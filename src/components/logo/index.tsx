@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import React from "react";
 import { Link } from "react-router";
 import { appConfig } from '@/config/app';
@@ -29,12 +30,13 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
 }
 
 export function Logo({ size = 32, className, disableLink = false }: Props) {
+  useT();
   const mark = <LogoMark size={size} />;
   if (disableLink) {
     return <span className={cn("inline-flex items-center", className)}>{mark}</span>;
   }
   return (
-    <Link to="/dashboard" className={cn("inline-flex items-center", className)} aria-label={`${appConfig.name} 首页`}>
+    <Link to="/dashboard" className={cn("inline-flex items-center", className)} aria-label={t('layout.logoHome', { name: appConfig.name })}>
       {mark}
     </Link>
   );

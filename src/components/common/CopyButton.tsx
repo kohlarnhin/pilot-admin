@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import React, { useState } from 'react';
 import { Icon } from '@/components/icon';
 import { copyToClipboard, cn } from '@/utils';
@@ -18,9 +19,10 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
   text,
   className,
   size = 13,
-  tip = '复制',
+  tip = t('common.copy'),
   secret = false,
 }) => {
+  useT();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -29,15 +31,15 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopied(true);
-      message.success(secret ? '已复制' : `已复制：${text}`);
+      message.success(secret ? t('common.copied') : t('common.copiedValue', { text }));
       window.setTimeout(() => setCopied(false), 1800);
     } else {
-      message.error('复制失败，请手动选择复制');
+      message.error(t('common.copyFailed'));
     }
   };
 
   return (
-    <Tooltip title={copied ? '已复制' : tip}>
+    <Tooltip title={copied ? t('common.copied') : tip}>
       <button
         type="button"
         onClick={handleCopy}

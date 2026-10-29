@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useState } from 'react';
 import { authService } from '@/api/services/authService';
 import { message } from '@/ui/message';
@@ -11,6 +12,7 @@ export function PasswordChangeModal({ open, onClose, onPasswordChanged }: {
   onClose: () => void;
   onPasswordChanged: () => void;
 }) {
+  useT();
   const [changingPassword, setChangingPassword] = useState(false);
   const [form] = Form.useForm();
   const handleChangePassword = async (values: any) => {
@@ -21,12 +23,12 @@ export function PasswordChangeModal({ open, onClose, onPasswordChanged }: {
         newPassword: values.newPassword,
         confirmPassword: values.confirmPassword,
       });
-      message.success('密码修改成功，请重新登录');
+      message.success(t('auth.passwordChanged'));
       onClose();
       form.resetFields();
       onPasswordChanged();
     } catch (error: any) {
-      message.error(error.message || '密码修改失败');
+      message.error(error.message || t('auth.passwordChangeFailed'));
     } finally {
       setChangingPassword(false);
     }
@@ -34,39 +36,39 @@ export function PasswordChangeModal({ open, onClose, onPasswordChanged }: {
 
   return (
     <Modal
-      title="修改密码"
+      title={t('auth.changePassword')}
       icon="key-round"
-      description="修改成功后需要使用新密码重新登录"
+      description={t('auth.passwordDescription')}
       open={open}
       onCancel={onClose}
       onOk={() => form.submit()}
-      okText="确认修改"
+      okText={t('auth.confirmChange')}
       confirmLoading={changingPassword}
       width={420}
     >
       <Form form={form} onFinish={handleChangePassword}>
-        <Form.Item name="oldPassword" label="原密码" rules={[{ required: true, message: '请输入原密码' }]}>
-          <Input.Password placeholder="请输入原密码" autoComplete="current-password" />
+        <Form.Item name="oldPassword" label={t('auth.oldPassword')} rules={[{ required: true, message: t('auth.oldPasswordRequired') }]}>
+          <Input.Password placeholder={t('auth.oldPasswordRequired')} autoComplete="current-password" />
         </Form.Item>
-        <Form.Item name="newPassword" label="新密码" rules={[{ required: true, message: '请输入新密码' }]}>
-          <Input.Password placeholder="请输入新密码" autoComplete="new-password" />
+        <Form.Item name="newPassword" label={t('auth.newPassword')} rules={[{ required: true, message: t('auth.newPasswordRequired') }]}>
+          <Input.Password placeholder={t('auth.newPasswordRequired')} autoComplete="new-password" />
         </Form.Item>
         <Form.Item
           name="confirmPassword"
-          label="确认新密码"
+          label={t('auth.confirmPassword')}
           className="mb-0"
           dependencies={['newPassword']}
           rules={[
-            { required: true, message: '请再次输入新密码' },
+            { required: true, message: t('auth.confirmPasswordRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                return Promise.reject(new Error('两次输入的新密码不一致'));
+                return Promise.reject(new Error(t('auth.passwordMismatch')));
               },
             }),
           ]}
         >
-          <Input.Password placeholder="请再次输入新密码" autoComplete="new-password" />
+          <Input.Password placeholder={t('auth.confirmPasswordRequired')} autoComplete="new-password" />
         </Form.Item>
         <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
       </Form>

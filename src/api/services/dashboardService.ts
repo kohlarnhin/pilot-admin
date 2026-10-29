@@ -19,29 +19,25 @@ export const dashboardService = {
       todos: [
         {
           id: 'todo-users',
-          title: '维护用户账号',
-          description: '查看账号状态，完善用户资料',
+          code: 'users' as const,
           route: '/system/users',
           icon: 'users',
         },
         {
           id: 'todo-roles',
-          title: '检查角色权限',
-          description: '按职责分配菜单与操作权限',
+          code: 'roles' as const,
           route: '/system/roles',
           icon: 'shield-check',
         },
         {
           id: 'todo-components',
-          title: '探索组件示例',
-          description: '查看常用组件与交互状态',
+          code: 'components' as const,
           route: '/examples/components',
           icon: 'component',
         },
         {
           id: 'todo-settings',
-          title: '完善系统设置',
-          description: '设置站点信息、安全与通知',
+          code: 'settings' as const,
           route: '/system/settings',
           icon: 'settings-2',
         },

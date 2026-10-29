@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import { cn } from "@/utils";
 import { Icon } from "@/components/icon";
@@ -27,12 +28,13 @@ export function FileDropZone({
   disabled = false,
   loading = false,
   onFiles,
-  title = "点击或拖拽文件到此处",
+  title = t('ui.dropFile'),
   hint,
   icon = "upload",
   className,
   children,
 }: FileDropZoneProps) {
+  useT();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
   const inactive = disabled || loading;

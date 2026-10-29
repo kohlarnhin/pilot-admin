@@ -1,3 +1,4 @@
+import { t, getLocale } from '@/i18n';
 import { API_BASE_URL, ApiRequestError, refreshAccessToken } from './http';
 import { syncStoredTokens } from './tokenStorage';
 import type { AgentChatProgress } from '@/types';
@@ -17,7 +18,7 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
   const timeout = new AbortController();
   const timeoutId = setTimeout(() => timeout.abort(), timeoutMs);
   const mergedSignal = signal ? AbortSignal.any([signal, timeout.signal]) : timeout.signal;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'text/event-stream, application/json' };
+  const headers: Record<string, string> = { 'Accept-Language': getLocale(), 'Content-Type': 'application/json', Accept: 'text/event-stream, application/json' };
   let accessToken = syncStoredTokens()?.accessToken;
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -36,7 +37,7 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
       response = await request();
     }
     if (!response.ok) {
-      let message = '请求失败，请稍后重试';
+      let message = t('client.requestRetry');
       let code: number | undefined;
       try {
         const body = await response.json();
@@ -45,7 +46,7 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
       } catch { /* 非 JSON 错误使用默认提示。 */ }
       throw new ApiRequestError(message, response.status, code);
     }
-    if (!response.body) throw new ApiRequestError('无法建立流式响应通道');
+    if (!response.body) throw new ApiRequestError(t('client.streamUnavailable'));
     reader = response.body.getReader();
     mergedSignal.addEventListener('abort', cancel, { once: true });
     const decoder = new TextDecoder('utf-8');
@@ -86,8 +87,8 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
         } catch { /* 无效进度不影响最终结果。 */ }
       } else if (eventName === 'result' || eventName === 'done') {
         const value = JSON.parse(raw) as { code: number; message?: string; data: T };
-        if (value.code !== 0) throw new ApiRequestError(value.message || '处理失败', 200, value.code);
-        if (value.data === undefined || value.data === null) throw new ApiRequestError('结果响应不完整');
+        if (value.code !== 0) throw new ApiRequestError(value.message || t('client.processingFailed'), 200, value.code);
+        if (value.data === undefined || value.data === null) throw new ApiRequestError(t('client.resultIncomplete'));
         finalResult = value.data;
         completed = true;
       } else if (eventName === 'error') {
@@ -95,7 +96,7 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
         let code: number | undefined;
         try {
           const value = JSON.parse(raw) as { message?: string; code?: number };
-          message = value.message || 'AI 助手处理异常';
+          message = value.message || t('client.assistantFailed');
           code = value.code;
         } catch { /* 兼容纯文本错误。 */ }
         throw new ApiRequestError(message, 200, code);
@@ -119,14 +120,14 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
       }
     }
     mergedSignal.throwIfAborted();
-    if (!completed) throw new ApiRequestError('流式响应中断，请重试');
+    if (!completed) throw new ApiRequestError(t('client.streamInterrupted'));
     onResult?.(finalResult!);
     return finalResult!;
   } catch (error) {
-    if (signal?.aborted) throw signal.reason || new DOMException('已取消', 'AbortError');
-    if (timeout.signal.aborted) throw new ApiRequestError('AI 助手响应超时，请重试');
+    if (signal?.aborted) throw signal.reason || new DOMException(t('client.cancelled'), 'AbortError');
+    if (timeout.signal.aborted) throw new ApiRequestError(t('client.assistantTimeout'));
     if (error instanceof ApiRequestError) throw error;
-    throw new ApiRequestError(error instanceof SyntaxError ? '流式响应格式无效' : '网络连接异常，无法连接到 AI 助手');
+    throw new ApiRequestError(error instanceof SyntaxError ? t('client.invalidStream') : t('client.assistantConnection'));
   } finally {
     mergedSignal.removeEventListener('abort', cancel);
     if (reader) {

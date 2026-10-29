@@ -9,6 +9,7 @@ React 19、TypeScript strict、Vite 6、Tailwind 3.4、Radix、zustand 5、react
 - `pnpm install --frozen-lockfile`
 - `pnpm dev`：http://localhost:3300，无代理
 - `pnpm lint`
+- `pnpm i18n:check`
 - `pnpm typecheck`
 - `pnpm build`
 - `pnpm preview`
@@ -37,7 +38,7 @@ UI 工作必须先读 `skills/pilot-ui-spec/SKILL.md`、`references/visual-syste
 
 ## 代码与交互
 
-UI 文案使用简洁中文；已有命名和 concise 中文注释保持一致。Mock 和 service 一行一个语句，对象多行排版。不要重构任务无关代码。
+可见文案放在 `src/i18n/locales`，zh-CN 为源、en-US 同步；静态元数据保存 MessageKey，在订阅语言的渲染处翻译。已有命名和 concise 中文注释保持一致。Mock 和 service 一行一个语句，对象多行排版。不要重构任务无关代码。
 
 列表使用分页无限追加和虚拟化，保留 ID 去重、代次保护、真实滚动容器及失败显式重试。每个可收缩中间层有 min-h-0 / min-w-0。异步提交阻止重复操作，失败保留输入；字段错误内联并关联 ARIA。
 
@@ -45,6 +46,6 @@ UI 文案使用简洁中文；已有命名和 concise 中文注释保持一致�
 
 ## 验证与交付
 
-运行 lint、类型检查和构建；不得跳过或放宽现有检查。涉及 UI 必须用运行中的真实页面验证，在 **1280×720** 和 **1440×900** 检查操作列、文档不滚动、面板尺寸、长列表、键盘/焦点、错误恢复及三种角色权限。生产预览不应发送外部或后端请求。
+运行 lint、类型检查、构建和 i18n:check；不得跳过或放宽现有检查。涉及 UI 必须用运行中的真实页面验证，在 **1280×720** 和 **1440×900** 检查操作列、文档不滚动、面板尺寸、长列表、键盘/焦点、错误恢复及三种角色权限。生产预览不应发送外部或后端请求。
 
 如任务指定 artifacts 目录，将截图、日志和临时检查脚本放在那里；不把这些当成项目源码。报告实际执行的检查、结果和限制，不宣称未执行的验证。除非任务授权，不提交、推送、创建分支或改写历史。

@@ -1,3 +1,4 @@
+import { t, getLocale } from '@/i18n';
 import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse, AuthTokens } from '../types';
@@ -95,7 +96,13 @@ export function setUnauthorizedHandler(handler: () => void): void {
 }
 
 // 请求：注入 Bearer AT，body 统一 snake_case → camelCase。
+refreshClient.interceptors.request.use((config) => {
+  config.headers.set('Accept-Language', getLocale());
+  return config;
+});
+
 http.interceptors.request.use((config) => {
+  config.headers.set('Accept-Language', getLocale());
   const retryableConfig = config as RetryableRequestConfig;
   if (!isAuthEndpoint(config.url)) {
     const accessToken = syncStoredTokens()?.accessToken;
@@ -115,7 +122,7 @@ http.interceptors.response.use(
     if (body && typeof body === 'object' && 'code' in body) {
       if (body.code !== 0) {
         return Promise.reject(
-          new ApiRequestError(responseMessage(body, '请求失败'), response.status, responseCode(body))
+          new ApiRequestError(responseMessage(body, t('client.requestFailed')), response.status, responseCode(body))
         );
       }
       return { ...response, data: { ...body, data: transformKeys(body.data, camelToSnake) } };
@@ -151,7 +158,7 @@ http.interceptors.response.use(
 
     return Promise.reject(
       new ApiRequestError(
-        responseMessage(response?.data, '请求失败，请稍后重试'),
+        responseMessage(response?.data, t('client.requestRetry')),
         response?.status,
         responseCode(response?.data)
       )
@@ -177,7 +184,7 @@ export function refreshAccessToken(failedAccessToken?: string): Promise<string> 
 
 async function performTokenRefresh(failedAccessToken?: string): Promise<string> {
   const currentTokens = syncStoredTokens();
-  if (!currentTokens) throw new ApiRequestError('登录状态已失效，请重新登录', 401, 1002);
+  if (!currentTokens) throw new ApiRequestError(t('client.sessionExpired'), 401, 1002);
 
   // 等待跨标签页锁期间，其他标签页可能已完成轮换或重新登录。
   if (!failedAccessToken) return currentTokens.accessToken;
@@ -192,19 +199,19 @@ async function performTokenRefresh(failedAccessToken?: string): Promise<string> 
     });
     const body = response.data;
     if (body.code !== 0) {
-      throw new ApiRequestError(responseMessage(body, '刷新 Token 失败'), response.status, body.code);
+      throw new ApiRequestError(responseMessage(body, t('client.refreshFailed')), response.status, body.code);
     }
     const nextTokens: AuthTokens = {
       accessToken: body.data?.accessToken,
       refreshToken: body.data?.refreshToken,
     };
     if (!nextTokens.accessToken || !nextTokens.refreshToken) {
-      throw new ApiRequestError('刷新 Token 响应不完整');
+      throw new ApiRequestError(t('client.refreshIncomplete'));
     }
     if (!replaceStoredTokens(nextTokens, consumedRefreshToken)) {
       const latestTokens = syncStoredTokens();
       if (latestTokens) return latestTokens.accessToken;
-      throw new ApiRequestError('登录状态已变更，请重新登录', 401, 1002);
+      throw new ApiRequestError(t('auth.sessionChanged'), 401, 1002);
     }
     return nextTokens.accessToken;
   } catch (error) {
@@ -216,7 +223,7 @@ async function performTokenRefresh(failedAccessToken?: string): Promise<string> 
     if (error instanceof ApiRequestError) throw error;
     if (axios.isAxiosError(error)) {
       throw new ApiRequestError(
-        responseMessage(error.response?.data, '刷新 Token 失败'),
+        responseMessage(error.response?.data, t('client.refreshFailed')),
         error.response?.status,
         responseCode(error.response?.data)
       );

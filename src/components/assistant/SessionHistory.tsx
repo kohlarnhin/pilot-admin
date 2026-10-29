@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { ArrowLeft, Check, MessageSquare } from 'lucide-react';
@@ -10,7 +11,7 @@ import { Skeleton } from '@/ui/skeleton';
 import { Spinner } from '@/ui/spinner';
 import { cn } from '@/utils';
 
-const GROUPS = ['今天', '昨天', '近 7 天', '更早'] as const;
+const GROUPS = ['today', 'yesterday', 'week', 'earlier'] as const;
 
 interface SessionHistoryProps {
   error?: string;
@@ -28,6 +29,7 @@ interface SessionHistoryProps {
 }
 
 export function SessionHistory({ error, onRetry, open, sessions, activeSessionId, loading, hasNext, busy, onClose, onSelect, onLoadMore, inline = false }: SessionHistoryProps) {
+  useT();
   const backRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -58,12 +60,12 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
   if (!open && !present) return null;
 
   const today = dayjs().startOf('day');
-  const grouped = new Map<string, AgentSession[]>(GROUPS.map(group => [group, []]));
+  const grouped = new Map<typeof GROUPS[number], AgentSession[]>(GROUPS.map(group => [group, []]));
   for (const session of sessions) {
     const date = dayjs(session.last_message_date || session.create_date);
-    const group = date.isSame(today, 'day') ? '今天'
-      : date.isSame(today.subtract(1, 'day'), 'day') ? '昨天'
-      : date.isAfter(today.subtract(7, 'day')) ? '近 7 天' : '更早';
+    const group = date.isSame(today, 'day') ? 'today'
+      : date.isSame(today.subtract(1, 'day'), 'day') ? 'yesterday'
+      : date.isAfter(today.subtract(7, 'day')) ? 'week' : 'earlier';
     grouped.get(group)?.push(session);
   }
 
@@ -89,7 +91,7 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
               if (!groupSessions.length) return null;
               return (
                 <div key={group} className="mb-5">
-                  <h4 className="mb-2 px-2 text-[11px] font-medium text-slate-400">{group}</h4>
+                  <h4 className="mb-2 px-2 text-[11px] font-medium text-slate-400">{t(`history.${group}`)}</h4>
                   <div className="space-y-1">
                     {groupSessions.map(session => {
                       const active = activeSessionId !== null && String(activeSessionId) === String(session.id);
@@ -107,7 +109,7 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
                             <span className="block truncate text-13 font-medium text-slate-700" title={session.title || '新对话'}>{session.title || '新对话'}</span>
                             <span className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
                               <span>{session.message_count} 条记录</span><span aria-hidden="true">·</span>
-                              <time dateTime={session.last_message_date}>{dayjs(session.last_message_date).format(group === '今天' ? 'HH:mm' : 'MM-DD HH:mm')}</time>
+                              <time dateTime={session.last_message_date}>{dayjs(session.last_message_date).format(group === 'today' ? 'HH:mm' : 'MM-DD HH:mm')}</time>
                             </span>
                           </span>
                           {active ? <Badge variant="outline" className="h-5 gap-1 border-line bg-white px-1.5 text-[11px] text-slate-700"><Check className="size-2.5" />当前</Badge> : null}

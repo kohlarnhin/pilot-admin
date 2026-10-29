@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Tooltip } from '@/ui/tooltip';
@@ -39,10 +40,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
   crumbs,
   onBack,
-  backLabel = '返回',
+  backLabel = t('common.back'),
   className,
   extra,
-}) => (
+}) => {
+  useT();
+  return (
   <div className={cn('mb-5 flex shrink-0 flex-wrap items-end justify-between gap-x-6 gap-y-3', className)}>
     <div className="min-w-0">
       <div className="flex min-w-0 items-center gap-3">
@@ -92,4 +95,5 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
     )}
   </div>
-);
+  );
+};

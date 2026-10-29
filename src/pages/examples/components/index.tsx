@@ -37,9 +37,9 @@ function Example({ id, title, description, children, wide = false }: { id: strin
 }
 
 const DEMO_ROWS = [
-  { id: 'DEMO-001', name: '项目说明', owner: '林知行', status: '已完成' },
-  { id: 'DEMO-002', name: '界面验收', owner: '陈思远', status: '进行中' },
-  { id: 'DEMO-003', name: '上线检查', owner: '许清和', status: '待开始' },
+  { id: 'DEMO-001', name: '项目说明', owner: '林知行', status: 'completed', statusLabel: '已完成' },
+  { id: 'DEMO-002', name: '界面验收', owner: '陈思远', status: 'active', statusLabel: '进行中' },
+  { id: 'DEMO-003', name: '上线检查', owner: '许清和', status: 'pending', statusLabel: '待开始' },
 ];
 
 export const ComponentsPage: React.FC = () => {
@@ -138,7 +138,7 @@ export const ComponentsPage: React.FC = () => {
           <div className="flex gap-2"><Button size="sm" pressed={tableState === 'data'} onClick={() => setTableState('data')}>数据</Button><Button size="sm" pressed={tableState === 'loading'} onClick={() => setTableState('loading')}>加载中</Button><Button size="sm" pressed={tableState === 'empty'} onClick={() => setTableState('empty')}>空数据</Button></div>
           <div className="h-[260px] overflow-hidden rounded-xl border border-line">
             <FixedTable rowKey="id" loading={tableState === 'loading'} dataSource={tableState === 'empty' ? [] : tableState === 'loading' ? [] : DEMO_ROWS} rowSelection={{ selectedRowKeys: keys, onChange: setKeys }}
-              columns={[{ title: '名称', dataIndex: 'name', width: '35%' }, { title: '编码', dataIndex: 'id', width: '30%', render: (value) => <CodeTag>{value}</CodeTag> }, { title: '负责人', dataIndex: 'owner', width: '20%' }, { title: '状态', dataIndex: 'status', width: '20%', render: (value) => <Tag dot color={value === '已完成' ? 'success' : value === '进行中' ? 'processing' : 'default'}>{value}</Tag> }, { title: '操作', width: 88, render: () => <RowAction icon="pencil" label="编辑表格示例" onClick={() => message.info('编辑记录')} /> }]} />
+              columns={[{ title: '名称', dataIndex: 'name', width: '35%' }, { title: '编码', dataIndex: 'id', width: '30%', render: (value) => <CodeTag>{value}</CodeTag> }, { title: '负责人', dataIndex: 'owner', width: '20%' }, { title: '状态', dataIndex: 'status', width: '20%', render: (value, record) => <Tag dot color={value === 'completed' ? 'success' : value === 'active' ? 'processing' : 'default'}>{record.statusLabel}</Tag> }, { title: '操作', width: 88, render: () => <RowAction icon="pencil" label="编辑表格示例" onClick={() => message.info('编辑记录')} /> }]} />
           </div>
           <DataTable rowKey="id" dataSource={DEMO_ROWS.slice(0, 1)} columns={[{ title: '独立数据表', dataIndex: 'name' }, { title: '负责人', dataIndex: 'owner' }]} />
           <Table><TableCaption>原生表格组件</TableCaption><TableHeader><TableRow><TableHead>名称</TableHead><TableHead>编码</TableHead></TableRow></TableHeader><TableBody>{DEMO_ROWS.slice(0, 2).map((row) => <TableRow key={row.id}><TableCell>{row.name}</TableCell><TableCell><CodeTag>{row.id}</CodeTag></TableCell></TableRow>)}</TableBody><TableFooter><TableRow><TableCell colSpan={2}>2 条示例记录</TableCell></TableRow></TableFooter></Table>

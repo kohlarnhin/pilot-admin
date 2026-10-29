@@ -1,0 +1,37 @@
+import type source from '../zh-CN/ui';
+import type { LocalizedDictionary } from '../../types';
+
+export default {
+  "breadcrumbLocation": "Location",
+  "increase": "Increase",
+  "decrease": "Decrease",
+  "loading": "Loading",
+  "selectRow": "Select row",
+  "selectAll": "Select all",
+  "loadingMore": "Loading more",
+  "dropFile": "Click or drop a file here",
+  "fieldRequired": "This field is required",
+  "fieldLabelRequired": "Enter {label}",
+  "whitespace": "Cannot contain only whitespace",
+  "invalidEmail": "Enter a valid email address",
+  "invalidUrl": "Enter a valid URL",
+  "numberRequired": "Enter a number",
+  "length": "Length must be {length}",
+  "min": "Must be at least {min}",
+  "max": "Must not exceed {max}",
+  "invalidFormat": "Invalid format",
+  "invalidChoice": "Choose an allowed value",
+  "invalid": "Validation failed",
+  "clear": "Clear",
+  "hidePassword": "Hide password",
+  "showPassword": "Show password",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "close": "Close",
+  "dialog": "Dialog",
+  "actionFailed": "Action failed. Please try again.",
+  "gotIt": "Got it",
+  "noOptions": "No matching options",
+  "loadingOptions": "Loading…",
+  "remove": "Remove"
+} satisfies LocalizedDictionary<typeof source>;

@@ -61,7 +61,7 @@ skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现�
 
 ## 换品牌
 
-1. 修改 `src/config/app.ts` 的 `name`、`shortName`、`zhName` 和 `description`。未配置 `helpUrl` 时，所有「使用手册」入口隐藏。
+1. 修改 `src/config/app.ts` 的 `name`、`shortName`、`zhName` 和 `description`。默认介绍的双语文案在 `src/i18n/locales/zh-CN/common.ts` / `src/i18n/locales/en-US/common.ts` 的 `appDescription`；系统设置保存的自定义介绍保留原文。未配置 `helpUrl` 时，所有「使用手册」入口隐藏。
 2. 替换 `src/components/logo/index.tsx` 和 `public/favicon.svg`。本地演示助手资料的默认值在 `src/mock/seed.ts`，运行时默认资料在 `agentProfileService.ts`。
 3. 按需修改 `tailwind.config.js` 中的 `brand` 色阶。橙色仅表示品牌、当前位置与进行中，按钮、focus、checkbox 和 switch 保持 slate。
 4. 已持久化的站点名称优先于种子。改动默认值后，重置演示数据查看新品牌。
@@ -80,7 +80,7 @@ skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现�
    }),
    ```
 
-3. 在 `src/config/menus.ts` 添加菜单（稳定 `id`、相同的 `route_path`、`sort_no`、`icon`）及可选按钮权限。图标直接使用 `src/components/icon/registry.ts` 已注册的 Lucide 名称；不需要另一份路径映射。
+3. 在 `src/config/menus.ts` 添加菜单（稳定 `id`、相同的 `route_path`、`sort_no`、`icon`）及可选按钮权限，默认名称在两种语言的 `menu` / `button` 字典中按 id 定义。图标直接使用 `src/components/icon/registry.ts` 已注册的 Lucide 名称；不需要另一份路径映射。
 
 注册表在模块作用域创建 lazy 组件；路由、已知页面判断与 hover/focus 预取共用缓存 loader。无路由分组不预取，实际重定向沿用统一的可访问首页选择。
 
@@ -202,17 +202,40 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 
 `VITE_*` 变量可被客户端读取，不得填写密码、Token 或模型密钥。修改环境变量后需重启开发服务；生产配置在构建时生效。
 
+## 国际化
+
+默认语言为 `zh-CN`，不读取浏览器语言。登录页右上角与账号菜单的「语言」入口可切换简体中文 / English，无需刷新页面；选择保存在 `pilot-admin:locale:v1`，同源标签页跟随切换。`src/config/app.ts` 配置默认语言和原生语言名称。
+
+- 字典按功能存放在 `src/i18n/locales/zh-CN/<namespace>.ts`，以中文 literal 为源，导出 `as const` 对象；`en-US` 对应文件使用 `LocalizedDictionary<typeof source>` 校验。新增 namespace 后在两种语言的 `index.ts` 注册，缺失或多余 key 会导致类型错误。
+- React 渲染使用 `const { t, locale } = useT()`；service、store 和事件处理可调用非 hook 的 `t()`，每次调用读取当前语言。静态 METRICS / SECTIONS 等只存 `MessageKey`，在订阅语言的渲染处翻译；翻译后的列定义、格式化器等 memo 必须依赖 `locale`。
+
+  ```tsx
+  const { t } = useT();
+  t('auth.login');
+  t('auth.loginTitle', { name: 'My Admin' });
+  // 未知 key、遗漏 name、错误参数名或为无参数 key 传参都会报类型错误。
+  ```
+
+- `{name}` 插值参数从中文 literal 推导，值为 string / number。运行时按当前语言 → 中文 → key 回退；开发环境缺少参数会保留占位符并警告。`formatNumber` 使用当前语言，dayjs 随语言切换；已有明确的日期格式保持不变。
+- 不引入复数引擎。英文优先使用不依赖单复数的表达，如 `Users: {count}`，避免在数量可能为 1 时固定使用复数名词。
+- 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<id>` / `button.<id>` 本地化，重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
+- 切换会更新 html lang / dayjs、清查询缓存、刷新已登录账号的 me，并通过 `useDataChanged` 发出 `locale` 原因。无限列表将 locale 纳入作用域，丢弃旧语言响应，刷新已加载范围并尽量保留滚动位置。路由、助手面板、草稿和已存会话不变；已打开的命令式弹窗 / toast 保留打开时语言。
+- 本轮覆盖外壳、登录、搜索、概览、错误页和基础控件；后台管理页面、其他 service、种子及助手正文仍在 M5b / M5c 待迁移列表中。用户、角色、会话和活动等已存数据不随切换重译；按创建/重置时语言生成种子的规则将在 M5b 完成。
+
+运行 `pnpm i18n:check` 检查两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 是后续里程碑待迁移文件。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
+
 ## 脚本与验证
 
 | 命令 | 用途 |
 | --- | --- |
 | `pnpm dev` | 0.0.0.0:3300 开发服务，不自动打开浏览器，默认无代理 |
 | `pnpm lint` | ESLint 检查，须无 error；保留 Hooks 依赖和 Fast Refresh 警告 |
+| `pnpm i18n:check` | 字典 / 占位符一致性和源代码 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm build` | `tsc -b && vite build` |
 | `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |
 
-提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
+提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
 
 ## 路线图
 

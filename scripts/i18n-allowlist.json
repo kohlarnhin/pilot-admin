@@ -1,0 +1,12 @@
+[
+  {
+    "file": "src/config/app.ts",
+    "text": "领航",
+    "reason": "产品中文品牌原名，英文界面使用 shortName。"
+  },
+  {
+    "file": "src/config/app.ts",
+    "text": "简体中文",
+    "reason": "语言选择器显示语言的原生名称。"
+  }
+]

@@ -19,7 +19,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "i18n:check": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@fontsource-variable/open-sans": "^5.3.0",

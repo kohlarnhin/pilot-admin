@@ -1,3 +1,4 @@
+import { t, tNode, useT } from '@/i18n';
 import React from 'react';
 import { Button } from '@/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -6,16 +7,18 @@ import { useAuthStore } from '../../store/authStore';
 import { StatusPage } from './StatusPage';
 
 const HomeButton: React.FC = () => {
+  useT();
   const navigate = useNavigate();
   return (
     <Button onClick={() => navigate('/')}>
       <ArrowLeft className="size-4" />
-      返回首页
+      {t('common.home')}
     </Button>
   );
 };
 
 export const Page403: React.FC = () => {
+  useT();
   const { roles } = useAuthStore();
   const currentRoleCode = roles[0] || '';
 
@@ -23,24 +26,24 @@ export const Page403: React.FC = () => {
     <StatusPage
       code="403"
       icon="shield-check"
-      title="暂无此模块访问权限"
+      title={t('errors.forbiddenTitle')}
       actions={<HomeButton />}
-      description={
-        <>
-          当前角色 {currentRoleCode && <strong className="font-medium text-slate-700">{currentRoleCode}</strong>}{' '}
-          未被授予此菜单或功能模块的权限，如需访问请联系管理员。
-        </>
-      }
+      description={tNode('errors.forbiddenDescription', {
+        role: currentRoleCode ? <strong className="font-medium text-slate-700">{currentRoleCode}</strong> : '',
+      })}
     />
   );
 };
 
-export const Page404: React.FC = () => (
-  <StatusPage
-    code="404"
-    icon="map-pin"
-    title="页面不存在"
-    description="您访问的页面路径不存在或已迁移。"
-    actions={<HomeButton />}
-  />
-);
+export const Page404: React.FC = () => {
+  useT();
+  return (
+    <StatusPage
+      code="404"
+      icon="map-pin"
+      title={t('errors.notFoundTitle')}
+      description={t('errors.notFoundDescription')}
+      actions={<HomeButton />}
+    />
+  );
+};

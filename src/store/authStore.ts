@@ -1,7 +1,9 @@
+import { t } from '@/i18n';
 import { create } from 'zustand';
 import type { AuthMeResponse, User, Menu, UserPreferences } from '../types';
 import { authService, DEFAULT_USER_PREFERENCES } from '../api/services/authService';
 import { clearQueryCache } from '../api/queryCache';
+import { getLocale, registerLocaleRefresh } from '@/i18n/store';
 import { isUnauthorizedError, setUnauthorizedHandler } from '../api/http';
 import {
   clearStoredTokens,
@@ -127,12 +129,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ ...EMPTY_AUTH_STATE, isLoading: true });
     try {
       const tokens = await authService.login(loginName, password);
-      if (authGeneration !== generation) throw new Error('登录操作已取消');
+      if (authGeneration !== generation) throw new Error(t('auth.cancelled'));
       saveStoredTokens(tokens);
 
       const me = await authService.getMe();
       if (authGeneration !== generation || !getStoredTokens()) {
-        throw new Error('登录状态已变更，请重新登录');
+        throw new Error(t('auth.sessionChanged'));
       }
       set(toAuthenticatedState(me));
     } catch (error) {
@@ -161,15 +163,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   refreshMe: async () => {
     const generation = authGeneration;
+    const locale = getLocale();
     try {
       const me = await authService.getMe();
-      if (generation === authGeneration && getStoredTokens()) set(toAuthenticatedState(me));
+      if (generation === authGeneration && locale === getLocale() && getStoredTokens()) set(toAuthenticatedState(me));
     } catch (error) {
-      if (generation === authGeneration && isUnauthorizedError(error)) get().logout();
+      if (generation === authGeneration && locale === getLocale() && isUnauthorizedError(error)) get().logout();
       throw error;
     }
   },
 }));
+
+registerLocaleRefresh(async () => {
+  const state = useAuthStore.getState();
+  if (state.isAuthenticated) await state.refreshMe();
+});
 
 setUnauthorizedHandler(() => {
   authGeneration += 1;

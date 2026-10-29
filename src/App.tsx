@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import React from 'react';
 import { RouterProvider } from 'react-router';
 import { router } from './routes';
@@ -16,7 +17,7 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, { error:
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('[Pilot Admin] 应用发生错误', error, info.componentStack);
+    console.error(t('client.appError'), error, info.componentStack);
   }
 
   render() {
@@ -28,10 +29,11 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, { error:
 }
 
 export const App: React.FC = () => {
+  const { locale } = useT();
   const siteName = useAppStore((state) => state.siteName);
   const loadBrand = useAppStore((state) => state.loadBrand);
   React.useEffect(() => { void loadBrand(); }, [loadBrand]);
-  React.useEffect(() => { document.title = `${siteName} · ${appConfig.zhName}`; }, [siteName]);
+  React.useEffect(() => { document.title = `${siteName} · ${locale === 'zh-CN' ? appConfig.zhName : appConfig.shortName}`; }, [siteName, locale]);
   return (
     <AppErrorBoundary>
       <TooltipProvider delayDuration={250} skipDelayDuration={150}>

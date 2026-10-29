@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/utils";
@@ -21,7 +22,8 @@ interface WorkbenchCrumbsProps {
 /**
  * 工作台面包屑：32px 细边框返回按钮 + 可点击的上级路径 + 加粗的当前位置。
  */
-export function WorkbenchCrumbs({ onBack, backLabel = "返回", items, extra, className }: WorkbenchCrumbsProps) {
+export function WorkbenchCrumbs({ onBack, backLabel = t('common.back'), items, extra, className }: WorkbenchCrumbsProps) {
+  useT();
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       {onBack && (
@@ -36,7 +38,7 @@ export function WorkbenchCrumbs({ onBack, backLabel = "返回", items, extra, cl
           </button>
         </Tooltip>
       )}
-      <nav aria-label="位置" className="flex min-w-0 items-center gap-1.5 text-13">
+      <nav aria-label={t('ui.breadcrumbLocation')} className="flex min-w-0 items-center gap-1.5 text-13">
         {items.map((item, index) => {
           const last = index === items.length - 1;
           return (

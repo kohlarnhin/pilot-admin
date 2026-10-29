@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
@@ -71,8 +72,8 @@ export function Modal({
   description,
   onOk,
   onCancel,
-  okText = "确定",
-  cancelText = "取消",
+  okText = t('ui.ok'),
+  cancelText = t('ui.cancel'),
   okType = "primary",
   confirmLoading = false,
   okButtonProps,
@@ -89,6 +90,7 @@ export function Modal({
   zIndex,
   children,
 }: ModalProps) {
+  useT();
   const wasOpen = React.useRef(open);
   React.useEffect(() => {
     if (wasOpen.current && !open && afterClose) {
@@ -209,7 +211,7 @@ export function Modal({
               </div>
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label="关闭" className="-mr-2 shrink-0 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="-mr-2 shrink-0 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>
@@ -217,10 +219,10 @@ export function Modal({
             </div>
           ) : (
             <>
-              <DialogPrimitive.Title className="sr-only">{ariaLabel ?? "对话框"}</DialogPrimitive.Title>
+              <DialogPrimitive.Title className="sr-only">{ariaLabel ?? t('ui.dialog')}</DialogPrimitive.Title>
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label="关闭" className="absolute right-3 top-3 z-10 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="absolute right-3 top-3 z-10 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>
@@ -273,6 +275,7 @@ interface ConfirmEntry extends ConfirmConfig {
   id: number;
   kind: ConfirmKind;
   open: boolean;
+  failureText: string;
 }
 
 let entries: ConfirmEntry[] = [];
@@ -287,7 +290,15 @@ const getSnapshot = () => entries;
 
 function openConfirm(kind: ConfirmKind, config: ConfirmConfig) {
   const id = ++seed;
-  entries = [...entries, { ...config, id, kind, open: true }];
+  entries = [...entries, {
+    ...config,
+    id,
+    kind,
+    open: true,
+    okText: config.okText ?? (kind === 'confirm' ? t('ui.ok') : t('ui.gotIt')),
+    cancelText: config.cancelText ?? t('ui.cancel'),
+    failureText: t('ui.actionFailed'),
+  }];
   emit();
   const close = () => {
     entries = entries.map((entry) => (entry.id === id ? { ...entry, open: false } : entry));
@@ -342,7 +353,7 @@ function ConfirmDialog({ entry, close }: { entry: ConfirmEntry; close: () => voi
       }
       close();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '操作失败，请重试');
+      setError(cause instanceof Error ? cause.message : entry.failureText);
       setPending(false);
     } finally {
       pendingRef.current = false;
@@ -386,7 +397,7 @@ function ConfirmDialog({ entry, close }: { entry: ConfirmEntry; close: () => voi
           <div className="mt-6 flex justify-end gap-2.5">
             {isConfirm && (
               <Button variant="outline" disabled={pending} onClick={() => void run(entry.onCancel)} {...entry.cancelButtonProps}>
-                {entry.cancelText ?? "取消"}
+                {entry.cancelText}
               </Button>
             )}
             <Button
@@ -395,7 +406,7 @@ function ConfirmDialog({ entry, close }: { entry: ConfirmEntry; close: () => voi
               {...restOk}
               onClick={() => void run(entry.onOk)}
             >
-              {entry.okText ?? (isConfirm ? "确定" : "知道了")}
+              {entry.okText}
             </Button>
           </div>
         </DialogPrimitive.Content>
@@ -476,6 +487,7 @@ export function Drawer({
   onEscapeKeyDown,
   children,
 }: DrawerProps) {
+  useT();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(next) => !next && onClose?.()} modal={mask}>
       <DialogPrimitive.Portal>
@@ -506,7 +518,7 @@ export function Drawer({
               {extra}
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label="关闭" className="-mr-1.5 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="-mr-1.5 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>

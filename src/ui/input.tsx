@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import { Eye, EyeOff, Search, X } from "lucide-react";
 import { cn } from "@/utils";
@@ -52,6 +53,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 
 const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
   (allProps, ref) => {
+    useT();
     const {
       className,
       wrapperClassName,
@@ -146,7 +148,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
           <button
             type="button"
             tabIndex={-1}
-            aria-label="清空"
+            aria-label={t('ui.clear')}
             className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-300/80 text-white transition-colors hover:bg-slate-400"
             onClick={() => {
               if (innerRef.current) {
@@ -172,6 +174,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
 InputBase.displayName = "Input";
 
 const Password = React.forwardRef<HTMLInputElement, Omit<InputProps, "type" | "suffix">>((props, ref) => {
+  useT();
   const [visible, setVisible] = React.useState(false);
   return (
     <InputBase
@@ -182,7 +185,7 @@ const Password = React.forwardRef<HTMLInputElement, Omit<InputProps, "type" | "s
         <button
           type="button"
           tabIndex={-1}
-          aria-label={visible ? "隐藏密码" : "显示密码"}
+          aria-label={visible ? t('ui.hidePassword') : t('ui.showPassword')}
           className="flex cursor-pointer items-center text-slate-400 transition-colors hover:text-slate-600"
           onClick={() => setVisible((current) => !current)}
         >

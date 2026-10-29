@@ -16,6 +16,7 @@ pnpm dev
 | 命令 | 用途 |
 | --- | --- |
 | `pnpm lint` | ESLint 检查，提交前须无 error |
+| `pnpm i18n:check` | 字典、占位符一致性及 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm build` | 类型检查与生产构建 |
 | `pnpm preview` | 预览生产构建 |
@@ -55,8 +56,30 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm typecheck
 pnpm build
+pnpm i18n:check
 ```
 
 UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280×720** 和 **1440×900** 检查操作列、文档不滚动、面板尺寸、长列表、键盘/焦点与错误恢复，并覆盖 admin、operator、viewer 三种角色。生产预览不得发送外部或后端请求。
 
-本项目没有额外测试框架。请提供与改动对应的可复现步骤和实际检查结果；未执行的检查须明确说明。CI 会执行安装、lint、类型检查和构建，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 私密报告。
+本项目没有额外测试框架。请提供与改动对应的可复现步骤和实际检查结果；未执行的检查须明确说明。CI 会执行安装、lint、i18n:check、类型检查和构建，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 私密报告。
+
+## 国际化约定与术语
+
+可见系统文案放在 `src/i18n/locales`，中文 literal 是类型来源，英文保持 key 与 `{placeholder}` 集合完整一致。功能拥有自己的 namespace，新增时在两种语言根字典注册。React 使用 `useT()` 订阅；事件、service、store 使用实时读取语言的 `t()`。静态元数据只存 key，翻译后的 memo / 格式化器依赖 locale。不要把翻译文本作为状态、分组或错误类型的判别依据，应使用稳定代码或 HTTP 状态。
+
+英文按钮、标签用 sentence case，页面标题用 Title Case；按下表保留既定导航名称。没有复数引擎，优先 `Users: {count}` 等数量中性表达。数字使用 `formatNumber`，明确的日期格式保持原样。默认菜单 / 操作名与错误由服务边界本地化，稳定系统代码由界面翻译；用户输入、已存数据不随切换改写。已打开的命令式弹窗和 toast 保留打开语言。完整流程见 README 的「国际化」。
+
+| 中文 | English | 中文 | English |
+| --- | --- | --- | --- |
+| 概览 | Overview | 系统管理 | System |
+| 用户管理 | Users | 角色管理 | Roles |
+| 菜单管理 | Menus | 系统设置 | Settings |
+| 助手设置 | Assistant settings | AI 助手 | AI assistant |
+| Agent 模式 | Agent mode | 示例 | Examples |
+| 组件示例 | Components | 权限 | Permission |
+| 按钮权限 | Action permission | 演示数据 | Demo data |
+| 会话 | Conversation | 重置 | Reset |
+| 新增 | Add / Create | 编辑 | Edit |
+| 删除 | Delete | 启用 / 停用 | Enable / Disable |
+
+提交前运行 `pnpm i18n:check`。allowlist 只用于有原因的原文精确例外（如原生语言名称），pending 只列尚未迁移的 M5b/M5c 文件。不要扩大例外规避检查；完成迁移后同步删除条目，过时条目会失败。

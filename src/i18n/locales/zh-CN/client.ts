@@ -1,0 +1,23 @@
+export default {
+  "requestFailed": "请求失败",
+  "requestRetry": "请求失败，请稍后重试",
+  "sessionExpired": "登录状态已失效，请重新登录",
+  "refreshFailed": "刷新 Token 失败",
+  "refreshIncomplete": "刷新 Token 响应不完整",
+  "streamUnavailable": "无法建立流式响应通道",
+  "processingFailed": "处理失败",
+  "resultIncomplete": "结果响应不完整",
+  "assistantFailed": "AI 助手处理异常",
+  "streamInterrupted": "流式响应中断，请重试",
+  "cancelled": "已取消",
+  "assistantTimeout": "AI 助手响应超时，请重试",
+  "invalidStream": "流式响应格式无效",
+  "assistantConnection": "网络连接异常，无法连接到 AI 助手",
+  "emptyPage": "分页数据为空，请重试",
+  "stalledPage": "分页数据未前进，请重试",
+  "appError": "[Pilot Admin] 应用发生错误",
+  "pageError": "[Pilot Admin] 页面发生错误",
+  "resourceError": "[Pilot Admin] 页面资源加载失败",
+  "reloadMarkerError": "[Pilot Admin] 无法保存自动刷新标记，请手动刷新页面",
+  "version": "[Pilot Admin] 前端版本：{version}"
+} as const;

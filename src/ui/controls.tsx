@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import { AlertTriangle, CheckCircle2, Info, Minus, Plus, XCircle } from "lucide-react";
 import { cn } from "@/utils";
@@ -227,6 +228,7 @@ export function InputNumber({
   id,
   ...rest
 }: InputNumberProps) {
+  useT();
   const [inner, setInner] = React.useState<number | null>(defaultValue ?? null);
   const current = value !== undefined ? value : inner;
   const [draft, setDraft] = React.useState<string>(current === null || current === undefined ? "" : String(current));
@@ -299,10 +301,10 @@ export function InputNumber({
       />
       {!disabled && (
         <span className="flex h-full shrink-0 flex-col border-l border-line opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          <button type="button" tabIndex={-1} aria-label="增加" onClick={() => stepBy(1)} className="flex h-1/2 w-7 cursor-pointer items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900">
+          <button type="button" tabIndex={-1} aria-label={t('ui.increase')} onClick={() => stepBy(1)} className="flex h-1/2 w-7 cursor-pointer items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900">
             <Plus className="size-3" />
           </button>
-          <button type="button" tabIndex={-1} aria-label="减少" onClick={() => stepBy(-1)} className="flex h-1/2 w-7 cursor-pointer items-center justify-center border-t border-line text-slate-400 hover:bg-slate-50 hover:text-slate-900">
+          <button type="button" tabIndex={-1} aria-label={t('ui.decrease')} onClick={() => stepBy(-1)} className="flex h-1/2 w-7 cursor-pointer items-center justify-center border-t border-line text-slate-400 hover:bg-slate-50 hover:text-slate-900">
             <Minus className="size-3" />
           </button>
         </span>

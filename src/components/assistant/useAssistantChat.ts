@@ -1,3 +1,4 @@
+import { ApiRequestError } from '@/api/http';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { agentService } from '@/api/services/agentService';
@@ -231,7 +232,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
     } catch (error) {
       if (request !== detailRequestRef.current) return;
       toast.error('加载会话详情失败');
-      const missing = error instanceof Error && error.message.includes('不存在');
+      const missing = error instanceof ApiRequestError && error.status === 404;
       selectSession(missing ? null : previousSessionId);
       updateMessages(() => missing ? [] : previousMessages);
       setHasMoreBefore(missing ? false : previousHasMoreBefore);

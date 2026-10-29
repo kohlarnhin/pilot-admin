@@ -185,13 +185,13 @@ export const UsersPage: React.FC = () => {
             <div>
               <div className="mt-1 divide-y divide-line-soft rounded-lg border border-line bg-slate-50/70">
                 {[
-                  ['账号', values.login_name],
-                  ['密码', created.data.initial_password],
-                ].map(([label, value]) => (
+                  { label: '账号', value: values.login_name, secret: false },
+                  { label: '密码', value: created.data.initial_password, secret: true },
+                ].map(({ label, value, secret }) => (
                   <div key={label} className="flex items-center gap-3 px-3 py-2">
                     <span className="w-8 shrink-0 text-xs text-slate-400">{label}</span>
                     <span className="min-w-0 flex-1 truncate font-mono text-13 text-slate-800">{value}</span>
-                    <CopyButton text={value} tip={`复制${label}`} secret={label === '密码'} />
+                    <CopyButton text={value} tip={`复制${label}`} secret={secret} />
                   </div>
                 ))}
               </div>

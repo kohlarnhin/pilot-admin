@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Check, ChevronDown, X } from "lucide-react";
@@ -89,6 +90,7 @@ const SIZE_CLASS = {
 } as const;
 
 function SelectInner<V = any>(props: SelectProps<V>) {
+  useT();
   const {
     value: controlledValue,
     defaultValue,
@@ -105,7 +107,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
     onSearch,
     filterOption = true,
     optionFilterProp = "label",
-    notFoundContent = "暂无匹配选项",
+    notFoundContent = t('ui.noOptions'),
     optionRender,
     labelRender,
     popupRender,
@@ -291,7 +293,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
   const menu = (
     <div ref={listRef} role="listbox" aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto overscroll-contain p-1">
       {filtered.length === 0 ? (
-        <div className="px-3 py-6 text-center text-xs text-slate-400">{loading ? "加载中…" : notFoundContent}</div>
+        <div className="px-3 py-6 text-center text-xs text-slate-400">{loading ? t('ui.loadingOptions') : notFoundContent}</div>
       ) : (
         filtered.map((option, index) => {
           const selected = selectedValues.some((item) => sameValue(item, option.value));
@@ -383,7 +385,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
                       <button
                         type="button"
                         tabIndex={-1}
-                        aria-label="移除"
+                        aria-label={t('ui.remove')}
                         onPointerDown={(event) => event.preventDefault()}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -451,7 +453,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
                   <button
                     type="button"
                     tabIndex={-1}
-                    aria-label="清空"
+                    aria-label={t('ui.clear')}
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={clear}
                     className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-slate-300/80 text-white opacity-0 transition-opacity hover:bg-slate-400 group-hover:opacity-100"

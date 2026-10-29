@@ -1,0 +1,20 @@
+export default {
+  "unknown": "未知错误",
+  "updating": "系统已更新，正在刷新…",
+  "updated": "系统已更新",
+  "pageProblem": "页面暂时出现问题",
+  "loadingUpdate": "正在为您加载最新版本，请稍候。",
+  "chunkFailed": "页面资源未能加载，请刷新页面重试，或返回首页继续使用。",
+  "reloadOrHome": "您可以重新加载页面，或返回首页继续使用。",
+  "reloadOnly": "您可以重新加载页面后继续使用。",
+  "contactAdmin": "如问题持续，请复制错误详情并联系管理员。",
+  "refresh": "刷新页面",
+  "reload": "重新加载",
+  "details": "错误详情",
+  "copyDetails": "复制详情",
+  "copyFailed": "复制失败，请手动选择并复制错误详情。",
+  "forbiddenTitle": "暂无此模块访问权限",
+  "forbiddenDescription": "当前角色 {role} 未被授予此菜单或功能模块的权限，如需访问请联系管理员。",
+  "notFoundTitle": "页面不存在",
+  "notFoundDescription": "您访问的页面路径不存在或已迁移。"
+} as const;

@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import React from 'react';
 import { Icon } from '@/components/icon';
 import { cn } from '@/utils';
@@ -17,13 +18,14 @@ interface EmptyStateProps {
  * 供列表页空数据、仪表盘无数据、工作台等场景使用。
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = '暂无数据',
+  title = t('common.empty'),
   description,
   icon = 'inbox',
   action,
   minHeight,
   className,
 }) => {
+  useT();
   return (
     <div
       className={cn(

@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/utils";
@@ -128,9 +129,10 @@ function buildTemplate<T>(columns: ColumnsType<T>, selectionWidth?: number) {
 
 /** 首次加载骨架：表头 + 若干数据行，尺寸与真实表格一致，避免替换时跳动。 */
 export function TableSkeleton({ rows = 7, showHeader = true }: { rows?: number; showHeader?: boolean }) {
+  useT();
   const widths = ["24%", "16%", "14%", "12%", "10%"];
   return (
-    <div className="w-full" aria-busy="true" aria-label="加载中">
+    <div className="w-full" aria-busy="true" aria-label={t('ui.loading')}>
       {showHeader && (
         <div className="flex h-11 items-center gap-8 border-b border-line bg-white px-6">
           {widths.map((width, index) => (
@@ -186,6 +188,7 @@ export function DataTable<T extends object>({
   className,
   onScroll,
 }: DataTableProps<T>) {
+  useT();
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const headerRef = React.useRef<HTMLDivElement>(null);
@@ -355,7 +358,7 @@ export function DataTable<T extends object>({
               checked={selected}
               disabled={checkboxProps?.disabled}
               onChange={(event) => toggleRow(row.key, event.target.checked)}
-              aria-label="选择此行"
+              aria-label={t('ui.selectRow')}
             />
           </div>
         )}
@@ -401,7 +404,7 @@ export function DataTable<T extends object>({
             indeterminate={selectedCount > 0 && !allSelected}
             disabled={selectableRows.length === 0}
             onChange={(event) => toggleAll(event.target.checked)}
-            aria-label="全选"
+            aria-label={t('ui.selectAll')}
           />
         </div>
       )}
@@ -464,7 +467,7 @@ export function DataTable<T extends object>({
           </div>
         )}
         {initialLoading ? (
-          <div role="rowgroup" aria-busy="true" aria-label="加载中" className={fill ? "flex-1" : undefined}>
+          <div role="rowgroup" aria-busy="true" aria-label={t('ui.loading')} className={fill ? "flex-1" : undefined}>
             {showSkeleton && Array.from({ length: skeletonRows }).map((_, index) => (
               <div
                 key={index}
@@ -527,7 +530,7 @@ export function DataTable<T extends object>({
             <div role="rowgroup">{rows.map((row) => renderRow(row))}</div>
           )}
           {onLoadMore && hasNext && <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />}
-          {onLoadMore && loadingMore && <span className="sr-only" role="status">正在加载更多</span>}
+          {onLoadMore && loadingMore && <span className="sr-only" role="status">{t('ui.loadingMore')}</span>}
           </>
         )}
       </div>

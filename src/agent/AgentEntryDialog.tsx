@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useState } from 'react';
 import { Modal } from '@/ui/modal';
 import { Button } from '@/ui/button';
@@ -9,6 +10,7 @@ export function AgentEntryDialog({ onChoose }: {
   source?: 'login';
   onChoose: (agent: boolean) => void;
 }) {
+  useT();
   const [remember, setRemember] = useState(false);
   const [saving, setSaving] = useState(false);
   const patchPreferences = useAuthStore(state => state.patchPreferences);
@@ -19,19 +21,18 @@ export function AgentEntryDialog({ onChoose }: {
       if (remember) await patchPreferences({ agent_mode_entry: agent ? 'agent' : 'console' });
       onChoose(agent);
     } catch (error) {
-      message.error((error as Error).message || '保存偏好失败，请重试');
+      message.error((error as Error).message || t('agentEntry.saveRetry'));
       setSaving(false);
     }
   };
-  return <Modal open title={'选择你的工作方式'} icon="square-terminal"
+  return <Modal open title={t('agentEntry.title')} icon="square-terminal"
     width={480} closable={false} maskClosable={false} keyboard={false}
     footer={<>
-      <Button disabled={saving} onClick={() => { void choose(false); }}>留在管理后台</Button>
-      <Button loading={saving} onClick={() => { void choose(true); }}>进入 Agent 模式</Button>
+      <Button disabled={saving} onClick={() => { void choose(false); }}>{t('agentEntry.console')}</Button>
+      <Button loading={saving} onClick={() => { void choose(true); }}>{t('agentEntry.agent')}</Button>
     </>}>
-    <p className="text-13 leading-7 text-slate-600">在全屏对话中查看概况、维护账号或执行巡检，也可以继续使用管理后台。</p>
+    <p className="text-13 leading-7 text-slate-600">{t('agentEntry.description')}</p>
     <div className="mt-5"><Checkbox checked={remember} disabled={saving} onChange={event => setRemember(event.target.checked)}>
-      记住我的选择
-    </Checkbox></div>
+      {t('agentEntry.remember')}</Checkbox></div>
   </Modal>;
 }

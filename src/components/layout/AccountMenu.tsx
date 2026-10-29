@@ -1,3 +1,5 @@
+import { LocaleSubmenu } from '@/components/common/LocaleSwitcher';
+import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -17,6 +19,7 @@ import { PasswordChangeModal } from './PasswordChangeModal';
  * 折叠模式下仅显示头像。
  */
 export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
+  useT();
   const user = useAuthStore((state) => state.user);
   const canUseAgent = usePermission('agent:use');
   const [preferencesOpen, setPreferencesOpen] = useState(false);
@@ -29,12 +32,12 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
     setOpen(false);
     logout();
     navigate('/login', { replace: true });
-    message.info('已退出登录');
+    message.info(t('layout.signedOut'));
   };
 
-  const displayName = user?.user_name || '当前用户';
+  const displayName = user?.user_name || t('layout.currentUser');
   const accountLine = user?.login_name ? `@${user.login_name}` : user?.email || '';
-  const fallbackChar = user?.user_name ? user.user_name.slice(0, 1) : '平';
+  const fallbackChar = user?.user_name ? user.user_name.slice(0, 1) : t('layout.avatarFallback');
 
   const avatar = (
     <Avatar className="size-8 shrink-0">
@@ -49,7 +52,7 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
   const trigger = (
     <button
       type="button"
-      aria-label="账号菜单"
+      aria-label={t('layout.accountMenu')}
       className={cn(
         'flex w-full cursor-pointer select-none items-center gap-2.5 rounded-lg text-left transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
         collapsed ? 'justify-center p-1.5' : 'px-2 py-1.5',
@@ -78,10 +81,10 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
         className="w-60"
         menu={{
           items: [
-            appConfig.helpUrl ? { key: 'help', label: '使用手册', icon: <BookOpen />, onClick: () => window.open(appConfig.helpUrl, '_blank', 'noopener,noreferrer') } : null,
-            canUseAgent ? { key: 'agent-preferences', label: 'Agent 模式偏好', icon: <SquareTerminal />, onClick: () => setPreferencesOpen(true) } : null,
-            { key: 'password', label: '修改密码', icon: <KeyRound />, onClick: () => setPasswordModalOpen(true) },
-            { key: 'logout', label: '退出登录', icon: <LogOut />, danger: true, onClick: handleLogout },
+            appConfig.helpUrl ? { key: 'help', label: t('layout.help'), icon: <BookOpen />, onClick: () => window.open(appConfig.helpUrl, '_blank', 'noopener,noreferrer') } : null,
+            canUseAgent ? { key: 'agent-preferences', label: t('agentEntry.preferences'), icon: <SquareTerminal />, onClick: () => setPreferencesOpen(true) } : null,
+            { key: 'password', label: t('auth.changePassword'), icon: <KeyRound />, onClick: () => setPasswordModalOpen(true) },
+            { key: 'logout', label: t('layout.logout'), icon: <LogOut />, danger: true, onClick: handleLogout },
           ],
         }}
         popupRender={(menu) => (
@@ -90,6 +93,7 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
               <div className="truncate text-13 font-medium text-slate-900">{displayName}</div>
               {user?.email && <div className="truncate text-xs text-slate-400">{user.email}</div>}
             </div>
+            <LocaleSubmenu />
             {menu}
           </>
         )}

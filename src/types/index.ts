@@ -99,7 +99,7 @@ export interface DashboardData {
   activeUsers: number;
   totalRoles: number;
   totalMenus: number;
-  todos: { id: string; title: string; description: string; route: string; icon: string }[];
+  todos: { id: string; code: 'users' | 'roles' | 'components' | 'settings'; route: string; icon: string }[];
   activities: Activity[];
 }
 

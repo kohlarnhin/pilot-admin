@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { AlertCircle } from "lucide-react";
@@ -119,8 +120,8 @@ export function Popconfirm({
   description,
   onConfirm,
   onCancel,
-  okText = "确定",
-  cancelText = "取消",
+  okText = t('ui.ok'),
+  cancelText = t('ui.cancel'),
   okType,
   okButtonProps,
   cancelButtonProps,
@@ -130,6 +131,7 @@ export function Popconfirm({
   className,
   children,
 }: PopconfirmProps) {
+  useT();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
   const { side, align } = resolvePlacement(placement);

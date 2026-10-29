@@ -2,7 +2,7 @@
 
 # Pilot Admin
 
-A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The application UI currently uses Chinese; zh-CN / en-US localization is planned.
+A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, login, search, overview, error pages and UI primitives support zh-CN / en-US; admin pages and assistant content follow in later milestones.
 
 ## Features
 
@@ -53,7 +53,7 @@ Read [AGENTS.md](AGENTS.md) and the [UI specification](skills/pilot-ui-spec/SKIL
 
 ### Rebrand
 
-Edit `src/config/app.ts`, replace `src/components/logo/index.tsx` and `public/favicon.svg`, and adjust the brand tokens in `tailwind.config.js`. Update assistant defaults in the seed and `agentProfileService.ts` if needed. Persisted branding takes precedence: reset demo data to see new seed values. [Full guide](README.md#换品牌).
+Edit `src/config/app.ts`, replace `src/components/logo/index.tsx` and `public/favicon.svg`, and adjust the brand tokens in `tailwind.config.js`. The bilingual default description is `common.appDescription` in the locale dictionaries; custom descriptions saved in settings keep their original text. Update assistant defaults in the seed and `agentProfileService.ts` if needed. Persisted branding takes precedence: reset demo data to see new seed values. [Full guide](README.md#换品牌).
 
 ### Add a page and permissions
 
@@ -88,17 +88,30 @@ The dev proxy matches the API base's pathname on same-origin requests, keeps the
 
 Axios combines `/users` with its API base. SSE paths such as `agent/chat` or `./agent/chat` use the same base; root-relative paths such as `/api/agent/chat` and absolute URLs are used unchanged. Use SSE paths without a leading slash to follow a custom base. Restart dev after changing env files; production values are applied at build time. Never put secrets in client-readable `VITE_*` variables.
 
+## Internationalization
+
+Use the login language control or Account menu → Language to switch without reloading. The default is zh-CN, with no browser-language detection. `pilot-admin:locale:v1` persists the selection and synchronizes same-origin tabs.
+
+Feature dictionaries live in `src/i18n/locales/zh-CN/<namespace>.ts` (`as const`, source of truth) and `en-US/<namespace>.ts` (`LocalizedDictionary<typeof source>`). Register new namespaces in both roots. React components call `useT()`; services/stores can call `t()` to read the current locale at call time. Keys and required `{placeholder}` parameters are inferred from Chinese literals, for example `t('auth.loginTitle', { name: 'My Admin' })`. Static metadata stores keys; translated memoized columns depend on `locale`.
+
+Default menu/action names are localized when mock services materialize them; custom names override them in every locale. HTTP/SSE send `Accept-Language`. Overview todos use stable codes translated at render. Switching clears query caches, refreshes me and notifies `useDataChanged` with a `locale` reason. Infinite lists discard stale responses and refresh the loaded range while preserving scroll where possible. Routes, assistant drafts, panel state and stored content stay intact. Existing imperative dialogs/toasts keep their opening language.
+
+Use plural-neutral English such as `Users: {count}`; there is no plural engine. `formatNumber` and dayjs follow the active locale; explicit date formats remain unchanged. Stored users, roles, conversations and activity sentences are not retranslated. Seed creation language will be handled in M5b.
+
+`pnpm i18n:check` validates keys and placeholder parity and scans CJK in strings, templates, JSX and regexes (comments excluded). Exact justified exemptions live in `scripts/i18n-allowlist.json`; files awaiting M5b/M5c are in `scripts/i18n-pending.json`. Obsolete exemptions fail the check. [Full guide](README.md#国际化).
+
 ## Commands and verification
 
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server on port 3300; no proxy by default |
 | `pnpm lint` | ESLint; zero errors required, Hooks/Refresh warnings remain visible |
+| `pnpm i18n:check` | Dictionary/placeholder parity and source CJK gate |
 | `pnpm typecheck` | Strict TypeScript check |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
-Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build`. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
+Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
 
 ## Demo storage and reset
 

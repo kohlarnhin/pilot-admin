@@ -1,0 +1,21 @@
+export default {
+  "signedOut": "已退出登录",
+  "currentUser": "当前用户",
+  "avatarFallback": "平",
+  "accountMenu": "账号菜单",
+  "help": "使用手册",
+  "logout": "退出登录",
+  "restoring": "正在恢复会话…",
+  "agentBanner": "正在从 Agent 对话查看此页面",
+  "returnConversation": "返回对话 →",
+  "subtitle": " · 通用管理端",
+  "expandMenu": "展开菜单",
+  "collapseMenu": "折叠菜单",
+  "noMenus": "暂无可访问菜单",
+  "assistant": "AI 助手",
+  "generating": "助手正在生成",
+  "assistantShortcut": "AI 助手 · {shortcut}",
+  "logoHome": "{name} 首页",
+  "language": "语言",
+  "switchLanguage": "切换语言"
+} as const;

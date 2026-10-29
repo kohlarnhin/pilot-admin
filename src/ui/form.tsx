@@ -1,3 +1,4 @@
+import { getLocale, t, useT } from '@/i18n';
 import * as React from "react";
 import { cn } from "@/utils";
 import { Tooltip } from "./tooltip";
@@ -77,33 +78,33 @@ async function runRule(rule: Rule, value: any, label?: string): Promise<string |
 
   if (rule.required) {
     if (isEmpty(value) || (rule.whitespace && typeof value === "string" && !value.trim())) {
-      return fallback(label ? `请输入${label}` : "此项为必填项");
+      return fallback(label ? t('ui.fieldLabelRequired', { label }) : t('ui.fieldRequired'));
     }
   }
 
   if (isEmpty(value) && !rule.validator) return null;
 
-  if (rule.whitespace && typeof value === "string" && !value.trim()) return fallback("不能仅包含空白字符");
+  if (rule.whitespace && typeof value === "string" && !value.trim()) return fallback(t('ui.whitespace'));
 
   if (!isEmpty(value)) {
-    if (rule.type === "email" && !EMAIL.test(String(value))) return fallback("邮箱格式不正确");
+    if (rule.type === "email" && !EMAIL.test(String(value))) return fallback(t('ui.invalidEmail'));
     if (rule.type === "url") {
       try {
         new URL(String(value));
       } catch {
-        return fallback("链接格式不正确");
+        return fallback(t('ui.invalidUrl'));
       }
     }
-    if (rule.type === "number" && typeof value !== "number") return fallback("请输入数字");
+    if (rule.type === "number" && typeof value !== "number") return fallback(t('ui.numberRequired'));
 
     const measure = typeof value === "number" ? value : typeof value === "string" || Array.isArray(value) ? value.length : undefined;
     if (measure !== undefined) {
-      if (rule.len !== undefined && measure !== rule.len) return fallback(`长度需为 ${rule.len}`);
-      if (rule.min !== undefined && measure < rule.min) return fallback(`不能少于 ${rule.min}`);
-      if (rule.max !== undefined && measure > rule.max) return fallback(`不能超过 ${rule.max}`);
+      if (rule.len !== undefined && measure !== rule.len) return fallback(t('ui.length', { length: rule.len }));
+      if (rule.min !== undefined && measure < rule.min) return fallback(t('ui.min', { min: rule.min }));
+      if (rule.max !== undefined && measure > rule.max) return fallback(t('ui.max', { max: rule.max }));
     }
-    if (rule.pattern && !rule.pattern.test(String(value))) return fallback("格式不正确");
-    if (rule.enum && !rule.enum.includes(value)) return fallback("取值不在允许范围内");
+    if (rule.pattern && !rule.pattern.test(String(value))) return fallback(t('ui.invalidFormat'));
+    if (rule.enum && !rule.enum.includes(value)) return fallback(t('ui.invalidChoice'));
   }
 
   if (rule.validator) {
@@ -112,7 +113,7 @@ async function runRule(rule: Rule, value: any, label?: string): Promise<string |
     } catch (error) {
       if (error instanceof Error && error.message) return error.message;
       if (typeof error === "string") return error;
-      return fallback("校验未通过");
+      return fallback(t('ui.invalid'));
     }
   }
   return null;
@@ -240,6 +241,7 @@ class FormStore {
   }
 
   async validateField(name: string): Promise<string[]> {
+    const locale = getLocale();
     const field = this.fields.get(name);
     if (!field) return [];
     this.validatedOnce.add(name);
@@ -255,7 +257,7 @@ class FormStore {
       }
     }
     // 校验期间值已变化时丢弃过期结果
-    if (this.values[name] !== value) return results;
+    if (this.values[name] !== value || locale !== getLocale()) return results;
     this.errors = { ...this.errors, [name]: results.length ? results : undefined };
     this.notify();
     return results;
@@ -479,9 +481,19 @@ function FormItem({
   htmlFor,
   children,
 }: FormItemProps) {
+  const { locale } = useT();
   const context = React.useContext(FormContext);
   const store = context?.store;
   const key = name;
+  const previousLocale = React.useRef(locale);
+
+  React.useEffect(() => {
+    if (previousLocale.current === locale) return;
+    previousLocale.current = locale;
+    if (store && key && store.instance.getFieldError(key).length) {
+      void store.validateField(key);
+    }
+  }, [key, store, locale]);
 
   React.useState(() => {
     if (store && key) store.ensureInitial(key, initialValue);

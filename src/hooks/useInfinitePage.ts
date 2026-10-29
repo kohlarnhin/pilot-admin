@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PageResult } from '../types';
 
@@ -22,6 +23,7 @@ export const useInfinitePage = <T>({
   scopeKey = 'default',
   onError,
 }: UseInfinitePageOptions<T>) => {
+  const { locale } = useT();
   const [records, setRecords] = useState<T[]>([]);
   const [hasNext, setHasNext] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export const useInfinitePage = <T>({
   const nextPageRef = useRef(2);
   const hasNextRef = useRef(true);
   const recordsRef = useRef<T[]>([]);
-  const scopeKeyRef = useRef(scopeKey);
+  const scopeKeyRef = useRef({ query: scopeKey, locale });
   const getKeyRef = useRef(getKey);
   const onErrorRef = useRef(onError);
   const failedPageRef = useRef<number | null>(null);
@@ -50,13 +52,14 @@ export const useInfinitePage = <T>({
     const previousHasNext = hasNextRef.current;
     busyRef.current = true;
     failedPageRef.current = null;
-    nextPageRef.current = 2;
+    const queryChanged = scopeKeyRef.current.query !== scopeKey;
+    const targetPages = queryChanged ? 1 : Math.max(1, previousNextPage - 1);
+    if (queryChanged) nextPageRef.current = 2;
     hasNextRef.current = true;
-    const scopeChanged = scopeKeyRef.current !== scopeKey;
-    scopeKeyRef.current = scopeKey;
-    const keepPreviousRecords = !scopeChanged && recordsRef.current.length > 0;
+    scopeKeyRef.current = { query: scopeKey, locale };
+    const keepPreviousRecords = !queryChanged && recordsRef.current.length > 0;
 
-    if (scopeChanged) {
+    if (queryChanged) {
       recordsRef.current = [];
       setRecords([]);
       setHasNext(true);
@@ -65,14 +68,30 @@ export const useInfinitePage = <T>({
     setRefreshing(keepPreviousRecords);
     setLoadingMore(false);
 
-    void fetchPage(1, pageSize)
+    // 刷新当前已加载范围，保留行高与滚动位置；旧语言的异步响应仍由 version 丢弃。
+    const refreshPages = async () => {
+      let combined: T[] = [];
+      let hasNext = true;
+      let pageNo = 1;
+      for (; pageNo <= targetPages && hasNext; pageNo += 1) {
+        const page = await fetchPage(pageNo, pageSize);
+        if (versionRef.current !== version) return undefined;
+        if (page.hasNext && !page.records.some((record) => !combined.some((item) => getKeyRef.current(item) === getKeyRef.current(record)))) {
+          throw new Error(t(page.records.length ? 'client.stalledPage' : 'client.emptyPage'));
+        }
+        combined = appendUniqueRecords(combined, page.records, getKeyRef.current);
+        hasNext = page.hasNext;
+      }
+      return { records: combined, hasNext, nextPage: pageNo };
+    };
+    void refreshPages()
       .then((page) => {
-        if (versionRef.current !== version) return;
-        if (page.hasNext && page.records.length === 0) throw new Error('分页数据为空，请重试');
+        if (!page || versionRef.current !== version) return;
         recordsRef.current = page.records;
         setRecords(page.records);
         setHasNext(page.hasNext);
         hasNextRef.current = page.hasNext;
+        nextPageRef.current = page.nextPage;
       })
       .catch((error) => {
         if (versionRef.current !== version) return;
@@ -96,7 +115,7 @@ export const useInfinitePage = <T>({
     return () => {
       if (versionRef.current === version) versionRef.current += 1;
     };
-  }, [fetchPage, pageSize, reloadToken, scopeKey]);
+  }, [fetchPage, pageSize, reloadToken, scopeKey, locale]);
 
   const loadMore = useCallback(async () => {
     if (busyRef.current || !hasNextRef.current || failedPageRef.current !== null) return;
@@ -111,7 +130,7 @@ export const useInfinitePage = <T>({
       if (versionRef.current !== version) return;
       const existingKeys = new Set(recordsRef.current.map(getKeyRef.current));
       if (page.hasNext && !page.records.some((record) => !existingKeys.has(getKeyRef.current(record)))) {
-        throw new Error('分页数据未前进，请重试');
+        throw new Error(t('client.stalledPage'));
       }
       setRecords((current) => {
         const next = appendUniqueRecords(current, page.records, getKeyRef.current);
@@ -146,7 +165,7 @@ export const useInfinitePage = <T>({
   }, [loadMore, reload]);
 
   // scope 改变发生在 effect 之前；这一帧直接隐藏旧作用域数据并展示骨架，避免串页闪现。
-  const scopeChangedDuringRender = scopeKeyRef.current !== scopeKey;
+  const scopeChangedDuringRender = scopeKeyRef.current.query !== scopeKey;
 
   return {
     records: scopeChangedDuringRender ? [] : records,

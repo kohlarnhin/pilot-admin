@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 const CHUNK_RELOAD_KEY = 'pilot-admin:chunk-reload-at';
 const CHUNK_RELOAD_WINDOW_MS = 10_000;
 
@@ -23,7 +24,7 @@ export const reloadOnceForChunkError = (): boolean => {
     if (Number.isFinite(storedReloadAt) && storedReloadAt > 0 && now - storedReloadAt < CHUNK_RELOAD_WINDOW_MS) return false;
     sessionStorage.setItem(CHUNK_RELOAD_KEY, String(now));
   } catch (error) {
-    console.error('[Pilot Admin] 无法保存自动刷新标记，请手动刷新页面', error);
+    console.error(t('client.reloadMarkerError'), error);
     return false;
   }
 

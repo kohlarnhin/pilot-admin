@@ -1,3 +1,4 @@
+import { isMessageKey, t } from '@/i18n';
 import { ApiRequestError } from '@/api/http';
 import { getStoredTokens } from '@/api/tokenStorage';
 import { DEFAULT_MENUS } from '@/config/menus';
@@ -11,12 +12,16 @@ export const publicUser = ({ password: _password, preferences: _preferences, ...
 
 export function mockMenus(): Menu[] {
   const { menuNames, buttonNames } = getMockDb();
+  const defaultName = (kind: 'menu' | 'button', id: string) => {
+    const key = `${kind}.${id}` as const;
+    return isMessageKey(key) ? t(key) : id;
+  };
   const adapt = (menu: Menu): Menu => ({
     ...menu,
-    menu_name: menuNames[menu.id] || menu.menu_name,
+    menu_name: menuNames[menu.id] || defaultName('menu', menu.id),
     buttons: menu.buttons?.map((button) => ({
       ...button,
-      button_name: buttonNames[button.id] || button.button_name,
+      button_name: buttonNames[button.id] || defaultName('button', button.id),
     })),
     children: menu.children?.map(adapt),
   });

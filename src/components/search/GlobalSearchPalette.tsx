@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { searchService } from '@/api/services/searchService';
@@ -19,6 +20,7 @@ import type { User } from '@/types';
 type Result = { kind: 'page'; id: string; page: SearchPage } | { kind: 'user'; id: string; user: User };
 
 export default function GlobalSearchPalette({ onClose }: { onClose: () => void }) {
+  const { locale } = useT();
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.user?.id || '');
   const recentKey = `pilot-admin:search:recent:v1:${userId}`;
@@ -53,10 +55,10 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     if (!q || !canSearchUsers) { setLoading(false); return; }
     setLoading(true);
     searchService.searchUsers(q).then((users) => { if (active && queryRef.current === q) setBundle({ query: q, users }); })
-      .catch((cause: Error) => { if (active && queryRef.current === q) setError(cause.message || '搜索失败，请重试'); })
+      .catch((cause: Error) => { if (active && queryRef.current === q) setError(cause.message || t('search.failed')); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [q, canSearchUsers, attempt]);
+  }, [q, canSearchUsers, attempt, locale]);
 
   const searchLoading = Boolean(queryText && canSearchUsers && (loading || q !== queryText));
   const matches = (value: string) => queryText.toLowerCase().split(/\s+/).every((token) => value.toLowerCase().includes(token));
@@ -67,7 +69,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     const page = pages.find((page) => page.route === item.page.route);
     return page ? [{ ...item, page }] : [];
   });
-  const sections = queryText ? [{ title: '用户', items: userResults }, { title: '页面', items: pageResults }] : [{ title: '最近访问', items: recentResults }, { title: '常用页面', items: pageResults.filter((item) => !recentResults.some((recentItem) => recentItem.id === item.id)) }];
+  const sections = queryText ? [{ id: 'users', title: t('search.users'), items: userResults }, { id: 'pages', title: t('search.pages'), items: pageResults }] : [{ id: 'recent', title: t('search.recent'), items: recentResults }, { id: 'common', title: t('search.common'), items: pageResults.filter((item) => !recentResults.some((recentItem) => recentItem.id === item.id)) }];
   const results = sections.flatMap((section) => section.items);
   const activeIndex = Math.max(0, results.findIndex((result) => result.id === activeId));
   const selected = results[activeIndex];
@@ -98,7 +100,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     </button>;
   };
 
-  return <Modal open ariaLabel="全局搜索" closable={false} onCancel={onClose} footer={null} width={720} zIndex={1100}
+  return <Modal open ariaLabel={t('search.title')} closable={false} onCancel={onClose} footer={null} width={720} zIndex={1100}
     className="h-[620px] max-h-[calc(100svh-48px)]" bodyClassName="!flex min-h-0 flex-1 !flex-col !overflow-hidden !p-0">
     <div className="flex min-h-0 flex-1 flex-col" onKeyDown={(event) => {
       event.stopPropagation();
@@ -109,38 +111,38 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
       } else if (event.key === 'Enter') { event.preventDefault(); openResult(selected); }
     }}>
       <div className="flex shrink-0 items-center gap-2 border-b border-line-soft px-4 py-3">
-        <Input ref={inputRef} prefix={<Icon icon="search" size={17} />} autoFocus role="combobox" aria-label="搜索页面、用户" aria-autocomplete="list"
+        <Input ref={inputRef} prefix={<Icon icon="search" size={17} />} autoFocus role="combobox" aria-label={t('search.label')} aria-autocomplete="list"
           aria-expanded="true" aria-controls="global-search-results" aria-activedescendant={selected ? `search-result-${activeIndex}` : undefined}
-          value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} placeholder="搜索页面、姓名、账号或邮箱…"
+          value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} placeholder={t('search.placeholder')}
           onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }} className="min-w-0 flex-1" />
         <Button variant="ghost" size="xs" onClick={onClose}>Esc</Button>
       </div>
       <div className="flex min-h-0 flex-1">
-        <div ref={listRef} id="global-search-results" role="listbox" aria-label="搜索结果" aria-busy={searchLoading} className="min-h-0 min-w-0 w-[54%] overflow-y-auto overscroll-contain p-2">
-          {sections.filter((section) => section.items.length || ['用户', '最近访问'].includes(section.title)).map((section) => <div key={section.title} role="group" aria-label={section.title} className="mb-3">
+        <div ref={listRef} id="global-search-results" role="listbox" aria-label={t('search.results')} aria-busy={searchLoading} className="min-h-0 min-w-0 w-[54%] overflow-y-auto overscroll-contain p-2">
+          {sections.filter((section) => section.items.length || ['users', 'recent'].includes(section.id)).map((section) => <div key={section.id} role="group" aria-label={section.title} className="mb-3">
             <div className="px-3 pb-1 pt-2 text-[11px] font-medium text-slate-500">{section.title}</div>{section.items.map(row)}
-            {section.title === '最近访问' && !section.items.length && <p className="px-3 py-4 text-xs text-slate-400">打开的页面和用户会出现在这里</p>}
-            {section.title === '用户' && searchLoading && !userResults.length && <div aria-label="正在搜索" className="space-y-5 px-3 py-4">{[0, 1, 2].map((index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-4/5" /><Skeleton className="h-3 w-3/5" /></div>)}</div>}
-            {section.title === '用户' && !canSearchUsers && <p className="px-3 py-5 text-xs text-slate-500">当前角色可搜索已授权页面</p>}
-            {section.title === '用户' && canSearchUsers && !searchLoading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">没有匹配的用户</p>}
+            {section.id === 'recent' && !section.items.length && <p className="px-3 py-4 text-xs text-slate-400">{t('search.recentEmpty')}</p>}
+            {section.id === 'users' && searchLoading && !userResults.length && <div aria-label={t('search.loading')} className="space-y-5 px-3 py-4">{[0, 1, 2].map((index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-4/5" /><Skeleton className="h-3 w-3/5" /></div>)}</div>}
+            {section.id === 'users' && !canSearchUsers && <p className="px-3 py-5 text-xs text-slate-500">{t('search.pagesOnly')}</p>}
+            {section.id === 'users' && canSearchUsers && !searchLoading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">{t('search.noUsers')}</p>}
           </div>)}
-          {error && <p role="alert" className="px-3 py-4 text-xs text-slate-600">{error}<Button size="xs" className="ml-2" onClick={() => setAttempt((value) => value + 1)}>重试</Button></p>}
+          {error && <p role="alert" className="px-3 py-4 text-xs text-slate-600">{error}<Button size="xs" className="ml-2" onClick={() => setAttempt((value) => value + 1)}>{t('common.retry')}</Button></p>}
         </div>
-        <aside aria-label="搜索预览" className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-line-soft bg-slate-50/40">
+        <aside aria-label={t('search.preview')} className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-line-soft bg-slate-50/40">
           {selected?.kind === 'user' ? <>
-            <div className="min-h-0 flex-1 overflow-y-auto p-5"><div className="mb-4 text-[11px] text-slate-500">用户预览</div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-5"><div className="mb-4 text-[11px] text-slate-500">{t('search.userPreview')}</div>
               <h2 className="break-words text-base font-medium text-slate-900">{selected.user.user_name}</h2><p className="mt-1 break-all font-mono text-xs text-slate-500">@{selected.user.login_name}</p>
-              <div className="mt-5"><Tag dot color={selected.user.status === 1 ? 'success' : 'default'}>{selected.user.status === 1 ? '已启用' : '已停用'}</Tag></div>
-              <dl className="mt-5 space-y-4 text-xs"><div><dt className="text-slate-500">邮箱</dt><dd className="mt-1 break-all text-slate-700">{selected.user.email || '—'}</dd></div>
-                <div><dt className="text-slate-500">用户 ID</dt><dd className="mt-1 flex items-center gap-1 break-all font-mono text-slate-700">{selected.user.id}<CopyButton text={selected.user.id} /></dd></div></dl>
+              <div className="mt-5"><Tag dot color={selected.user.status === 1 ? 'success' : 'default'}>{selected.user.status === 1 ? t('common.enabled') : t('common.disabled')}</Tag></div>
+              <dl className="mt-5 space-y-4 text-xs"><div><dt className="text-slate-500">{t('search.email')}</dt><dd className="mt-1 break-all text-slate-700">{selected.user.email || '—'}</dd></div>
+                <div><dt className="text-slate-500">{t('search.userId')}</dt><dd className="mt-1 flex items-center gap-1 break-all font-mono text-slate-700">{selected.user.id}<CopyButton text={selected.user.id} /></dd></div></dl>
             </div>
-            <div className="shrink-0 border-t border-line-soft p-4"><Button size="sm" onClick={() => openResult(selected)}>查看用户<Icon icon="arrow-right" size={13} /></Button></div>
-          </> : <div className="m-auto px-5 text-center text-xs leading-6 text-slate-500"><Icon icon="search" size={26} className="mx-auto mb-3 text-slate-300" />{selected?.kind === 'page' ? selected.page.title : '搜索并选择用户，查看详细信息'}</div>}
+            <div className="shrink-0 border-t border-line-soft p-4"><Button size="sm" onClick={() => openResult(selected)}>{t('search.viewUser')}<Icon icon="arrow-right" size={13} /></Button></div>
+          </> : <div className="m-auto px-5 text-center text-xs leading-6 text-slate-500"><Icon icon="search" size={26} className="mx-auto mb-3 text-slate-300" />{selected?.kind === 'page' ? selected.page.title : t('search.selectUser')}</div>}
         </aside>
       </div>
       <div className="flex shrink-0 items-center gap-4 border-t border-line-soft px-4 py-3 text-[11px] text-slate-500">
-        <span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↑↓</Kbd> 选择</span><span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↵</Kbd> 打开</span>
-        <span className="ml-auto"><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">Esc</Kbd> 关闭</span>
+        <span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↑↓</Kbd> {t('search.select')}</span><span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↵</Kbd> {t('search.open')}</span>
+        <span className="ml-auto"><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">Esc</Kbd> {t('ui.close')}</span>
       </div>
     </div>
   </Modal>;
