@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { ApiResponse, Menu } from '@/types';
 import { mockMenus, requireMenu, requirePermission } from '@/mock/access';
 import { updateMockDb } from '@/mock/db';
@@ -15,7 +16,7 @@ export const menuService = {
     await delay();
     requirePermission('menu:update');
     if (!data.menu_name.trim() || !flattenMenuTree(mockMenus()).some((menu) => menu.id === menuId)) {
-      throw new ApiRequestError('菜单不存在或名称为空', 400);
+      throw new ApiRequestError(t('serverErrors.menu.invalidName'), 400);
     }
 
     updateMockDb((db) => {
@@ -29,7 +30,7 @@ export const menuService = {
     requirePermission('menu:update');
     if (!data.button_name.trim()
       || !flattenMenuTree(mockMenus()).find((menu) => menu.id === menuId)?.buttons?.some((button) => button.id === buttonId)) {
-      throw new ApiRequestError('按钮不存在或名称为空', 400);
+      throw new ApiRequestError(t('serverErrors.menu.invalidActionName'), 400);
     }
 
     updateMockDb((db) => {

@@ -17,13 +17,11 @@ export default {
   "noUsers": "No matching users",
   "preview": "Search preview",
   "userPreview": "User preview",
-  "email": "Email",
   "userId": "User ID",
   "viewUser": "View user",
   "selectUser": "Search and select a user to view details",
   "select": "Select",
   "open": "Open",
-  "close": "Close",
   "shortcut": "Search {shortcut}K",
   "opening": "Opening search",
   "openingText": "Opening search…"

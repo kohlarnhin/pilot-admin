@@ -1,3 +1,5 @@
+import { getSeedText } from '@/i18n/seed';
+import defaultText from '@/i18n/locales/zh-CN/common';
 import { appConfig } from '@/config/app';
 import { DEFAULT_MENUS } from '@/config/menus';
 import { collectMenuCatalog, type PermissionCatalog } from './permissionCatalog';
@@ -58,6 +60,7 @@ const audit = {
 const { menuIds: allMenuIds, buttonIds: allButtonIds } = collectMenuCatalog(DEFAULT_MENUS);
 
 export function createSeed(): MockDb {
+  const text = getSeedText();
   const role = (
     id: string,
     role_name: string,
@@ -82,26 +85,26 @@ export function createSeed(): MockDb {
   const roles = [
     role(
       'role-admin',
-      '超级管理员',
+      text.roles.admin.name,
       'ROLE_ADMIN',
-      '管理所有菜单、账号与系统配置',
+      text.roles.admin.description,
       [...allMenuIds],
       [...allButtonIds],
       true,
     ),
     role(
       'role-operator',
-      '运营人员',
+      text.roles.operator.name,
       'ROLE_OPERATOR',
-      '查看概览，维护用户信息与状态',
+      text.roles.operator.description,
       ['dashboard', 'system', 'users', 'examples', 'components', 'ai-permissions'],
       ['user-update', 'agent-use'],
     ),
     role(
       'role-viewer',
-      '访客',
+      text.roles.viewer.name,
       'ROLE_VIEWER',
-      '只读浏览概览与组件示例',
+      text.roles.viewer.description,
       ['dashboard', 'examples', 'components'],
       [],
     ),
@@ -109,30 +112,24 @@ export function createSeed(): MockDb {
   const accounts = [
     {
       login_name: 'admin',
-      user_name: '林知行',
+      user_name: text.accountNames[0],
       password: 'admin123',
       role_ids: ['role-admin'],
     },
     {
       login_name: 'operator',
-      user_name: '陈思远',
+      user_name: text.accountNames[1],
       password: 'operator123',
       role_ids: ['role-operator'],
     },
     {
       login_name: 'viewer',
-      user_name: '许清和',
+      user_name: text.accountNames[2],
       password: 'viewer123',
       role_ids: ['role-viewer'],
     },
   ];
-  const surnames = [
-    '王', '李', '张', '刘', '陈', '杨', '黄', '赵', '周', '吴', '徐', '孙', '胡', '朱', '林', '何', '高', '郭', '马', '罗', '梁',
-  ];
-  const givenNames = [
-    '雨桐', '子涵', '思源', '明轩', '若宁', '嘉禾', '星辰', '书瑶', '沐阳', '景行',
-    '安然', '知夏', '亦凡', '清越', '文博', '语棠', '致远', '欣怡', '一诺',
-  ];
+  const { familyNames, givenNames, nameOrder, nameSeparator } = text;
   const users: MockUser[] = Array.from({ length: SEED_USER_COUNT }, (_, index) => {
     const account = accounts[index];
     const date = new Date(Date.UTC(2026, 0, 2 + index, 1 + index % 8, index % 60)).toISOString();
@@ -140,7 +137,9 @@ export function createSeed(): MockDb {
       ...audit,
       id: `u-${String(index + 1).padStart(4, '0')}`,
       login_name: account?.login_name || `user_${String(index + 1).padStart(3, '0')}`,
-      user_name: account?.user_name || `${surnames[index % surnames.length]}${givenNames[index % givenNames.length]}`,
+      user_name: account?.user_name || (nameOrder === 'family-given'
+        ? [familyNames[index % familyNames.length], givenNames[index % givenNames.length]]
+        : [givenNames[index % givenNames.length], familyNames[index % familyNames.length]]).join(nameSeparator),
       email: `${account?.login_name || `user${String(index + 1).padStart(3, '0')}`}@example.com`,
       password: account?.password || 'pilot123',
       role_ids: account?.role_ids || [index % 3 === 0 ? 'role-operator' : 'role-viewer'],
@@ -166,10 +165,10 @@ export function createSeed(): MockDb {
     agentConfigs: [
       {
         id: 'model-demo',
-        provider: 'OpenAI 兼容',
+        provider: text.model.provider,
         base_url: 'https://api.example.com/v1',
         model_code: 'pilot-demo',
-        model_name: '演示模型',
+        model_name: text.model.name,
         apiKey: 'demo-key',
         api_key_masked: '••••••••',
         status: 1,
@@ -186,7 +185,7 @@ export function createSeed(): MockDb {
     settings: {
       basic: {
         siteName: appConfig.name,
-        description: appConfig.description,
+        description: appConfig.description === defaultText.appDescription ? text.settingsDescription : appConfig.description,
       },
       security: {
         passwordMinLength: 6,
@@ -202,36 +201,36 @@ export function createSeed(): MockDb {
     activities: [
       {
         id: 'activity-1',
-        actor: '林知行',
-        action: '更新了系统基本设置',
+        actor: text.accountNames[0],
+        action: text.activities.settings,
         time: '2026-10-29T09:40:00+08:00',
         icon: 'settings-2',
       },
       {
         id: 'activity-2',
-        actor: '陈思远',
-        action: '完善了用户资料',
+        actor: text.accountNames[1],
+        action: text.activities.user,
         time: '2026-10-29T09:25:00+08:00',
         icon: 'user',
       },
       {
         id: 'activity-3',
-        actor: '林知行',
-        action: '调整了运营人员的菜单权限',
+        actor: text.accountNames[0],
+        action: text.activities.permissions,
         time: '2026-10-28T16:10:00+08:00',
         icon: 'shield-check',
       },
       {
         id: 'activity-4',
-        actor: '林知行',
-        action: '创建了访客角色',
+        actor: text.accountNames[0],
+        action: text.activities.role,
         time: '2026-10-28T14:30:00+08:00',
         icon: 'plus',
       },
       {
         id: 'activity-5',
-        actor: '系统',
-        action: '演示数据已准备就绪',
+        actor: text.activities.system,
+        action: text.activities.ready,
         time: '2026-10-28T09:00:00+08:00',
         icon: 'circle-check',
       },

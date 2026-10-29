@@ -126,14 +126,14 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
             {section.id === 'users' && !canSearchUsers && <p className="px-3 py-5 text-xs text-slate-500">{t('search.pagesOnly')}</p>}
             {section.id === 'users' && canSearchUsers && !searchLoading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">{t('search.noUsers')}</p>}
           </div>)}
-          {error && <p role="alert" className="px-3 py-4 text-xs text-slate-600">{error}<Button size="xs" className="ml-2" onClick={() => setAttempt((value) => value + 1)}>{t('common.retry')}</Button></p>}
+          {error && <p role="alert" className="px-3 py-4 text-xs text-slate-600">{error}<Button size="xs" className="ml-2" onClick={() => setAttempt((value) => value + 1)}>{t('common.actions.retry')}</Button></p>}
         </div>
         <aside aria-label={t('search.preview')} className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-line-soft bg-slate-50/40">
           {selected?.kind === 'user' ? <>
             <div className="min-h-0 flex-1 overflow-y-auto p-5"><div className="mb-4 text-[11px] text-slate-500">{t('search.userPreview')}</div>
               <h2 className="break-words text-base font-medium text-slate-900">{selected.user.user_name}</h2><p className="mt-1 break-all font-mono text-xs text-slate-500">@{selected.user.login_name}</p>
-              <div className="mt-5"><Tag dot color={selected.user.status === 1 ? 'success' : 'default'}>{selected.user.status === 1 ? t('common.enabled') : t('common.disabled')}</Tag></div>
-              <dl className="mt-5 space-y-4 text-xs"><div><dt className="text-slate-500">{t('search.email')}</dt><dd className="mt-1 break-all text-slate-700">{selected.user.email || '—'}</dd></div>
+              <div className="mt-5"><Tag dot color={selected.user.status === 1 ? 'success' : 'default'}>{selected.user.status === 1 ? t('common.status.enabled') : t('common.status.disabled')}</Tag></div>
+              <dl className="mt-5 space-y-4 text-xs"><div><dt className="text-slate-500">{t('common.fields.email')}</dt><dd className="mt-1 break-all text-slate-700">{selected.user.email || '—'}</dd></div>
                 <div><dt className="text-slate-500">{t('search.userId')}</dt><dd className="mt-1 flex items-center gap-1 break-all font-mono text-slate-700">{selected.user.id}<CopyButton text={selected.user.id} /></dd></div></dl>
             </div>
             <div className="shrink-0 border-t border-line-soft p-4"><Button size="sm" onClick={() => openResult(selected)}>{t('search.viewUser')}<Icon icon="arrow-right" size={13} /></Button></div>
@@ -142,7 +142,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
       </div>
       <div className="flex shrink-0 items-center gap-4 border-t border-line-soft px-4 py-3 text-[11px] text-slate-500">
         <span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↑↓</Kbd> {t('search.select')}</span><span><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">↵</Kbd> {t('search.open')}</span>
-        <span className="ml-auto"><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">Esc</Kbd> {t('ui.close')}</span>
+        <span className="ml-auto"><Kbd className="!border-slate-200 !bg-slate-50 !text-slate-500">Esc</Kbd> {t('common.actions.close')}</span>
       </div>
     </div>
   </Modal>;

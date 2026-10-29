@@ -12,7 +12,7 @@ const HomeButton: React.FC = () => {
   return (
     <Button onClick={() => navigate('/')}>
       <ArrowLeft className="size-4" />
-      {t('common.home')}
+      {t('common.actions.home')}
     </Button>
   );
 };

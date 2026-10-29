@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { AgentProfile } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
@@ -37,10 +38,10 @@ export const agentProfileService = {
     requirePermission('agent-config:update');
     const next = { ...getMockDb().agentProfile, ...input };
     if (!next.name.trim() || !next.greeting.trim()) {
-      throw new ApiRequestError('请填写助手名称和问候语', 400);
+      throw new ApiRequestError(t('serverErrors.agentProfile.incomplete'), 400);
     }
     if (next.suggestions.length > 6 || next.suggestions.some((item) => !item.label.trim() || !item.prompt.trim())) {
-      throw new ApiRequestError('请填写完整的快捷提问，最多 6 项', 400);
+      throw new ApiRequestError(t('serverErrors.agentProfile.invalidShortcuts'), 400);
     }
 
     updateMockDb((db) => {

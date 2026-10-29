@@ -13,7 +13,9 @@ export const publicUser = ({ password: _password, preferences: _preferences, ...
 export function mockMenus(): Menu[] {
   const { menuNames, buttonNames } = getMockDb();
   const defaultName = (kind: 'menu' | 'button', id: string) => {
-    const key = `${kind}.${id}` as const;
+    // 权限 ID 保持不变，字典键将连字符后的字母转为大写。
+    const messageId = id.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    const key = `${kind}.${messageId}` as const;
     return isMessageKey(key) ? t(key) : id;
   };
   const adapt = (menu: Menu): Menu => ({
@@ -43,7 +45,7 @@ export function currentUser(): MockUser {
   } catch {
     // 损坏或已失效的本地会话。
   }
-  throw new ApiRequestError('登录状态已失效，请重新登录', 401, 1002);
+  throw new ApiRequestError(t('serverErrors.auth.sessionExpired'), 401, 1002);
 }
 
 export function meResponse(): AuthMeResponse {
@@ -99,7 +101,7 @@ export function meResponse(): AuthMeResponse {
 export function requirePermission(permission: string): MockUser {
   const user = currentUser();
   if (!meResponse().permissions.includes(permission)) {
-    throw new ApiRequestError('没有执行此操作的权限', 403);
+    throw new ApiRequestError(t('serverErrors.access.forbiddenAction'), 403);
   }
   return user;
 }
@@ -108,7 +110,7 @@ export function requireMenu(path: string): MockUser {
   const user = currentUser();
   const includes = (nodes: Menu[]): boolean => nodes.some((menu) => menu.route_path === path || includes(menu.children || []));
   if (!includes(meResponse().menus)) {
-    throw new ApiRequestError('没有访问此页面的权限', 403);
+    throw new ApiRequestError(t('serverErrors.access.forbiddenPage'), 403);
   }
   return user;
 }

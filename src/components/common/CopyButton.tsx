@@ -19,7 +19,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
   text,
   className,
   size = 13,
-  tip = t('common.copy'),
+  tip = t('common.actions.copy'),
   secret = false,
 }) => {
   useT();
@@ -31,15 +31,15 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopied(true);
-      message.success(secret ? t('common.copied') : t('common.copiedValue', { text }));
+      message.success(secret ? t('common.toast.copied') : t('common.toast.copiedValue', { text }));
       window.setTimeout(() => setCopied(false), 1800);
     } else {
-      message.error(t('common.copyFailed'));
+      message.error(t('common.toast.copyFailed'));
     }
   };
 
   return (
-    <Tooltip title={copied ? t('common.copied') : tip}>
+    <Tooltip title={copied ? t('common.toast.copied') : tip}>
       <button
         type="button"
         onClick={handleCopy}

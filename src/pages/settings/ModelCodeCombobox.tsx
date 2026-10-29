@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useId, useRef, useState } from 'react';
 import { Icon } from '@/components/icon';
 import { Input } from '@/ui/input';
@@ -15,6 +16,7 @@ interface ModelCodeComboboxProps {
 
 /** 模型发现只提供建议，始终允许输入服务端列表之外的模型编号。 */
 export function ModelCodeCombobox({ options, loading, value = '', onChange, ...props }: ModelCodeComboboxProps) {
+  useT();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -33,7 +35,7 @@ export function ModelCodeCombobox({ options, loading, value = '', onChange, ...p
     }}>
       <Input {...props} ref={inputRef} value={value} role="combobox" aria-autocomplete="list" aria-expanded={open}
         aria-controls={listId} aria-activedescendant={open && highlighted >= 0 ? `${listId}-${highlighted}` : undefined}
-        placeholder="选择或输入模型编号" className="pr-9 font-mono"
+        placeholder={t('agentConfig.modelPicker.placeholder')} className="pr-9 font-mono"
         onFocus={() => { setQuery(''); setOpen(true); }}
         onChange={event => { onChange?.(event.target.value); setQuery(event.target.value); setHighlighted(-1); setOpen(true); }}
         onKeyDown={event => {
@@ -50,18 +52,18 @@ export function ModelCodeCombobox({ options, loading, value = '', onChange, ...p
             setOpen(false);
           }
         }} />
-      <button type="button" disabled={props.disabled} tabIndex={-1} aria-label="显示可用模型" className="absolute right-0 top-0 flex size-9 items-center justify-center text-slate-400"
+      <button type="button" disabled={props.disabled} tabIndex={-1} aria-label={t('agentConfig.modelPicker.toggle')} className="absolute right-0 top-0 flex size-9 items-center justify-center text-slate-400"
         onMouseDown={event => event.preventDefault()} onClick={() => {
           inputRef.current?.focus(); setQuery(''); setOpen(!open);
         }}>
         <Icon icon={loading ? 'loader-circle' : 'chevron-down'} size={14} className={loading ? 'animate-spin' : undefined} />
       </button>
-      {open && <div id={listId} role="listbox" aria-label="可用模型" className="absolute z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-pop">
-        {loading ? <p className="px-3 py-2 text-xs text-slate-400">正在获取模型列表…</p> : matches.length ? matches.map((model, index) => (
+      {open && <div id={listId} role="listbox" aria-label={t('agentConfig.modelPicker.label')} className="absolute z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-pop">
+        {loading ? <p className="px-3 py-2 text-xs text-slate-400">{t('agentConfig.modelPicker.loading')}</p> : matches.length ? matches.map((model, index) => (
           <button key={model} id={`${listId}-${index}`} type="button" role="option" tabIndex={-1} aria-selected={value === model}
             className={`block w-full truncate rounded-md px-3 py-2 text-left font-mono text-xs text-slate-700 hover:bg-slate-50 ${highlighted === index ? 'bg-slate-100' : ''}`}
             onMouseDown={event => event.preventDefault()} onClick={() => select(model)}>{model}</button>
-        )) : <p className="px-3 py-2 text-xs text-slate-400">暂无匹配模型，可直接输入模型编号</p>}
+        )) : <p className="px-3 py-2 text-xs text-slate-400">{t('agentConfig.modelPicker.empty')}</p>}
       </div>}
     </div>
   );

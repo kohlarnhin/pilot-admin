@@ -87,7 +87,7 @@ async function runRule(rule: Rule, value: any, label?: string): Promise<string |
   if (rule.whitespace && typeof value === "string" && !value.trim()) return fallback(t('ui.whitespace'));
 
   if (!isEmpty(value)) {
-    if (rule.type === "email" && !EMAIL.test(String(value))) return fallback(t('ui.invalidEmail'));
+    if (rule.type === "email" && !EMAIL.test(String(value))) return fallback(t('common.validation.emailInvalid'));
     if (rule.type === "url") {
       try {
         new URL(String(value));

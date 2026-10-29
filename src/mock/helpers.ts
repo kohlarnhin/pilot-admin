@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { ApiRequestError } from '@/api/http';
 import type { ApiResponse, PageResult } from '@/types';
 import type { PageQuery } from '@/api/services/pagination';
@@ -34,13 +35,13 @@ export const matchesKeyword = (keyword: string | undefined, ...values: (string |
 export function validatePassword(password: string): void {
   const { passwordMinLength, requireLetter, requireNumber } = getMockDb().settings.security;
   if (password.length < passwordMinLength) {
-    throw new ApiRequestError(`密码至少需要 ${passwordMinLength} 位`, 400);
+    throw new ApiRequestError(t('serverErrors.password.minLength', { length: passwordMinLength }), 400);
   }
   if (requireLetter && !/[a-z]/i.test(password)) {
-    throw new ApiRequestError('密码需要包含字母', 400);
+    throw new ApiRequestError(t('serverErrors.password.needLetter'), 400);
   }
   if (requireNumber && !/\d/.test(password)) {
-    throw new ApiRequestError('密码需要包含数字', 400);
+    throw new ApiRequestError(t('serverErrors.password.needNumber'), 400);
   }
 }
 

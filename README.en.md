@@ -2,7 +2,7 @@
 
 # Pilot Admin
 
-A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, login, search, overview, error pages and UI primitives support zh-CN / en-US; admin pages and assistant content follow in later milestones.
+A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, admin pages, non-Agent messages and demo data support zh-CN / en-US; assistant conversations and tools follow in M5c.
 
 ## Features
 
@@ -96,9 +96,13 @@ Feature dictionaries live in `src/i18n/locales/zh-CN/<namespace>.ts` (`as const`
 
 Default menu/action names are localized when mock services materialize them; custom names override them in every locale. HTTP/SSE send `Accept-Language`. Overview todos use stable codes translated at render. Switching clears query caches, refreshes me and notifies `useDataChanged` with a `locale` reason. Infinite lists discard stale responses and refresh the loaded range while preserving scroll where possible. Routes, assistant drafts, panel state and stored content stay intact. Existing imperative dialogs/toasts keep their opening language.
 
-Use plural-neutral English such as `Users: {count}`; there is no plural engine. `formatNumber` and dayjs follow the active locale; explicit date formats remain unchanged. Stored users, roles, conversations and activity sentences are not retranslated. Seed creation language will be handled in M5b.
+Use plural-neutral English such as `Users: {count}`; there is no plural engine. `formatNumber` and dayjs follow the active locale; explicit date formats remain unchanged. Admin pages and non-Agent service messages are bilingual. Errors use the response-time locale; new activity sentences use the write-time locale. Stored names, conversations and activities are not retranslated.
 
-`pnpm i18n:check` validates keys and placeholder parity and scans CJK in strings, templates, JSX and regexes (comments excluded). Exact justified exemptions live in `scripts/i18n-allowlist.json`; files awaiting M5b/M5c are in `scripts/i18n-pending.json`. Obsolete exemptions fail the check. [Full guide](README.md#国际化).
+Use short semantic keys grouped by purpose, such as `users.toast.created` and `users.deleteDialog.content`, rather than sentence fragments. Each segment must match `/^[a-z][a-zA-Z0-9]*$/` (camelCase) and contain at most 24 characters. Reuse identical shared wording from `common`; keep feature-specific keys when the wording differs. Domain errors live in `serverErrors`, and activity messages in `activity`. Menu/action IDs stay unchanged; dictionary keys camel-case hyphenated IDs (for example, `user-reset-password` → `button.userResetPassword`).
+
+Locale-specific seed content is a separate `seedText` export in `src/i18n/locales/<locale>/seed.ts`, typed by `SeedText` in `src/i18n/seed.ts`. It supports name arrays and stays outside the `t()` message tree. Initial creation and demo reset use the current locale for role names, user names, site descriptions, model names and activities. IDs, login names, emails, deterministic ordering and DB v4 stay unchanged. Assistant profile and conversation seeds follow in M5c. Switching locale preserves unsaved role permission selections, menu rename input and settings fields while refreshing menu/action names.
+
+`pnpm i18n:check` validates camelCase keys (at most 24 characters per segment), dictionary completeness and placeholder parity and scans CJK in strings, templates, JSX and regexes (comments excluded). Exact justified exemptions live in `scripts/i18n-allowlist.json`; only M5c assistant/Agent content remains in `scripts/i18n-pending.json`. Obsolete exemptions fail the check. [Full guide](README.md#国际化).
 
 ## Commands and verification
 

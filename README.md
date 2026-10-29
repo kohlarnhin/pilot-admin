@@ -207,6 +207,7 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 默认语言为 `zh-CN`，不读取浏览器语言。登录页右上角与账号菜单的「语言」入口可切换简体中文 / English，无需刷新页面；选择保存在 `pilot-admin:locale:v1`，同源标签页跟随切换。`src/config/app.ts` 配置默认语言和原生语言名称。
 
 - 字典按功能存放在 `src/i18n/locales/zh-CN/<namespace>.ts`，以中文 literal 为源，导出 `as const` 对象；`en-US` 对应文件使用 `LocalizedDictionary<typeof source>` 校验。新增 namespace 后在两种语言的 `index.ts` 注册，缺失或多余 key 会导致类型错误。
+- key 按语义命名，并按列、表单、提示或对话框等用途嵌套分组，如 `users.toast.created`、`users.deleteDialog.content`；不要从句子截取键名。每段使用 camelCase（`/^[a-z][a-zA-Z0-9]*$/`），最多 24 个字符。相同的通用文案复用 `common`（如 `common.actions.retry`、`common.toast.saveFailed`），仅在措辞确有差异时保留功能专用 key；服务错误归入 `serverErrors`，活动句子归入 `activity`。
 - React 渲染使用 `const { t, locale } = useT()`；service、store 和事件处理可调用非 hook 的 `t()`，每次调用读取当前语言。静态 METRICS / SECTIONS 等只存 `MessageKey`，在订阅语言的渲染处翻译；翻译后的列定义、格式化器等 memo 必须依赖 `locale`。
 
   ```tsx
@@ -218,11 +219,13 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 
 - `{name}` 插值参数从中文 literal 推导，值为 string / number。运行时按当前语言 → 中文 → key 回退；开发环境缺少参数会保留占位符并警告。`formatNumber` 使用当前语言，dayjs 随语言切换；已有明确的日期格式保持不变。
 - 不引入复数引擎。英文优先使用不依赖单复数的表达，如 `Users: {count}`，避免在数量可能为 1 时固定使用复数名词。
-- 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<id>` / `button.<id>` 本地化，重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
+- 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<camelCaseId>` / `button.<camelCaseId>` 本地化（如 `user-reset-password` 对应 `button.userResetPassword`，权限 ID 不变），重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
 - 切换会更新 html lang / dayjs、清查询缓存、刷新已登录账号的 me，并通过 `useDataChanged` 发出 `locale` 原因。无限列表将 locale 纳入作用域，丢弃旧语言响应，刷新已加载范围并尽量保留滚动位置。路由、助手面板、草稿和已存会话不变；已打开的命令式弹窗 / toast 保留打开时语言。
-- 本轮覆盖外壳、登录、搜索、概览、错误页和基础控件；后台管理页面、其他 service、种子及助手正文仍在 M5b / M5c 待迁移列表中。用户、角色、会话和活动等已存数据不随切换重译；按创建/重置时语言生成种子的规则将在 M5b 完成。
+- 外壳、管理页面、非 Agent 服务消息及非 Agent 演示种子已支持双语。服务错误在返回时使用当前语言，活动句子在写入时使用当前语言；用户输入、已存用户/角色名称及已有活动不随切换重译。
+- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和活动；ID、登录名、邮箱及确定性顺序保持一致，仍为 DB v4。助手资料与历史会话的种子文案将在 M5c 迁移。
+- 在角色权限弹窗切换语言时，重新读取菜单/按钮名称并保留当前勾选；菜单重命名保留输入中的名称，系统设置保留未保存字段。已经持久化的自定义名称在两种语言下都优先于默认名称。
 
-运行 `pnpm i18n:check` 检查两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 是后续里程碑待迁移文件。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
+运行 `pnpm i18n:check` 检查 key 每段的 camelCase 命名与 24 字符上限、两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 现在只保留 M5c 助手/Agent 待迁移内容（包括种子和默认资料文件中的 Agent 部分）。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
 
 ## 脚本与验证
 

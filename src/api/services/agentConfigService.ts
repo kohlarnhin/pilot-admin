@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { AgentConfig } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
@@ -15,14 +16,14 @@ export interface AgentConfigInput {
 
 const publicConfig = ({ apiKey, ...config }: AgentConfig & { apiKey: string }): AgentConfig => ({
   ...config,
-  api_key_masked: apiKey ? '••••••••' : '未设置',
+  api_key_masked: apiKey ? '••••••••' : t('common.empty.unset'),
 });
 
 const changed = () => window.dispatchEvent(new Event(AGENT_CONFIG_CHANGED_EVENT));
 
 const validate = (input: AgentConfigInput) => {
   if (![input.provider, input.base_url, input.model_code, input.model_name].every((value) => value?.trim())) {
-    throw new ApiRequestError('请填写完整的模型配置', 400);
+    throw new ApiRequestError(t('serverErrors.agentConfig.incomplete'), 400);
   }
 
   try {
@@ -30,7 +31,7 @@ const validate = (input: AgentConfigInput) => {
       throw new Error();
     }
   } catch {
-    throw new ApiRequestError('请输入有效的 HTTP 或 HTTPS 地址', 400);
+    throw new ApiRequestError(t('serverErrors.agentConfig.invalidUrl'), 400);
   }
 };
 
@@ -75,7 +76,7 @@ export const agentConfigService = {
     updateMockDb((db) => {
       const config = db.agentConfigs.find((item) => item.id === id);
       if (!config) {
-        throw new ApiRequestError('配置不存在', 404);
+        throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
       }
       Object.assign(config, input, {
         apiKey: input.apiKey || config.apiKey,
@@ -91,7 +92,7 @@ export const agentConfigService = {
     updateMockDb((db) => {
       const config = db.agentConfigs.find((item) => item.id === id);
       if (!config) {
-        throw new ApiRequestError('配置不存在', 404);
+        throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
       }
       config.status = status;
     });

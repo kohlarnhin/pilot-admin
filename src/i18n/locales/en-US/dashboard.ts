@@ -7,7 +7,6 @@ export default {
   "totalRoles": "Roles",
   "totalMenus": "Pages",
   "failed": "Could not load the overview",
-  "title": "Overview",
   "hello": "Hello",
   "welcome": "{name}, welcome back. This is your admin workspace.",
   "todosTitle": "Tasks and shortcuts",

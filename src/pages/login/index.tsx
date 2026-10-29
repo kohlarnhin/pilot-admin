@@ -36,7 +36,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isPreparingPage, setIsPreparingPage] = useState(false);
   const [accountError, setAccountError] = useState<'auth.accountRequired' | null>(null);
-  const [passwordError, setPasswordError] = useState<'auth.passwordRequired' | 'auth.invalidCredentials' | 'auth.accountDisabled' | 'auth.loginFailed' | null>(null);
+  const [passwordError, setPasswordError] = useState<'auth.passwordRequired' | 'serverErrors.auth.invalidCredentials' | 'serverErrors.auth.accountDisabled' | 'auth.loginFailed' | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -62,8 +62,8 @@ export const LoginPage: React.FC = () => {
       navigate(target, { replace: true });
     } catch (error) {
       setIsPreparingPage(false);
-      setPasswordError(error instanceof ApiRequestError && error.status === 400 ? 'auth.invalidCredentials'
-        : error instanceof ApiRequestError && error.status === 403 ? 'auth.accountDisabled' : 'auth.loginFailed');
+      setPasswordError(error instanceof ApiRequestError && error.status === 400 ? 'serverErrors.auth.invalidCredentials'
+        : error instanceof ApiRequestError && error.status === 403 ? 'serverErrors.auth.accountDisabled' : 'auth.loginFailed');
       requestAnimationFrame(() => { passwordRef.current?.focus(); passwordRef.current?.select(); });
     } finally { busyRef.current = false; }
   };
@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
         </div>
         <form onSubmit={handleSubmit} className="mt-7 space-y-4" noValidate>
           <div>
-            <FieldLabel htmlFor="login-name">{t('auth.account')}</FieldLabel>
+            <FieldLabel htmlFor="login-name">{t('common.fields.account')}</FieldLabel>
             <Input id="login-name" ref={accountRef} size="large" autoFocus autoComplete="username" value={loginName}
               onChange={(event) => { setLoginName(event.target.value); setAccountError(null); setPasswordError(null); }}
               placeholder={t('auth.accountRequired')} disabled={isBusy} aria-invalid={accountError ? true : undefined}
@@ -89,7 +89,7 @@ export const LoginPage: React.FC = () => {
             {accountError && <FieldHint id="login-account-error" error>{t(accountError)}</FieldHint>}
           </div>
           <div>
-            <FieldLabel htmlFor="login-password">{t('auth.password')}</FieldLabel>
+            <FieldLabel htmlFor="login-password">{t('common.fields.password')}</FieldLabel>
             <Input.Password id="login-password" ref={passwordRef} size="large" autoComplete="current-password" value={password}
               onChange={(event) => { setPassword(event.target.value); setPasswordError(null); }} placeholder={t('auth.passwordRequired')}
               disabled={isBusy} aria-invalid={passwordError ? true : undefined}

@@ -7,8 +7,8 @@ import { DEFAULT_AGENT_PROFILE, type AgentProfile } from '@/api/services/agentPr
 import { useAuthStore } from '@/store/authStore';
 import { canAccessPage } from '@/routes/access';
 
-export function EmptyState({ profile = DEFAULT_AGENT_PROFILE, notConfigured, disabled, onPrompt, fullScreen = false }: {
-  profile?: AgentProfile; notConfigured?: boolean; disabled?: boolean; onPrompt: (prompt: string) => void; fullScreen?: boolean;
+export function EmptyState({ profile = DEFAULT_AGENT_PROFILE, notConfigured, disabled, onPrompt, fullScreen = false, promptHint = '从一个问题开始，或直接描述你的需求' }: {
+  profile?: AgentProfile; notConfigured?: boolean; disabled?: boolean; onPrompt: (prompt: string) => void; fullScreen?: boolean; promptHint?: string;
 }) {
   const { menus, permissions } = useAuthStore();
   const canConfigure = canAccessPage('/system/assistant', { menus, permissions });
@@ -22,6 +22,6 @@ export function EmptyState({ profile = DEFAULT_AGENT_PROFILE, notConfigured, dis
     <div className={`mt-8 grid w-full grid-cols-1 gap-2 ${fullScreen ? 'sm:grid-cols-3' : 'min-[360px]:grid-cols-2'}`}>
       {profile.suggestions.map(({ label, prompt }, index) => <Button key={index} variant="outline" disabled={disabled} onClick={() => onPrompt(prompt)} className="group h-auto min-w-0 justify-start gap-2 rounded-xl px-3 py-3 text-left font-normal shadow-none hover:border-slate-300 hover:bg-slate-50"><span className="min-w-0 flex-1 text-xs">{label}</span><ArrowUpRight className="size-3 text-slate-300 group-hover:text-brand-700" /></Button>)}
     </div>
-    <p className="mt-5 text-[11px] text-slate-400">从一个问题开始，或直接描述你的需求</p>
+    <p className="mt-5 text-[11px] text-slate-400">{promptHint}</p>
   </div>;
 }

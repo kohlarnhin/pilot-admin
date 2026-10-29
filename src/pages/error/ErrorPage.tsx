@@ -74,7 +74,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ error, fullScreen = false,
           {onHome && (
             <Button onClick={onHome}>
               <Icon icon="arrow-right" size={16} className="rotate-180" />
-              {t('common.home')}</Button>
+              {t('common.actions.home')}</Button>
           )}
         </>
       }
@@ -86,7 +86,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ error, fullScreen = false,
           <div className="mb-3 flex justify-end">
             <Button size="xs" onClick={copyDetails}>
               <Icon icon={copyState === 'copied' ? 'check-check' : 'copy'} size={14} />
-              {copyState === 'copied' ? t('common.copied') : t('errors.copyDetails')}
+              {copyState === 'copied' ? t('common.toast.copied') : t('errors.copyDetails')}
             </Button>
           </div>
           <pre className="max-h-56 select-text overflow-y-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-3 font-mono text-xs leading-5 text-slate-600">{details}</pre>

@@ -11,4 +11,13 @@ import history from './history';
 import menu from './menu';
 import button from './button';
 
-export default { common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button } as const;
+import users from './users';
+import roles from './roles';
+import menus from './menus';
+import settings from './settings';
+import agentConfig from './agentConfig';
+import assistantSettings from './assistantSettings';
+import gallery from './gallery';
+import serverErrors from './serverErrors';
+import activity from './activity';
+export default { common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, activity } as const;

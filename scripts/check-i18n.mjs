@@ -45,6 +45,11 @@ function dictionary(file, cache = new Map()) {
 
 const leaves = (value, prefix = '') => typeof value === 'string' ? [[prefix, value]]
   : Object.entries(value).flatMap(([key, child]) => leaves(child, prefix ? `${prefix}.${key}` : key));
+const keyPaths = (value, prefix = '') => typeof value === 'string' ? []
+  : Object.entries(value).flatMap(([key, child]) => {
+    const current = prefix ? `${prefix}.${key}` : key;
+    return [current, ...keyPaths(child, current)];
+  });
 const placeholders = (value) => [...new Set([...value.matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]))].sort();
 
 export function checkI18n(root) {
@@ -95,8 +100,15 @@ export function checkI18n(root) {
   pending.forEach((file, index) => {
     if (!usedPending.has(file)) errors.push(`scripts/i18n-pending.json:${index + 1}: obsolete pending file ${file}`);
   });
-  const zh = new Map(leaves(dictionary(path.join(root, 'src/i18n/locales/zh-CN/index.ts'))));
-  const en = new Map(leaves(dictionary(path.join(root, 'src/i18n/locales/en-US/index.ts'))));
+  const zhTree = dictionary(path.join(root, 'src/i18n/locales/zh-CN/index.ts'));
+  const enTree = dictionary(path.join(root, 'src/i18n/locales/en-US/index.ts'));
+  for (const key of new Set([...keyPaths(zhTree), ...keyPaths(enTree)])) {
+    const segment = key.split('.').at(-1);
+    if (!/^[a-z][a-zA-Z0-9]*$/.test(segment)) errors.push(`dictionary ${key}: key segment ${JSON.stringify(segment)} must match /^[a-z][a-zA-Z0-9]*$/ (camelCase)`);
+    if (segment.length > 24) errors.push(`dictionary ${key}: key segment ${JSON.stringify(segment)} exceeds 24 characters (${segment.length})`);
+  }
+  const zh = new Map(leaves(zhTree));
+  const en = new Map(leaves(enTree));
   for (const key of new Set([...zh.keys(), ...en.keys()])) {
     if (!zh.has(key) || !en.has(key)) { errors.push(`dictionary ${key}: missing in ${zh.has(key) ? 'en-US' : 'zh-CN'}`); continue; }
     const zhParams = placeholders(zh.get(key));
@@ -114,6 +126,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (result.errors.length) {
       console.error(result.errors.join('\n'));
       process.exitCode = 1;
-    } else console.log(`i18n: ${result.keys} keys verified; ${result.pending} pending files; ${result.allowlist} exact exemptions; no unapproved CJK`);
+    } else console.log(`i18n: ${result.keys} keys verified (camelCase, <=24 characters per segment); ${result.pending} pending files; ${result.allowlist} exact exemptions; no unapproved CJK`);
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

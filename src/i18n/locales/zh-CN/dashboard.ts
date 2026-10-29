@@ -4,7 +4,6 @@ export default {
   "totalRoles": "系统角色",
   "totalMenus": "功能页面",
   "failed": "加载概览失败",
-  "title": "概览",
   "hello": "你好",
   "welcome": "{name}，欢迎回来。这里是您的管理工作台。",
   "todosTitle": "待办与快捷入口",

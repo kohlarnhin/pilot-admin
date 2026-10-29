@@ -67,6 +67,8 @@ UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280�
 
 可见系统文案放在 `src/i18n/locales`，中文 literal 是类型来源，英文保持 key 与 `{placeholder}` 集合完整一致。功能拥有自己的 namespace，新增时在两种语言根字典注册。React 使用 `useT()` 订阅；事件、service、store 使用实时读取语言的 `t()`。静态元数据只存 key，翻译后的 memo / 格式化器依赖 locale。不要把翻译文本作为状态、分组或错误类型的判别依据，应使用稳定代码或 HTTP 状态。
 
+key 使用简短的语义名称，按列、表单、提示、对话框等用途嵌套分组（如 `users.columns.user`、`users.deleteDialog.content`），不截取或缩短原句来生成键名。每段必须符合 camelCase（`/^[a-z][a-zA-Z0-9]*$/`），长度不超过 24 个字符；门禁会报告违规路径。相同的通用词句放入 `common` 并复用（如 `common.actions.retry`、`common.toast.saveFailed`），措辞确有差异时才保留功能专用 key。服务错误按领域组织在 `serverErrors`，写入时生成的活动文案放在 `activity`。插值句子应保留为完整消息；需保留节点样式时使用 `tNode`，不要用多个翻译片段拼接句子。
+
 英文按钮、标签用 sentence case，页面标题用 Title Case；按下表保留既定导航名称。没有复数引擎，优先 `Users: {count}` 等数量中性表达。数字使用 `formatNumber`，明确的日期格式保持原样。默认菜单 / 操作名与错误由服务边界本地化，稳定系统代码由界面翻译；用户输入、已存数据不随切换改写。已打开的命令式弹窗和 toast 保留打开语言。完整流程见 README 的「国际化」。
 
 | 中文 | English | 中文 | English |
@@ -82,4 +84,4 @@ UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280�
 | 新增 | Add / Create | 编辑 | Edit |
 | 删除 | Delete | 启用 / 停用 | Enable / Disable |
 
-提交前运行 `pnpm i18n:check`。allowlist 只用于有原因的原文精确例外（如原生语言名称），pending 只列尚未迁移的 M5b/M5c 文件。不要扩大例外规避检查；完成迁移后同步删除条目，过时条目会失败。
+提交前运行 `pnpm i18n:check`。allowlist 只用于有原因的原文精确例外（如原生语言名称），pending 只列尚未迁移的 M5c 助手/Agent 文件。不要扩大例外规避检查；完成迁移后同步删除条目，过时条目会失败。

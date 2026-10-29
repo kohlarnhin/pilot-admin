@@ -1,4 +1,6 @@
+import { t, useT } from '@/i18n';
 import { useCan } from '@/hooks/usePermission';
+import { useDataChanged } from '@/hooks/useDataChanged';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from '@/ui/modal';
 import { Switch } from '@/ui/controls';
@@ -21,6 +23,7 @@ import { RowAction } from '@/ui/row-action';
 import dayjs from 'dayjs';
 
 export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
+  const { locale } = useT();
   const requestSequence = useRef(0);
   const initialLoadSettled = useRef(false);
   const can = useCan();
@@ -46,7 +49,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       setConfigs(res);
     } catch (error) {
       if (sequence === requestSequence.current && initial) {
-        message.error((error as Error).message || '加载AI助手配置失败');
+        message.error((error as Error).message || t('agentConfig.errors.load'));
       }
     } finally {
       if (sequence === requestSequence.current) {
@@ -62,11 +65,14 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   useEffect(() => {
     if (active) void loadConfigs();
   }, [active, loadConfigs]);
+  useDataChanged((reason) => {
+    if (reason === 'locale' && active) void loadConfigs();
+  });
 
   const openCreate = () => {
     setEditingConfig(null);
     form.resetFields();
-    form.setFieldsValue({ provider: 'OpenAI 兼容', base_url: 'https://api.example.com/v1' });
+    form.setFieldsValue({ provider: t('agentConfig.providers.openai'), base_url: 'https://api.example.com/v1' });
     setModalOpen(true);
   };
   const openEdit = (config: AgentConfig) => {
@@ -81,16 +87,16 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       setSaving(true);
       if (editingConfig) {
         await agentConfigService.updateConfig(editingConfig.id, values);
-        message.success('更新成功');
+        message.success(t('common.toast.updated'));
       } else {
         await agentConfigService.addConfig(values);
-        message.success('创建成功');
+        message.success(t('common.toast.created'));
       }
       setModalOpen(false);
       void loadConfigs();
     } catch (error: any) {
       if (error?.errorFields) return; // Validation failed
-      message.error((error as Error).message || '保存失败');
+      message.error((error as Error).message || t('common.toast.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -103,9 +109,9 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       setConfigs((current) =>
         current.map((item) => (item.id === config.id ? { ...item, status: checked ? 1 : 0 } : item))
       );
-      message.success(checked ? '已启用' : '已停用');
+      message.success(checked ? t('common.status.enabled') : t('common.status.disabled'));
     } catch (error) {
-      message.error((error as Error).message || '操作失败');
+      message.error((error as Error).message || t('common.toast.actionFailed'));
     } finally {
       setChangingStatusIds((current) => {
         const next = new Set(current);
@@ -118,7 +124,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const columns = useMemo<ColumnsType<AgentConfig>>(
     () => [
       {
-        title: '模型',
+        title: t('agentConfig.columns.model'),
         dataIndex: 'model_name',
         width: '28%',
         render: (_, record) => (
@@ -134,13 +140,13 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
         ),
       },
       {
-        title: '提供方',
+        title: t('agentConfig.fields.provider'),
         dataIndex: 'provider',
         width: '28%',
         render: (_, record) => <div className="min-w-0"><p className="text-13 text-slate-700">{record.provider}</p><p className="truncate font-mono text-[11px] text-slate-400" title={record.base_url}>{record.base_url}</p><p className="mt-1 font-mono text-[11px] text-slate-400">{record.api_key_masked}</p></div>,
       },
       {
-        title: '最后更新',
+        title: t('common.columns.updated'),
         dataIndex: 'last_update_date',
         width: '20%',
         render: (date: string) => (
@@ -150,7 +156,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
         ),
       },
       {
-        title: '状态',
+        title: t('common.columns.status'),
         dataIndex: 'status',
         width: 88,
         align: 'center',
@@ -161,39 +167,38 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
             loading={changingStatusIds.has(record.id)}
             disabled={!canUpdate || changingStatusIds.has(record.id)}
             onChange={(checked) => void handleStatusChange(record, checked)}
-            aria-label={record.status === 1 ? '停用配置' : '启用配置'}
+            aria-label={record.status === 1 ? t('agentConfig.actions.disable') : t('agentConfig.actions.enable')}
           />
         ),
       },
       {
-        title: '操作',
+        title: t('common.columns.actions'),
         key: 'actions',
         width: 100,
         align: 'center',
         render: (_, record) => (
           <div className="flex items-center justify-center"><RowAction
             icon="pencil"
-            label="编辑配置"
+            label={t('agentConfig.actions.edit')}
             disabled={!canUpdate}
-            disabledReason="无修改权限"
+            disabledReason={t('agentConfig.access.editDenied')}
             onClick={() => openEdit(record)}
-          /><RowAction icon="trash-2" label="删除配置" disabled={!canUpdate} onClick={() => Modal.confirm({ title: '删除模型配置？', content: `即将删除 ${record.model_name}`, okText: '删除', onOk: async () => { await agentConfigService.deleteConfig(record.id); await loadConfigs(); } })} /></div>
+          /><RowAction icon="trash-2" label={t('agentConfig.actions.delete')} disabled={!canUpdate} onClick={() => Modal.confirm({ title: t('agentConfig.deleteDialog.title'), content: t('agentConfig.deleteDialog.content', { name: record.model_name }), okText: t('common.actions.delete'), onOk: async () => { await agentConfigService.deleteConfig(record.id); await loadConfigs(); } })} /></div>
         ),
       },
     ],
-    [canUpdate, changingStatusIds]
+    [canUpdate, changingStatusIds, locale]
   );
 
   return (
     <>
       <SectionBar
-        description="本地演示配置 · 不会发起模型调用"
+        description={t('agentConfig.description')}
         actions={
-          <Tooltip title={canAdd ? undefined : '无新增权限'}>
+          <Tooltip title={canAdd ? undefined : t('agentConfig.access.createDenied')}>
             <Button disabled={!canAdd} onClick={openCreate}>
               <Icon icon="plus" size={16} />
-              新增配置
-            </Button>
+              {t('agentConfig.actions.create')}</Button>
           </Tooltip>
         }
       />
@@ -209,9 +214,9 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
               emptyText: (
                 <EmptyState
                   icon="wand-sparkles"
-                  title="暂无 AI 助手配置"
-                  description="添加一个演示模型配置后即可使用助手"
-                  action={canAdd ? <Button onClick={openCreate}>新增配置</Button> : undefined}
+                  title={t('agentConfig.empty.title')}
+                  description={t('agentConfig.empty.description')}
+                  action={canAdd ? <Button onClick={openCreate}>{t('agentConfig.actions.create')}</Button> : undefined}
                 />
               ),
             }}
@@ -219,24 +224,24 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
         </CardContent>
       </Card>
       <Modal
-        title={editingConfig ? '编辑 AI 助手配置' : '新增 AI 助手配置'}
+        title={editingConfig ? t('agentConfig.form.editTitle') : t('agentConfig.form.createTitle')}
         icon="wand-sparkles"
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
         confirmLoading={saving}
-        okText={editingConfig ? '保存' : '创建'}
+        okText={editingConfig ? t('common.actions.save') : t('common.actions.create')}
         width={460}
       >
         <Form form={form}>
-          <Form.Item name="provider" label="提供方" rules={[{ required: true, message: '请选择提供方' }]}><Select options={[{ value: 'OpenAI 兼容', label: 'OpenAI 兼容' }, { value: '本地模型', label: '本地模型' }, { value: '其他', label: '其他' }]} /></Form.Item>
-          <Form.Item name="base_url" label="Base URL" rules={[{ required: true, message: '请输入 Base URL' }]} extra="仅保存用于展示，不会访问该地址。"><Input className="font-mono" placeholder="https://api.example.com/v1" /></Form.Item>
+          <Form.Item name="provider" label={t('agentConfig.fields.provider')} rules={[{ required: true, message: t('agentConfig.validation.providerRequired') }]}><Select options={[{ value: t('agentConfig.providers.openai'), label: t('agentConfig.providers.openai') }, { value: t('agentConfig.providers.local'), label: t('agentConfig.providers.local') }, { value: t('agentConfig.providers.other'), label: t('agentConfig.providers.other') }]} /></Form.Item>
+          <Form.Item name="base_url" label="Base URL" rules={[{ required: true, message: t('agentConfig.validation.urlRequired') }]} extra={t('agentConfig.hints.url')}><Input className="font-mono" placeholder="https://api.example.com/v1" /></Form.Item>
           <Form.Item
             name="model_code"
-            label="模型编号"
+            label={t('agentConfig.fields.modelCode')}
             rules={[
-              { required: true, message: '请输入模型编号' },
-              { max: 150, message: '模型编号最多 150 字符' },
+              { required: true, message: t('agentConfig.validation.codeRequired') },
+              { max: 150, message: t('agentConfig.validation.codeLength') },
             ]}
           >
             <ModelCodeCombobox options={['pilot-demo', 'local-demo']} loading={false} maxLength={150} />
@@ -244,15 +249,15 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
 
           <Form.Item
             name="model_name"
-            label="模型名称"
+            label={t('agentConfig.fields.modelName')}
             rules={[
-              { required: true, message: '请输入模型名称' },
-              { max: 150, message: '模型名称最多 150 字符' },
+              { required: true, message: t('agentConfig.validation.nameRequired') },
+              { max: 150, message: t('agentConfig.validation.nameLength') },
             ]}
           >
-            <Input placeholder="例如：演示模型" maxLength={150} />
+            <Input placeholder={t('agentConfig.placeholders.name')} maxLength={150} />
           </Form.Item>
-          <Form.Item name="apiKey" label="API Key" className="mb-0" extra={editingConfig ? '留空保留已有密钥；密钥仅以掩码展示。' : '演示配置无需真实密钥。'}><Input.Password autoComplete="new-password" placeholder={editingConfig?.api_key_masked || '仅本地保存'} /></Form.Item>
+          <Form.Item name="apiKey" label="API Key" className="mb-0" extra={editingConfig ? t('agentConfig.hints.keepKey') : t('agentConfig.hints.demoKey')}><Input.Password autoComplete="new-password" placeholder={editingConfig?.api_key_masked || t('agentConfig.placeholders.apiKey')} /></Form.Item>
         </Form>
       </Modal>
     </>

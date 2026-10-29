@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { ApiRequestError } from '../http';
 import type { ApiResponse, PageResult, User } from '@/types';
 import type { PageQuery } from './pagination';
@@ -29,7 +30,7 @@ const filteredUsers = (params: PageQuery) => getMockDb().users.filter((user) => 
 
 const validateRoles = (ids: string[]) => {
   if (!ids.length || ids.some((id) => !getMockDb().roles.some((role) => role.id === id && role.status === 1))) {
-    throw new ApiRequestError('请选择有效角色', 400);
+    throw new ApiRequestError(t('serverErrors.user.invalidRoles'), 400);
   }
 };
 
@@ -56,10 +57,10 @@ export const userService = {
     await delay();
     const actor = requirePermission('user:create');
     if (!/^[a-zA-Z0-9_]+$/.test(data.login_name) || !data.user_name.trim()) {
-      throw new ApiRequestError('请填写有效的账号与姓名', 400);
+      throw new ApiRequestError(t('serverErrors.user.invalidAccount'), 400);
     }
     if (getMockDb().users.some((user) => user.login_name === data.login_name)) {
-      throw new ApiRequestError('该登录账号已存在', 409);
+      throw new ApiRequestError(t('serverErrors.user.loginNameExists'), 409);
     }
 
     validateRoles(data.role_ids);
@@ -84,7 +85,7 @@ export const userService = {
     updateMockDb((db) => {
       db.users.unshift(user);
     });
-    addActivity(actor.user_name, `新增了用户 ${user.user_name}`, 'user-plus');
+    addActivity(actor.user_name, t('activity.user.created', { name: user.user_name }), 'user-plus');
     return response({ ...publicUser(user), initial_password: password });
   },
 
@@ -99,13 +100,13 @@ export const userService = {
     const actor = requirePermission('user:update');
     const user = getMockDb().users.find((item) => item.id === userId);
     if (!user) {
-      throw new ApiRequestError('用户不存在', 404);
+      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
     }
     if (data.role_ids) {
       validateRoles(data.role_ids);
     }
     if (data.user_name !== undefined && !data.user_name.trim()) {
-      throw new ApiRequestError('请输入姓名', 400);
+      throw new ApiRequestError(t('common.validation.nameRequired'), 400);
     }
     if (data.password) {
       requirePermission('user:reset-password');
@@ -137,10 +138,10 @@ export const userService = {
     const actor = requirePermission('user:update');
     const user = getMockDb().users.find((item) => item.id === userId);
     if (!user) {
-      throw new ApiRequestError('用户不存在', 404);
+      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
     }
     if (actor.id === userId && status === 0) {
-      throw new ApiRequestError('不可禁用当前登录账号', 400);
+      throw new ApiRequestError(t('serverErrors.user.selfDisable'), 400);
     }
 
     updateMockDb((db) => {
@@ -154,7 +155,7 @@ export const userService = {
     requirePermission('user:reset-password');
     validatePassword(password);
     if (!getMockDb().users.some((user) => user.id === userId)) {
-      throw new ApiRequestError('用户不存在', 404);
+      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
     }
 
     updateMockDb((db) => {
@@ -167,17 +168,17 @@ export const userService = {
     await delay();
     const actor = requirePermission('user:delete');
     if (userId === actor.id) {
-      throw new ApiRequestError('不可删除当前登录账号', 400);
+      throw new ApiRequestError(t('serverErrors.user.selfDelete'), 400);
     }
     const user = getMockDb().users.find((item) => item.id === userId);
     if (!user) {
-      throw new ApiRequestError('用户不存在', 404);
+      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
     }
 
     updateMockDb((db) => {
       db.users = db.users.filter((item) => item.id !== userId);
     });
-    addActivity(actor.user_name, `删除了用户 ${user.user_name}`, 'trash-2');
+    addActivity(actor.user_name, t('activity.user.deleted', { name: user.user_name }), 'trash-2');
     return response(undefined);
   },
 };

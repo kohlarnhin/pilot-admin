@@ -72,8 +72,8 @@ export function Modal({
   description,
   onOk,
   onCancel,
-  okText = t('ui.ok'),
-  cancelText = t('ui.cancel'),
+  okText = t('common.actions.confirm'),
+  cancelText = t('common.actions.cancel'),
   okType = "primary",
   confirmLoading = false,
   okButtonProps,
@@ -211,7 +211,7 @@ export function Modal({
               </div>
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="-mr-2 shrink-0 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('common.actions.close')} className="-mr-2 shrink-0 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>
@@ -222,7 +222,7 @@ export function Modal({
               <DialogPrimitive.Title className="sr-only">{ariaLabel ?? t('ui.dialog')}</DialogPrimitive.Title>
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="absolute right-3 top-3 z-10 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('common.actions.close')} className="absolute right-3 top-3 z-10 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>
@@ -295,9 +295,9 @@ function openConfirm(kind: ConfirmKind, config: ConfirmConfig) {
     id,
     kind,
     open: true,
-    okText: config.okText ?? (kind === 'confirm' ? t('ui.ok') : t('ui.gotIt')),
-    cancelText: config.cancelText ?? t('ui.cancel'),
-    failureText: t('ui.actionFailed'),
+    okText: config.okText ?? (kind === 'confirm' ? t('common.actions.confirm') : t('common.actions.gotIt')),
+    cancelText: config.cancelText ?? t('common.actions.cancel'),
+    failureText: t('common.toast.actionRetry'),
   }];
   emit();
   const close = () => {
@@ -518,7 +518,7 @@ export function Drawer({
               {extra}
               {closable && (
                 <DialogPrimitive.Close asChild>
-                  <Button variant="subtle" size="icon-sm" aria-label={t('ui.close')} className="-mr-1.5 text-slate-400">
+                  <Button variant="subtle" size="icon-sm" aria-label={t('common.actions.close')} className="-mr-1.5 text-slate-400">
                     <X className="size-4" />
                   </Button>
                 </DialogPrimitive.Close>

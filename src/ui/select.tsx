@@ -453,7 +453,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
                   <button
                     type="button"
                     tabIndex={-1}
-                    aria-label={t('ui.clear')}
+                    aria-label={t('common.actions.clear')}
                     onPointerDown={(event) => event.preventDefault()}
                     onClick={clear}
                     className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-slate-300/80 text-white opacity-0 transition-opacity hover:bg-slate-400 group-hover:opacity-100"

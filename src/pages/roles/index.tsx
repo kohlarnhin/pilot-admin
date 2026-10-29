@@ -1,4 +1,6 @@
+import { t, tNode, useT } from '@/i18n';
 import { useCan } from '@/hooks/usePermission';
+import { useDataChanged } from '@/hooks/useDataChanged';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { FixedTable } from '../../components/common/FixedTable';
@@ -26,6 +28,7 @@ import dayjs from 'dayjs';
 
 
 export const RolesPage: React.FC = () => {
+  useT();
   const can = useCan();
   const refreshMe = useAuthStore((state) => state.refreshMe);
   const canCreate = can('role:create');
@@ -52,6 +55,7 @@ export const RolesPage: React.FC = () => {
   const [loadingPermissionResources, setLoadingPermissionResources] = useState(true);
   const [permissionResourcesReady, setPermissionResourcesReady] = useState(false);
   const permissionRequestRef = useRef(0);
+  const resourceRequestRef = useRef(0);
 
   const flatMenus = useMemo(() => flattenMenuTree(menus), [menus]);
   const menuById = useMemo(
@@ -163,13 +167,13 @@ export const RolesPage: React.FC = () => {
       await roleService.updateRoleStatus(role.id, newStatus);
       await refreshMe();
       if (checked) {
-      message.success(`角色【${role.role_name}】已启用`);
+      message.success(t('roles.toast.enabled', { name: role.role_name }));
     } else {
-      message.warning(`角色【${role.role_name}】已停用`);
+      message.warning(t('roles.toast.disabled', { name: role.role_name }));
     }
     } catch (err: any) {
       setRoles((prev) => prev.map((r) => (r.id === role.id ? { ...r, status: role.status } : r)));
-      message.error(err.message || '操作失败');
+      message.error(err.message || t('common.toast.actionFailed'));
     }
   };
 
@@ -186,7 +190,7 @@ export const RolesPage: React.FC = () => {
   } = useInfinitePage({
     fetchPage: fetchRoles,
     getKey: (role: RoleWithPermissions) => role.id,
-    onError: (error) => { const text = (error as Error).message || '加载角色列表失败'; setLoadError(text); message.error(text); },
+    onError: (error) => { const text = (error as Error).message || t('roles.errors.loadRoles'); setLoadError(text); message.error(text); },
   });
 
   const ensureRolePermissions = useCallback(async (
@@ -216,25 +220,32 @@ export const RolesPage: React.FC = () => {
   }, [setRoles]);
 
   const loadPermissionResources = useCallback(async () => {
+    const request = ++resourceRequestRef.current;
     setLoadingPermissionResources(true);
     setPermissionResourcesReady(false);
     try {
       const response = await roleService.getMenusAndButtons();
+      if (request !== resourceRequestRef.current) return;
       setMenus(response.data.menus);
       setButtons(response.data.buttons);
       setPermissionResourcesReady(true);
     } catch (error) {
-      message.error((error as Error).message || '加载菜单按钮权限失败');
+      if (request === resourceRequestRef.current) message.error((error as Error).message || t('roles.errors.loadResources'));
     } finally {
-      setLoadingPermissionResources(false);
+      if (request === resourceRequestRef.current) setLoadingPermissionResources(false);
     }
   }, []);
+
+  useEffect(() => () => { resourceRequestRef.current += 1; }, []);
+  useDataChanged((reason) => {
+    if (reason === 'locale') void loadPermissionResources();
+  });
 
   const loadCount = useCallback(async () => {
     try {
       setTotal(await roleService.countRoles());
     } catch (error) {
-      message.error((error as Error).message || '加载角色总数失败');
+      message.error((error as Error).message || t('roles.errors.loadCount'));
     }
   }, []);
 
@@ -294,21 +305,21 @@ export const RolesPage: React.FC = () => {
           description: values.description,
         });
         await refreshMe();
-        message.success('修改角色成功');
+        message.success(t('roles.toast.updated'));
       } else {
         await roleService.createRole({
           role_name: values.role_name,
           role_code: values.role_code,
           description: values.description,
         });
-        message.success('新增角色成功');
+        message.success(t('roles.toast.created'));
       }
       setIsAddModalOpen(false);
       refreshRoles();
     } catch (err: any) {
       // 表单校验失败：错误已内联展示在字段下方，不再弹出错误提示
       if (err?.errorFields) return;
-      message.error(err.message || '保存失败');
+      message.error(err.message || t('common.toast.saveFailed'));
     }
   };
 
@@ -334,7 +345,7 @@ export const RolesPage: React.FC = () => {
       setSelectedButtonIds(resolvedSelection.buttonIds);
     } catch (error) {
       if (permissionRequestRef.current === requestId) {
-        message.error((error as Error).message || '加载角色权限失败');
+        message.error((error as Error).message || t('roles.errors.loadPermissions'));
       }
     } finally {
       if (permissionRequestRef.current === requestId) {
@@ -431,7 +442,7 @@ export const RolesPage: React.FC = () => {
         normalizedSelection.buttonIds
       );
       await refreshMe();
-      message.success(`角色【${currentRole.role_name}】权限配置已更新`);
+      message.success(t('roles.toast.permissionsSaved', { name: currentRole.role_name }));
       setIsPermModalOpen(false);
       setRoles((current) => current.map((role) => role.id === currentRole.id
         ? {
@@ -444,7 +455,7 @@ export const RolesPage: React.FC = () => {
           }
         : role));
     } catch (err: any) {
-      message.error(err.message || '保存权限失败');
+      message.error(err.message || t('roles.errors.savePermissions'));
     } finally {
       setSavingPerm(false);
     }
@@ -452,14 +463,14 @@ export const RolesPage: React.FC = () => {
 
   const handleDelete = (role: RoleWithPermissions) => {
     Modal.confirm({
-      title: '删除角色', content: `确定删除角色「${role.role_name}」吗？正在使用的角色需先解除用户关联。`, okText: '确认删除', okType: 'danger',
-      onOk: async () => { await roleService.deleteRole(role.id); message.success('角色已删除'); refreshRoles(); },
+      title: t('button.roleDelete'), content: t('roles.deleteDialog.content', { name: role.role_name }), okText: t('common.actions.confirmDelete'), okType: 'danger',
+      onOk: async () => { await roleService.deleteRole(role.id); message.success(t('roles.toast.deleted')); refreshRoles(); },
     });
   };
 
   const columns: ColumnsType<RoleWithPermissions> = [
     {
-      title: '角色',
+      title: t('common.fields.role'),
       dataIndex: 'role_name',
       key: 'role_name',
       width: '30%',
@@ -470,32 +481,34 @@ export const RolesPage: React.FC = () => {
           </span>
           <div className="min-w-0">
             <div className="truncate text-13 font-medium text-slate-900" title={name}>{name}</div>
-            <div className="truncate text-xs text-slate-500" title={record.description}>{record.description || '暂无说明'}</div>
+            <div className="truncate text-xs text-slate-500" title={record.description}>{record.description || t('roles.columns.noDescription')}</div>
           </div>
         </div>
       ),
     },
     {
-      title: '角色编码',
+      title: t('roles.fields.code'),
       dataIndex: 'role_code',
       key: 'role_code',
       width: '22%',
       render: (code: string) => <CodeTag className="select-all">{code}</CodeTag>,
     },
     {
-      title: '授权资源',
+      title: t('roles.columns.resources'),
       key: 'permsCount',
       width: '18%',
       render: (_, record) => (
         <span className="whitespace-nowrap text-13 text-slate-600">
-          <span className="font-mono tabular-nums text-slate-900">{record.menu_count || 0}</span> 菜单
-          <span className="mx-1.5 text-slate-300">·</span>
-          <span className="font-mono tabular-nums text-slate-900">{record.button_count || 0}</span> 按钮
+          {tNode('roles.columns.resourceCounts', {
+            menus: <span className="font-mono tabular-nums text-slate-900">{record.menu_count || 0}</span>,
+            separator: <span className="mx-1.5 text-slate-300">·</span>,
+            buttons: <span className="font-mono tabular-nums text-slate-900">{record.button_count || 0}</span>,
+          })}
         </span>
       ),
     },
     {
-      title: '状态',
+      title: t('common.columns.status'),
       dataIndex: 'status',
       key: 'status',
       width: 88,
@@ -506,12 +519,12 @@ export const RolesPage: React.FC = () => {
           disabled={!canEdit}
           checked={status === 1}
           onChange={(checked) => handleToggleStatus(record, checked)}
-          aria-label={status === 1 ? '停用角色' : '启用角色'}
+          aria-label={status === 1 ? t('roles.actions.disable') : t('roles.actions.enable')}
         />
       ),
     },
     {
-      title: '创建时间',
+      title: t('common.columns.created'),
       dataIndex: 'create_date',
       key: 'create_date',
       width: 156,
@@ -522,15 +535,15 @@ export const RolesPage: React.FC = () => {
       ),
     },
     {
-      title: '操作',
+      title: t('common.columns.actions'),
       key: 'action',
       width: 144,
       align: 'center',
       render: (_, record) => (
         <RowActions>
-          {canEdit && <RowAction size="sm" icon="pencil" label="编辑角色" onClick={() => handleOpenEditModal(record)} />}
-          {canConfigure && <RowAction size="sm" icon="shield-check" label="配置权限" onClick={() => handleOpenPermModal(record)} />}
-          {canDelete && <RowAction size="sm" icon="trash-2" label="删除角色" tone="danger" disabled={record.id === 'role-admin'} disabledReason="内置超级管理员角色不可删除" onClick={() => handleDelete(record)} />}
+          {canEdit && <RowAction size="sm" icon="pencil" label={t('button.roleUpdate')} onClick={() => handleOpenEditModal(record)} />}
+          {canConfigure && <RowAction size="sm" icon="shield-check" label={t('button.rolePermissions')} onClick={() => handleOpenPermModal(record)} />}
+          {canDelete && <RowAction size="sm" icon="trash-2" label={t('button.roleDelete')} tone="danger" disabled={record.id === 'role-admin'} disabledReason={t('serverErrors.role.builtInProtected')} onClick={() => handleDelete(record)} />}
         </RowActions>
       ),
     },
@@ -538,16 +551,15 @@ export const RolesPage: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      {loadError && <Alert type="error" title={loadError} action={<Button size="xs" onClick={() => { setLoadError(''); void retry(); }}>重试</Button>} className="mb-4 shrink-0" />}
+      {loadError && <Alert type="error" title={loadError} action={<Button size="xs" onClick={() => { setLoadError(''); void retry(); }}>{t('common.actions.retry')}</Button>} className="mb-4 shrink-0" />}
       <PageHeader
-        title="角色管理"
-        description="维护系统角色，按菜单与按钮鉴权编码进行细粒度授权"
-        meta={`共 ${total} 个角色`}
+        title={t('menu.roles')}
+        description={t('roles.description')}
+        meta={t('roles.total', { count: total })}
         actions={canCreate ?
           <Button onClick={handleOpenAddModal}>
             <Icon icon="plus" size={16} />
-            新增角色
-          </Button> : undefined
+            {t('button.roleCreate')}</Button> : undefined
         }
       />
       <Card className="min-h-0 flex-1">
@@ -565,8 +577,8 @@ export const RolesPage: React.FC = () => {
             locale={{
               emptyText: (
                 <EmptyState
-                  title={loadError ? '数据加载失败' : '暂无角色'}
-                  description={loadError ? '请点击上方重试，重新加载角色列表' : '点击右上角「新增角色」，定义职责与权限边界'}
+                  title={loadError ? t('common.errors.loadData') : t('roles.empty.noRoles')}
+                  description={loadError ? t('roles.empty.retryHint') : t('roles.empty.createHint')}
                   icon="shield-check"
                 />
               ),
@@ -577,59 +589,58 @@ export const RolesPage: React.FC = () => {
 
       {/* Add / Edit Role Modal */}
       <Modal
-        title={editingRole ? '编辑角色' : '新增角色'}
+        title={editingRole ? t('button.roleUpdate') : t('button.roleCreate')}
         icon={editingRole ? 'square-pen' : 'shield-check'}
-        description={editingRole ? editingRole.role_code : '定义角色职责，稍后可配置菜单与按钮权限'}
+        description={editingRole ? editingRole.role_code : t('roles.createDialog.description')}
         open={isAddModalOpen}
         onOk={handleRoleSubmit}
         onCancel={() => setIsAddModalOpen(false)}
-        okText={editingRole ? '保存' : '创建'}
+        okText={editingRole ? t('common.actions.save') : t('common.actions.create')}
         width={480}
       >
         <Form form={form}>
           <Form.Item
             name="role_name"
-            label="角色名称"
-            rules={[{ required: true, message: '请输入角色名称' }]}
+            label={t('roles.fields.name')}
+            rules={[{ required: true, message: t('serverErrors.role.nameRequired') }]}
           >
-            <Input placeholder="例如：审计人员" />
+            <Input placeholder={t('roles.placeholders.name')} />
           </Form.Item>
 
           <Form.Item
             name="role_code"
-            label="角色编码"
-            labelExtra={<span className="text-slate-400">仅支持字母、数字和下划线</span>}
+            label={t('roles.fields.code')}
+            labelExtra={<span className="text-slate-400">{t('common.validation.accountFormat')}</span>}
             rules={[
-              { required: true, message: '请输入角色编码' },
-              { pattern: /^[a-zA-Z0-9_]+$/, message: '仅支持字母、数字和下划线' },
+              { required: true, message: t('roles.validation.codeRequired') },
+              { pattern: /^[a-zA-Z0-9_]+$/, message: t('common.validation.accountFormat') },
             ]}
           >
-            <Input placeholder="例如：ROLE_AUDITOR" className="font-mono" disabled={Boolean(editingRole)} />
+            <Input placeholder={t('roles.placeholders.code')} className="font-mono" disabled={Boolean(editingRole)} />
           </Form.Item>
 
-          <Form.Item name="description" label="角色说明" className="mb-0">
-            <Input.TextArea placeholder="简要说明该角色的业务范围（选填）" rows={3} />
+          <Form.Item name="description" label={t('roles.fields.description')} className="mb-0">
+            <Input.TextArea placeholder={t('roles.placeholders.description')} rows={3} />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Permission Assignment Modal */}
       <Modal
-        title="配置角色权限"
+        title={t('roles.permissionDialog.title')}
         icon="shield-check"
         description={
           currentRole ? (
-            <>
-              为 <span className="font-medium text-slate-700">{currentRole.role_name}</span>
-              <span className="mx-1 font-mono text-slate-400">({currentRole.role_code})</span>
-              分配可访问的菜单与操作权限，当前账号保存后立即生效，其他账号重新登录后生效
-            </>
+            tNode('roles.permissionDialog.description', {
+              role: <span className="font-medium text-slate-700">{currentRole.role_name}</span>,
+              code: <span className="font-mono text-slate-400">({currentRole.role_code})</span>,
+            })
           ) : undefined
         }
         open={isPermModalOpen}
         onCancel={handleClosePermModal}
         onOk={handleSavePermissions}
-        okText="保存权限"
+        okText={t('roles.permissionDialog.save')}
         confirmLoading={savingPerm}
         okButtonProps={{ disabled: loadingRolePermissions || loadingPermissionResources || !permissionResourcesReady }}
         cancelButtonProps={{ disabled: savingPerm }}
@@ -637,7 +648,7 @@ export const RolesPage: React.FC = () => {
       >
         {loadingRolePermissions || loadingPermissionResources ? (
           <div className="flex h-[360px] items-center justify-center">
-            <Spin tip={loadingPermissionResources ? '正在读取菜单与按钮资源' : '正在读取角色权限'} />
+            <Spin tip={loadingPermissionResources ? t('roles.permissionDialog.loadResources') : t('roles.permissionDialog.loadPermissions')} />
           </div>
         ) : (
         <div className="space-y-4">
@@ -645,42 +656,40 @@ export const RolesPage: React.FC = () => {
             <div className="flex items-center gap-5 text-xs text-slate-600">
               <span className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-slate-900" />
-                已选菜单 <strong className="font-mono text-sm font-semibold text-slate-900">{selectedMenuIds.length}</strong>
+                {t('roles.permissionDialog.selectedMenus')}<strong className="font-mono text-sm font-semibold text-slate-900">{selectedMenuIds.length}</strong>
                 <span className="font-mono text-slate-300">/{flatMenus.length}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-emerald-500" />
-                已选按钮 <strong className="font-mono text-sm font-semibold text-slate-900">{selectedButtonIds.length}</strong>
+                {t('roles.permissionDialog.selectedActions')}<strong className="font-mono text-sm font-semibold text-slate-900">{selectedButtonIds.length}</strong>
                 <span className="font-mono text-slate-300">/{buttons.length}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Button size="xs" onClick={handleSelectAll}>
-                全选可用资源
-              </Button>
+                {t('roles.permissionDialog.selectAll')}</Button>
               <Button variant="subtle" size="xs" onClick={handleClearAll}>
-                清空
-              </Button>
+                {t('common.actions.clear')}</Button>
             </div>
           </div>
 
           <Alert
             type="warning"
-            title="菜单与操作联动授权"
-            description="勾选操作会自动补齐所属页面及父级菜单；取消菜单会同步移除其下级菜单和相关操作权限。"
+            title={t('roles.permissionDialog.linkedTitle')}
+            description={t('roles.permissionDialog.linkedHint')}
           />
 
           {/* Modular Permission Matrix List */}
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
-              <span className="text-13 font-medium text-slate-800">模块与页面权限</span>
-              <span className="text-xs text-slate-400">勾选页面控制可访问性，右侧网格配置按钮操作权限</span>
+              <span className="text-13 font-medium text-slate-800">{t('roles.permissionDialog.pagesTitle')}</span>
+              <span className="text-xs text-slate-400">{t('roles.permissionDialog.pagesHint')}</span>
             </div>
 
             <div className="space-y-3">
               {menus.length === 0 ? (
                 <EmptyState
-                  description="请先在菜单管理中创建菜单和按钮"
+                  description={t('roles.permissionDialog.emptyHint')}
                   icon="shield-check"
                   minHeight={240}
                 />
@@ -720,23 +729,21 @@ export const RolesPage: React.FC = () => {
 
                           <div className="flex items-center gap-2 shrink-0">
                             <Badge variant="secondary" className="font-normal">
-                              {activeChildren.length} 个子页面
-                            </Badge>
+                              {t('roles.permissionDialog.subpages', { count: activeChildren.length })}</Badge>
                             <Button
                               size="xs"
                               onClick={() => handleToggleModule(moduleMenu)}
                               disabled={!isModuleGrantable}
                             >
-                              全选模块页面
-                            </Button>
+                              {t('roles.permissionDialog.selectPages')}</Button>
                           </div>
                         </div>
 
                         {/* Column Header */}
                         <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-400">
-                          <div className="col-span-3">页面导航</div>
-                          <div className="col-span-7">操作按钮权限</div>
-                          <div className="col-span-2 text-right">快捷操作</div>
+                          <div className="col-span-3">{t('roles.permissionDialog.pageAccess')}</div>
+                          <div className="col-span-7">{t('roles.permissionDialog.actionsTitle')}</div>
+                          <div className="col-span-2 text-right">{t('roles.permissionDialog.quickActions')}</div>
                         </div>
 
                         {/* Sub-pages Rows */}
@@ -781,7 +788,7 @@ export const RolesPage: React.FC = () => {
                                         return (
                                           <Tooltip
                                             key={btn.id}
-                                            title={<span className="font-mono text-xs">权限码: {btn.permission_code}</span>}
+                                            title={<span className="font-mono text-xs">{t('roles.permissionDialog.codeLabel')}{btn.permission_code}</span>}
                                           >
                                             <div className="flex items-center min-w-0">
                                               <Checkbox
@@ -800,8 +807,7 @@ export const RolesPage: React.FC = () => {
                                     </div>
                                   ) : (
                                     <span className="block select-none pt-0.5 text-xs text-slate-400">
-                                      只读访问，无独立操作按钮
-                                    </span>
+                                      {t('roles.permissionDialog.readOnly')}</span>
                                   )}
                                 </div>
 
@@ -813,7 +819,7 @@ export const RolesPage: React.FC = () => {
                                       size="xs"                                      onClick={() => handleTogglePageButtons(childMenu.id, directButtons)}
                                       disabled={activeDirectButtons.length === 0}
                                     >
-                                      {isAllButtonsSelected ? '取消全部' : '全选操作'} ({selectedCount}/{directButtons.length})
+                                      {isAllButtonsSelected ? t('roles.permissionDialog.clearActions') : t('roles.permissionDialog.selectActions')} ({selectedCount}/{directButtons.length})
                                     </Button>
                                   )}
                                 </div>
@@ -861,16 +867,15 @@ export const RolesPage: React.FC = () => {
 
                         <div className="flex items-center gap-2 shrink-0">
                           <Badge variant="secondary" className="font-normal">
-                            独立页面
-                          </Badge>
+                            {t('roles.permissionDialog.standalone')}</Badge>
                         </div>
                       </div>
 
                       {/* Column Header */}
                       <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-400">
-                        <div className="col-span-3">页面导航</div>
-                        <div className="col-span-7">操作按钮权限</div>
-                        <div className="col-span-2 text-right">快捷操作</div>
+                        <div className="col-span-3">{t('roles.permissionDialog.pageAccess')}</div>
+                        <div className="col-span-7">{t('roles.permissionDialog.actionsTitle')}</div>
+                        <div className="col-span-2 text-right">{t('roles.permissionDialog.quickActions')}</div>
                       </div>
 
                       {/* Row */}
@@ -898,7 +903,7 @@ export const RolesPage: React.FC = () => {
                                 return (
                                   <Tooltip
                                     key={btn.id}
-                                    title={<span className="font-mono text-xs">权限码: {btn.permission_code}</span>}
+                                    title={<span className="font-mono text-xs">{t('roles.permissionDialog.codeLabel')}{btn.permission_code}</span>}
                                   >
                                     <div className="flex items-center min-w-0">
                                       <Checkbox
@@ -917,8 +922,7 @@ export const RolesPage: React.FC = () => {
                             </div>
                           ) : (
                             <span className="block select-none pt-0.5 text-xs text-slate-400">
-                              只读访问，无独立操作按钮
-                            </span>
+                              {t('roles.permissionDialog.readOnly')}</span>
                           )}
                         </div>
 
@@ -929,7 +933,7 @@ export const RolesPage: React.FC = () => {
                               size="xs"                              onClick={() => handleTogglePageButtons(moduleMenu.id, directButtons)}
                               disabled={activeDirectButtons.length === 0}
                             >
-                              {isAllButtonsSelected ? '取消全部' : '全选操作'} ({selectedCount}/{directButtons.length})
+                              {isAllButtonsSelected ? t('roles.permissionDialog.clearActions') : t('roles.permissionDialog.selectActions')} ({selectedCount}/{directButtons.length})
                             </Button>
                           )}
                         </div>

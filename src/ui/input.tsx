@@ -148,7 +148,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
           <button
             type="button"
             tabIndex={-1}
-            aria-label={t('ui.clear')}
+            aria-label={t('common.actions.clear')}
             className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-300/80 text-white transition-colors hover:bg-slate-400"
             onClick={() => {
               if (innerRef.current) {

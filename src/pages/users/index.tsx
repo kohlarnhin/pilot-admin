@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useCan } from '@/hooks/usePermission';
 import { useDataChanged } from '@/hooks/useDataChanged';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -27,6 +28,7 @@ import dayjs from 'dayjs';
 import { useSearchParams } from 'react-router';
 
 export const UsersPage: React.FC = () => {
+  const { locale } = useT();
   const currentUser = useAuthStore((state) => state.user);
   const can = useCan();
   const refreshMe = useAuthStore((state) => state.refreshMe);
@@ -82,7 +84,7 @@ export const UsersPage: React.FC = () => {
     scopeKey: queryKeyword,
     getKey: (user: User) => user.id,
     onError: (error) => {
-      const errorMessage = (error as Error).message || '加载用户失败';
+      const errorMessage = (error as Error).message || t('users.errors.loadUsers');
       setLoadError(errorMessage);
       message.error(errorMessage);
     },
@@ -100,8 +102,8 @@ export const UsersPage: React.FC = () => {
     try {
       setRoles(await roleService.getAllRoles());
     } catch (error) {
-      const errorMessage = (error as Error).message || '加载角色失败';
-      setLoadError((current) => current ? `${current}；${errorMessage}` : errorMessage);
+      const errorMessage = (error as Error).message || t('users.errors.loadRoles');
+      setLoadError((current) => current ? t('users.errors.combined', { current, error: errorMessage }) : errorMessage);
       message.error(errorMessage);
     }
   }, []);
@@ -112,7 +114,7 @@ export const UsersPage: React.FC = () => {
       const count = await userService.countUsers({ keyword: queryKeyword || undefined });
       if (request === countRequest.current) setTotal(count);
     } catch (error) {
-      message.error((error as Error).message || '加载用户总数失败');
+      message.error((error as Error).message || t('users.errors.loadCount'));
     }
   }, [queryKeyword]);
 
@@ -167,7 +169,7 @@ export const UsersPage: React.FC = () => {
           password: canResetPassword ? values.password_hash || undefined : undefined,
         });
         if (editingUser.id === currentUser?.id) await refreshMe();
-        message.success('用户信息更新成功');
+        message.success(t('users.toast.updated'));
         setIsModalOpen(false);
       } else {
         const created = await userService.createUser({
@@ -179,23 +181,23 @@ export const UsersPage: React.FC = () => {
         });
         setIsModalOpen(false);
         Modal.success({
-          title: '新增用户成功',
+          title: t('users.toast.created'),
           width: 440,
           content: (
             <div>
               <div className="mt-1 divide-y divide-line-soft rounded-lg border border-line bg-slate-50/70">
                 {[
-                  { label: '账号', value: values.login_name, secret: false },
-                  { label: '密码', value: created.data.initial_password, secret: true },
+                  { label: t('common.fields.account'), value: values.login_name, secret: false },
+                  { label: t('common.fields.password'), value: created.data.initial_password, secret: true },
                 ].map(({ label, value, secret }) => (
                   <div key={label} className="flex items-center gap-3 px-3 py-2">
-                    <span className="w-8 shrink-0 text-xs text-slate-400">{label}</span>
+                    <span className={`${locale === 'en-US' ? 'w-16' : 'w-8'} shrink-0 text-xs text-slate-400`}>{label}</span>
                     <span className="min-w-0 flex-1 truncate font-mono text-13 text-slate-800">{value}</span>
-                    <CopyButton text={value} tip={`复制${label}`} secret={secret} />
+                    <CopyButton text={value} tip={t('users.createdAccount.copyLabel', { name: label })} secret={secret} />
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-slate-400">请妥善保存，关闭后将不再显示密码。</p>
+              <p className="mt-2 text-xs text-slate-400">{t('users.createdAccount.notice')}</p>
             </div>
           ),
         });
@@ -203,7 +205,7 @@ export const UsersPage: React.FC = () => {
       refreshUsers();
     } catch (err: any) {
       if (err?.errorFields) return; // Validation failed
-      message.error(err.message || '保存失败');
+      message.error(err.message || t('common.toast.saveFailed'));
     }
   };
 
@@ -213,7 +215,7 @@ export const UsersPage: React.FC = () => {
       currentUser && (user.id === currentUser.id || user.login_name === currentUser.login_name)
     );
     if (isSelf && !checked) {
-      message.warning('不可禁用当前登录账号');
+      message.warning(t('serverErrors.user.selfDisable'));
       return;
     }
 
@@ -225,14 +227,14 @@ export const UsersPage: React.FC = () => {
     try {
       await userService.updateStatus(user.id, newStatus);
       if (checked) {
-        message.success(`用户【${user.user_name}】已启用`);
+        message.success(t('users.toast.enabled', { name: user.user_name }));
       } else {
-        message.warning(`用户【${user.user_name}】已禁用`);
+        message.warning(t('users.toast.disabled', { name: user.user_name }));
       }
     } catch (err: any) {
       // 失败时回滚
       setRawUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: user.status } : u)));
-      message.error(err.message || '操作失败');
+      message.error(err.message || t('common.toast.actionFailed'));
     } finally {
       setChangingStatusIds((current) => { const next = new Set(current); next.delete(user.id); return next; });
     }
@@ -244,10 +246,10 @@ export const UsersPage: React.FC = () => {
 
   const handleDelete = (user: User) => {
     Modal.confirm({
-      title: '删除用户', content: `确定删除用户「${user.user_name}」吗？删除后该账号无法再登录。`, okText: '确认删除', okType: 'danger',
+      title: t('button.userDelete'), content: t('users.deleteDialog.content', { name: user.user_name }), okText: t('common.actions.confirmDelete'), okType: 'danger',
       onOk: async () => {
         await userService.deleteUser(user.id);
-        message.success('用户已删除'); refreshUsers();
+        message.success(t('users.toast.deleted')); refreshUsers();
       },
     });
   };
@@ -257,15 +259,15 @@ export const UsersPage: React.FC = () => {
     try {
       const values = await passwordForm.validateFields();
       await userService.resetPassword(resetTarget.id, values.password);
-      setResetTarget(null); message.success('密码已重置');
+      setResetTarget(null); message.success(t('users.toast.passwordReset'));
     } catch (error: any) {
-      if (!error?.errorFields) message.error(error.message || '重置失败');
+      if (!error?.errorFields) message.error(error.message || t('users.errors.resetPassword'));
     }
   };
 
   const columns: ColumnsType<User> = [
     {
-      title: '用户',
+      title: t('users.columns.user'),
       dataIndex: 'user_name',
       key: 'user_name',
       width: '26%',
@@ -276,21 +278,21 @@ export const UsersPage: React.FC = () => {
             {record.avatar ? (
               <img alt="" src={record.avatar} className="size-full object-cover" />
             ) : (
-              <AvatarFallback>{name ? name.slice(0, 1) : '用'}</AvatarFallback>
+              <AvatarFallback>{name ? name.slice(0, 1) : t('users.avatarFallback')}</AvatarFallback>
             )}
           </Avatar>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-13 font-medium text-slate-900" title={name}>{name}</span>
             <div className="group flex min-w-0 items-center gap-1">
               <span className="truncate font-mono text-[11px] text-slate-500" title={`@${record.login_name} · ${record.id}`}>@{record.login_name} · {record.id}</span>
-              <CopyButton text={record.id} tip="复制用户 ID" />
+              <CopyButton text={record.id} tip={t('users.columns.copyId')} />
             </div>
           </div>
         </div>
       ),
     },
     {
-      title: '角色',
+      title: t('common.fields.role'),
       key: 'roles',
       width: '22%',
       render: (_, record) =>
@@ -301,11 +303,11 @@ export const UsersPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <span className="text-xs text-slate-400">未分配角色</span>
+          <span className="text-xs text-slate-400">{t('users.columns.noRole')}</span>
         ),
     },
     {
-      title: '工作邮箱',
+      title: t('users.fields.workEmail'),
       dataIndex: 'email',
       key: 'email',
       width: '24%',
@@ -316,26 +318,26 @@ export const UsersPage: React.FC = () => {
       ),
     },
     {
-      title: '状态',
+      title: t('common.columns.status'),
       dataIndex: 'status',
       key: 'status',
       width: 72,
       align: 'center',
       render: (status: number, record) => (
-        <Tooltip title={isSelfUser(record) ? '不可禁用当前登录账号' : undefined}>
+        <Tooltip title={isSelfUser(record) ? t('serverErrors.user.selfDisable') : undefined}>
           <Switch
             size="small"
             checked={status === 1}
             loading={changingStatusIds.has(record.id)}
             disabled={!canEdit || isSelfUser(record)}
             onChange={(checked) => handleToggleStatus(record, checked)}
-            aria-label={status === 1 ? '禁用用户' : '启用用户'}
+            aria-label={status === 1 ? t('users.actions.disable') : t('users.actions.enable')}
           />
         </Tooltip>
       ),
     },
     {
-      title: '创建时间',
+      title: t('common.columns.created'),
       dataIndex: 'create_date',
       key: 'create_date',
       width: 156,
@@ -346,15 +348,15 @@ export const UsersPage: React.FC = () => {
       ),
     },
     {
-      title: '操作',
+      title: t('common.columns.actions'),
       key: 'action',
       width: 144,
       align: 'center',
       render: (_, record) => (
         <RowActions>
-          {canEdit && <RowAction size="sm" icon="pencil" label="编辑用户" onClick={() => handleOpenEditModal(record)} />}
-          {canResetPassword && <RowAction size="sm" icon="key-round" label="重置密码" onClick={() => { passwordForm.resetFields(); setResetTarget(record); }} />}
-          {canDelete && <RowAction size="sm" icon="trash-2" label="删除用户" tone="danger" disabled={isSelfUser(record)} disabledReason="不可删除当前登录账号" onClick={() => handleDelete(record)} />}
+          {canEdit && <RowAction size="sm" icon="pencil" label={t('button.userUpdate')} onClick={() => handleOpenEditModal(record)} />}
+          {canResetPassword && <RowAction size="sm" icon="key-round" label={t('button.userResetPassword')} onClick={() => { passwordForm.resetFields(); setResetTarget(record); }} />}
+          {canDelete && <RowAction size="sm" icon="trash-2" label={t('button.userDelete')} tone="danger" disabled={isSelfUser(record)} disabledReason={t('serverErrors.user.selfDelete')} onClick={() => handleDelete(record)} />}
         </RowActions>
       ),
     },
@@ -363,23 +365,22 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       {loadError && (
-        <Alert type="error" title={`加载失败：${loadError}`} description={<Button size="xs" onClick={() => { setLoadError(null); void retry(); }}>重试</Button>} className="mb-4 shrink-0" />
+        <Alert type="error" title={t('users.errors.load', { error: loadError })} description={<Button size="xs" onClick={() => { setLoadError(null); void retry(); }}>{t('common.actions.retry')}</Button>} className="mb-4 shrink-0" />
       )}
 
       <PageHeader
-        title="用户管理"
-        description="维护平台用户账号，并为其分配 RBAC 角色权限"
+        title={t('menu.users')}
+        description={t('users.description')}
         actions={canCreate ?
           <Button onClick={handleOpenAddModal}>
             <Icon icon="user-plus" size={16} />
-            新增用户
-          </Button> : undefined
+            {t('button.userCreate')}</Button> : undefined
         }
       />
       <Card className="min-h-0 flex-1">
-        <ListToolbar extra={<span>共 {total} 名用户</span>}>
+        <ListToolbar extra={<span>{t('users.total', { count: total })}</span>}>
           <SearchInput className="w-72"
-            placeholder="搜索账号或姓名"
+            placeholder={t('users.searchPlaceholder')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onPressEnter={handleSearch}
@@ -399,8 +400,8 @@ export const UsersPage: React.FC = () => {
             locale={{
               emptyText: (
                 <EmptyState
-                  title={loadError ? '数据加载失败' : queryKeyword ? '没有匹配的用户' : '暂无系统用户'}
-                  description={loadError ? '请点击上方重试，重新加载用户数据' : queryKeyword ? '换个关键词试试' : '点击右上角「新增用户」，创建新的登录账号'}
+                  title={loadError ? t('common.errors.loadData') : queryKeyword ? t('search.noUsers') : t('users.empty.noUsers')}
+                  description={loadError ? t('users.empty.retryHint') : queryKeyword ? t('users.empty.searchHint') : t('users.empty.createHint')}
                   icon="users-round"
                 />
               ),
@@ -410,66 +411,66 @@ export const UsersPage: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingUser ? '编辑用户' : '新增用户'}
+        title={editingUser ? t('button.userUpdate') : t('button.userCreate')}
         icon="user"
-        description={editingUser ? `@${editingUser.login_name}` : '创建平台登录账号并分配角色'}
+        description={editingUser ? `@${editingUser.login_name}` : t('users.createDialog.description')}
         open={isModalOpen}
         onOk={handleModalSubmit}
         onCancel={() => setIsModalOpen(false)}
-        okText={editingUser ? '保存' : '创建'}
+        okText={editingUser ? t('common.actions.save') : t('common.actions.create')}
         width={520}
       >
         <Form form={form}>
           <Form.Item
             name="login_name"
-            label="登录账号"
+            label={t('users.fields.loginName')}
             rules={[
-              { required: true, message: '请输入登录账号' },
-              { pattern: /^[a-zA-Z0-9_]+$/, message: '仅支持字母、数字和下划线' },
+              { required: true, message: t('users.validation.loginRequired') },
+              { pattern: /^[a-zA-Z0-9_]+$/, message: t('common.validation.accountFormat') },
             ]}
           >
-            <Input placeholder="例如：dev_zhang" disabled={!!editingUser} className="font-mono" />
+            <Input placeholder={t('users.placeholders.loginName')} disabled={!!editingUser} className="font-mono" />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-x-4">
-            <Form.Item name="user_name" label="用户姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-              <Input placeholder="例如：张工" />
+            <Form.Item name="user_name" label={t('users.fields.displayName')} rules={[{ required: true, message: t('common.validation.nameRequired') }]}>
+              <Input placeholder={t('users.placeholders.displayName')} />
             </Form.Item>
-            <Form.Item name="email" label="工作邮箱" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
+            <Form.Item name="email" label={t('users.fields.workEmail')} rules={[{ type: 'email', message: t('common.validation.emailInvalid') }]}>
               <Input placeholder="name@company.com" />
             </Form.Item>
           </div>
 
           {(!editingUser || canResetPassword) && <Form.Item
             name="password_hash"
-            label={editingUser ? '重置密码' : '初始密码'}
-            extra={editingUser ? '无需重置请留空' : '留空将由系统自动生成随机密码'}
+            label={editingUser ? t('button.userResetPassword') : t('users.fields.initialPassword')}
+            extra={editingUser ? t('users.hints.keepPassword') : t('users.hints.generatePassword')}
           >
             <Input.Password
-              placeholder={editingUser ? '输入新密码，留空则不修改' : '留空自动生成'}
+              placeholder={editingUser ? t('users.placeholders.keepPassword') : t('users.placeholders.password')}
               autoComplete="new-password"
             />
           </Form.Item>}
 
           <Form.Item
             name="role_ids"
-            label="分配角色"
+            label={t('users.fields.roles')}
             className="mb-0"
-            rules={[{ required: true, message: '请至少选择一个角色' }]}
+            rules={[{ required: true, message: t('users.validation.rolesRequired') }]}
           >
             <Select
               mode="multiple"
-              placeholder="请选择角色"
+              placeholder={t('users.placeholders.roles')}
               options={roles.filter((r) => r.status === 1).map((r) => ({ label: `${r.role_name} · ${r.role_code}`, value: r.id }))}
             />
           </Form.Item>
         </Form>
       </Modal>
-      <Modal title="重置密码" icon="key-round" description={resetTarget ? `为 @${resetTarget.login_name} 设置新密码` : undefined}
-        open={Boolean(resetTarget)} onCancel={() => setResetTarget(null)} onOk={handleResetPassword} okText="确认重置" width={420}>
+      <Modal title={t('button.userResetPassword')} icon="key-round" description={resetTarget ? t('users.resetDialog.description', { account: resetTarget.login_name }) : undefined}
+        open={Boolean(resetTarget)} onCancel={() => setResetTarget(null)} onOk={handleResetPassword} okText={t('common.actions.confirmReset')} width={420}>
         <Form form={passwordForm}>
-          <Form.Item name="password" label="新密码" rules={[{ required: true, message: '请输入新密码' }]} className="mb-0">
-            <Input.Password autoComplete="new-password" placeholder="请输入新密码" />
+          <Form.Item name="password" label={t('common.fields.newPassword')} rules={[{ required: true, message: t('common.validation.passwordRequired') }]} className="mb-0">
+            <Input.Password autoComplete="new-password" placeholder={t('common.validation.passwordRequired')} />
           </Form.Item>
         </Form>
       </Modal>

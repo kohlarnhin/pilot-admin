@@ -23,7 +23,7 @@ export function AgentPreferencesDialog({ onClose }: { onClose: () => void }) {
     } finally { setSaving(false); }
   };
   return <Modal open title={t('agentEntry.preferences')} icon="square-terminal" description={t('agentEntry.preferencesDescription')}
-    confirmLoading={saving} onCancel={saving ? undefined : onClose} onOk={save} okText={t('common.save')} width={460}>
+    confirmLoading={saving} onCancel={saving ? undefined : onClose} onOk={save} okText={t('common.actions.save')} width={460}>
     <div className="space-y-5">
       <div><label htmlFor="agent-entry-preference" className="mb-2 block text-13 font-medium text-slate-700">{t('agentEntry.afterLogin')}</label>
         <Select id="agent-entry-preference" value={entry} disabled={saving} className="w-full" onChange={value => setEntry(value as UserPreferences['agent_mode_entry'])}

@@ -50,8 +50,8 @@ export function PasswordChangeModal({ open, onClose, onPasswordChanged }: {
         <Form.Item name="oldPassword" label={t('auth.oldPassword')} rules={[{ required: true, message: t('auth.oldPasswordRequired') }]}>
           <Input.Password placeholder={t('auth.oldPasswordRequired')} autoComplete="current-password" />
         </Form.Item>
-        <Form.Item name="newPassword" label={t('auth.newPassword')} rules={[{ required: true, message: t('auth.newPasswordRequired') }]}>
-          <Input.Password placeholder={t('auth.newPasswordRequired')} autoComplete="new-password" />
+        <Form.Item name="newPassword" label={t('common.fields.newPassword')} rules={[{ required: true, message: t('common.validation.passwordRequired') }]}>
+          <Input.Password placeholder={t('common.validation.passwordRequired')} autoComplete="new-password" />
         </Form.Item>
         <Form.Item
           name="confirmPassword"
@@ -63,7 +63,7 @@ export function PasswordChangeModal({ open, onClose, onPasswordChanged }: {
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                return Promise.reject(new Error(t('auth.passwordMismatch')));
+                return Promise.reject(new Error(t('serverErrors.password.confirmMismatch')));
               },
             }),
           ]}

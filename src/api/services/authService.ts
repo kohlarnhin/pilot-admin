@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { ApiRequestError } from '../http';
 import type { AuthMeResponse, AuthTokens, UserPreferences } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
@@ -11,10 +12,10 @@ export const authService = {
     await delay();
     const user = getMockDb().users.find((item) => item.login_name === loginName);
     if (!user || user.password !== password) {
-      throw new ApiRequestError('账号或密码错误，请检查后重试', 400);
+      throw new ApiRequestError(t('serverErrors.auth.invalidCredentials'), 400);
     }
     if (user.status !== 1) {
-      throw new ApiRequestError('账号已停用，请联系管理员', 403);
+      throw new ApiRequestError(t('serverErrors.auth.accountDisabled'), 403);
     }
 
     // 仅供前端演示；与正式 Token 使用相同的存储、会话恢复接口。
@@ -37,10 +38,10 @@ export const authService = {
     await delay();
     const user = currentUser();
     if (user.password !== data.oldPassword) {
-      throw new ApiRequestError('原密码不正确', 400);
+      throw new ApiRequestError(t('serverErrors.password.currentMismatch'), 400);
     }
     if (data.newPassword !== data.confirmPassword) {
-      throw new ApiRequestError('两次输入的新密码不一致', 400);
+      throw new ApiRequestError(t('serverErrors.password.confirmMismatch'), 400);
     }
 
     validatePassword(data.newPassword);

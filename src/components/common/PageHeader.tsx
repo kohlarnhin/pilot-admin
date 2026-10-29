@@ -40,7 +40,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
   crumbs,
   onBack,
-  backLabel = t('common.back'),
+  backLabel = t('common.actions.back'),
   className,
   extra,
 }) => {

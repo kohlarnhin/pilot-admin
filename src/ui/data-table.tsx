@@ -132,7 +132,7 @@ export function TableSkeleton({ rows = 7, showHeader = true }: { rows?: number; 
   useT();
   const widths = ["24%", "16%", "14%", "12%", "10%"];
   return (
-    <div className="w-full" aria-busy="true" aria-label={t('ui.loading')}>
+    <div className="w-full" aria-busy="true" aria-label={t('common.status.loading')}>
       {showHeader && (
         <div className="flex h-11 items-center gap-8 border-b border-line bg-white px-6">
           {widths.map((width, index) => (
@@ -467,7 +467,7 @@ export function DataTable<T extends object>({
           </div>
         )}
         {initialLoading ? (
-          <div role="rowgroup" aria-busy="true" aria-label={t('ui.loading')} className={fill ? "flex-1" : undefined}>
+          <div role="rowgroup" aria-busy="true" aria-label={t('common.status.loading')} className={fill ? "flex-1" : undefined}>
             {showSkeleton && Array.from({ length: skeletonRows }).map((_, index) => (
               <div
                 key={index}

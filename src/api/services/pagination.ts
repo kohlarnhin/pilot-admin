@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { PageResult } from '../../types';
 export interface PageQuery {
   pageNo?: number;
@@ -27,7 +28,7 @@ export const collectAllPages = async <T>(fetchPage: (pageNo: number, pageSize: n
     const page = await fetchPage(pageNo, pageSize);
     records.push(...page.records);
     if (page.records.length === 0 && page.hasNext) {
-      throw new Error('分页接口返回空数据但仍标记存在下一页');
+      throw new Error(t('serverErrors.pagination.emptyPage'));
     }
     hasNext = page.hasNext;
     pageNo += 1;

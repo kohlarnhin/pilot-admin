@@ -18,7 +18,7 @@ interface EmptyStateProps {
  * 供列表页空数据、仪表盘无数据、工作台等场景使用。
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = t('common.empty'),
+  title = t('common.empty.noData'),
   description,
   icon = 'inbox',
   action,

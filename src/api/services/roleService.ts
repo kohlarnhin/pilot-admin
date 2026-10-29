@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { ApiResponse, Button, Menu, PageResult, Role } from '@/types';
 import type { PageQuery } from './pagination';
 import { flattenMenuTree } from './menuService';
@@ -25,7 +26,7 @@ const publicRole = ({ auto_grant: _autoGrant, ...role }: MockRole): RoleWithPerm
 const getRole = (id: string) => {
   const role = getMockDb().roles.find((item) => item.id === id);
   if (!role) {
-    throw new ApiRequestError('角色不存在', 404);
+    throw new ApiRequestError(t('serverErrors.role.notFound'), 404);
   }
   return role;
 };
@@ -81,10 +82,10 @@ export const roleService = {
     await delay();
     const actor = requirePermission('role:create');
     if (!data.role_name.trim() || !/^[a-zA-Z0-9_]+$/.test(data.role_code)) {
-      throw new ApiRequestError('请填写有效的角色名称与编码', 400);
+      throw new ApiRequestError(t('serverErrors.role.invalidRole'), 400);
     }
     if (getMockDb().roles.some((role) => role.role_code === data.role_code)) {
-      throw new ApiRequestError('该角色编码已存在', 409);
+      throw new ApiRequestError(t('serverErrors.role.codeExists'), 409);
     }
 
     const date = new Date().toISOString();
@@ -106,7 +107,7 @@ export const roleService = {
     updateMockDb((db) => {
       db.roles.push(role);
     });
-    addActivity(actor.user_name, `创建了角色 ${role.role_name}`, 'shield-check');
+    addActivity(actor.user_name, t('activity.role.created', { name: role.role_name }), 'shield-check');
     return response(publicRole(role));
   },
 
@@ -119,7 +120,7 @@ export const roleService = {
     requirePermission('role:update');
     getRole(roleId);
     if (data.role_name !== undefined && !data.role_name.trim()) {
-      throw new ApiRequestError('请输入角色名称', 400);
+      throw new ApiRequestError(t('serverErrors.role.nameRequired'), 400);
     }
 
     updateMockDb((db) => {
@@ -164,7 +165,7 @@ export const roleService = {
       role.menu_count = role.menuIds.length;
       role.button_count = role.buttonIds.length;
     });
-    addActivity(actor.user_name, `更新了角色 ${getRole(roleId).role_name} 的权限`, 'shield-check');
+    addActivity(actor.user_name, t('activity.role.permissionsUpdated', { name: getRole(roleId).role_name }), 'shield-check');
     return response(true);
   },
 
@@ -173,10 +174,10 @@ export const roleService = {
     requirePermission('role:delete');
     getRole(roleId);
     if (roleId === 'role-admin') {
-      throw new ApiRequestError('内置超级管理员角色不可删除', 400);
+      throw new ApiRequestError(t('serverErrors.role.builtInProtected'), 400);
     }
     if (getMockDb().users.some((user) => user.role_ids.includes(roleId))) {
-      throw new ApiRequestError('该角色仍有用户使用，请先调整用户角色', 400);
+      throw new ApiRequestError(t('serverErrors.role.inUse'), 400);
     }
 
     updateMockDb((db) => {

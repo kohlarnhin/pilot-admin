@@ -16,10 +16,10 @@ import { preloadRoute } from '@/routes/routeModules';
 import type { DashboardData } from '@/types';
 
 const METRICS = [
-  { key: 'totalUsers', label: 'dashboard.totalUsers', icon: 'users', unit: 'common.peopleUnit' },
-  { key: 'activeUsers', label: 'dashboard.activeUsers', icon: 'user-check', unit: 'common.peopleUnit' },
-  { key: 'totalRoles', label: 'dashboard.totalRoles', icon: 'shield-check', unit: 'common.itemUnit' },
-  { key: 'totalMenus', label: 'dashboard.totalMenus', icon: 'layout-grid', unit: 'common.itemUnit' },
+  { key: 'totalUsers', label: 'dashboard.totalUsers', icon: 'users', unit: 'common.units.people' },
+  { key: 'activeUsers', label: 'dashboard.activeUsers', icon: 'user-check', unit: 'common.units.people' },
+  { key: 'totalRoles', label: 'dashboard.totalRoles', icon: 'shield-check', unit: 'common.units.items' },
+  { key: 'totalMenus', label: 'dashboard.totalMenus', icon: 'layout-grid', unit: 'common.units.items' },
 ] as const;
 
 export const DashboardPage: React.FC = () => {
@@ -39,8 +39,8 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="h-full min-h-0 min-w-0 w-full overflow-y-auto overscroll-contain">
-      <PageHeader title={t('dashboard.title')} description={t('dashboard.welcome', { name: userName || t('dashboard.hello') })} />
-      {error && <Alert type="error" title={error} action={<Button size="xs" onClick={() => setAttempt((value) => value + 1)}>{t('common.retry')}</Button>} className="mb-5" />}
+      <PageHeader title={t('menu.dashboard')} description={t('dashboard.welcome', { name: userName || t('dashboard.hello') })} />
+      {error && <Alert type="error" title={error} action={<Button size="xs" onClick={() => setAttempt((value) => value + 1)}>{t('common.actions.retry')}</Button>} className="mb-5" />}
       <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
         {METRICS.map((metric) => !stats ? <Skeleton key={metric.key} className="h-[108px] rounded-2xl" /> : (
           <div key={metric.key} className="rounded-2xl border border-[#E6EAF0] bg-white px-6 py-5 shadow-card">

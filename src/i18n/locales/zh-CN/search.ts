@@ -14,13 +14,11 @@ export default {
   "noUsers": "没有匹配的用户",
   "preview": "搜索预览",
   "userPreview": "用户预览",
-  "email": "邮箱",
   "userId": "用户 ID",
   "viewUser": "查看用户",
   "selectUser": "搜索并选择用户，查看详细信息",
   "select": "选择",
   "open": "打开",
-  "close": "关闭",
   "shortcut": "搜索 {shortcut}K",
   "opening": "正在打开搜索",
   "openingText": "正在打开搜索…"

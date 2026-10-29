@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { ApiResponse, SystemSettings } from '@/types';
 import { getMockDb, resetMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';
@@ -32,19 +33,19 @@ export const settingsService = {
     await delay();
     const actor = requirePermission('settings:update');
     if (section === 'basic' && !(value as SystemSettings['basic']).siteName.trim()) {
-      throw new ApiRequestError('请输入站点名称', 400);
+      throw new ApiRequestError(t('serverErrors.settings.nameRequired'), 400);
     }
     if (section === 'security') {
       const minimum = (value as SystemSettings['security']).passwordMinLength;
       if (!Number.isInteger(minimum) || minimum < 6 || minimum > 32) {
-        throw new ApiRequestError('密码最少长度须为 6–32 位', 400);
+        throw new ApiRequestError(t('serverErrors.password.invalidMinLength'), 400);
       }
     }
 
     updateMockDb((db) => {
       db.settings[section] = value;
     });
-    addActivity(actor.user_name, '更新了系统设置', 'settings-2');
+    addActivity(actor.user_name, t('activity.settings.updated'), 'settings-2');
     return response(getMockDb().settings);
   },
 
