@@ -9,7 +9,7 @@
   <script src="reference.js" defer></script>
 </head>
 <body>
-  <!-- 通用 SVG 示意图标；真实应用使用现有 Lucide 注册表。 -->
+  <!-- Generic SVG demo icons; the application uses its existing Lucide registry. -->
   <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
       <symbol id="pilot-grid" viewBox="0 0 24 24"><g fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2" opacity=".4"/><rect x="3" y="13" width="8" height="8" rx="2" opacity=".4"/><rect x="13" y="13" width="8" height="8" rx="2"/></g></symbol>
@@ -29,23 +29,23 @@
     <aside class="pilot-sidebar" aria-label="Application navigation">
       <div class="pilot-brand">
         <svg class="pilot-logo" aria-hidden="true"><use href="#pilot-grid"/></svg>
-        <div class="pilot-brand-copy"><div class="pilot-brand-name">Pilot Admin</div><div class="pilot-brand-description">通用管理端</div></div>
+        <div class="pilot-brand-copy"><div class="pilot-brand-name">Pilot Admin</div><div class="pilot-brand-description">Admin console</div></div>
         <button id="pilot-collapse" class="pilot-collapse" type="button" aria-label="Collapse navigation" aria-expanded="true"><svg width="12" height="12" aria-hidden="true"><use href="#pilot-arrow"/></svg></button>
       </div>
       <nav class="pilot-nav-scroll" aria-label="Resource views">
-        <div class="pilot-nav-group">管理端</div>
+        <div class="pilot-nav-group">Workspace</div>
         <button class="pilot-nav-item" type="button" data-filter="all" aria-current="page"><svg aria-hidden="true"><use href="#pilot-grid"/></svg><span>All resources</span></button>
         <button class="pilot-nav-item" type="button" data-filter="enabled"><svg aria-hidden="true"><use href="#pilot-check"/></svg><span>Enabled</span></button>
         <button class="pilot-nav-item" type="button" data-filter="paused"><svg aria-hidden="true"><use href="#pilot-pause"/></svg><span>Paused</span></button>
       </nav>
-      <div class="pilot-sidebar-status"><span><i class="pilot-status-dot" aria-hidden="true"></i>演示已就绪</span><span class="pilot-mono pilot-muted">v1.0</span></div>
+      <div class="pilot-sidebar-status"><span><i class="pilot-status-dot" aria-hidden="true"></i>Demo ready</span><span class="pilot-mono pilot-muted">v1.0</span></div>
     </aside>
     <div class="pilot-main-column">
       <main class="pilot-main">
         <div class="pilot-page">
           <section class="pilot-panel" aria-labelledby="pilot-page-title">
             <header class="pilot-panel-heading">
-              <div class="pilot-title-group"><div class="pilot-title-icon"><svg aria-hidden="true"><use href="#pilot-grid"/></svg></div><div><div class="pilot-heading-line"><h1 id="pilot-page-title">Resource management</h1><span id="pilot-total" class="pilot-badge">Resources</span></div><p class="pilot-subtitle">Manage shared resources and their availability.</p></div></div>
+              <div class="pilot-title-group"><button id="pilot-mobile-menu" class="pilot-btn pilot-btn--icon pilot-mobile-menu" type="button" aria-label="Open navigation" aria-expanded="false"><svg aria-hidden="true"><use href="#pilot-menu"/></svg></button><div class="pilot-title-icon"><svg aria-hidden="true"><use href="#pilot-grid"/></svg></div><div><div class="pilot-heading-line"><h1 id="pilot-page-title">Resource management</h1><span id="pilot-total" class="pilot-badge">Resources</span></div><p class="pilot-subtitle">Manage shared resources and their availability.</p></div></div>
               <form id="pilot-search-form" class="pilot-toolbar" role="search">
                 <label class="pilot-search"><span class="pilot-sr-only">Search resource name or code</span><svg aria-hidden="true"><use href="#pilot-search"/></svg><input id="pilot-search-input" class="pilot-input" type="search" placeholder="Search name or code" autocomplete="off"></label>
                 <button class="pilot-btn" type="submit">Search</button>

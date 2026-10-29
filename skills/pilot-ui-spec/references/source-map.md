@@ -1,38 +1,108 @@
-# Pilot Admin 实现映射
+# Implementation Evidence and Interpretation
 
-所有路径相对于本仓库，无需访问其他项目。静态 assets 是通用演示；真实行为由下面的文件提供。
+## Scope
 
-| 文件 | 契约 |
+This package describes the interface implemented in this repository. Evidence comes from source inspection and browser measurements at 1440x900 and 1280x720. All paths below are relative to the repository root; the specification does not require any external project to exist. The reference HTML is a synthetic demonstrator, not an exported screenshot.
+
+The package separates observable design intent, current implementation variants, and reliability improvements needed for reuse. Where a rule describes a pattern the repository does not implement yet, the reference marks it *no reference implementation* rather than implying a screen exists.
+
+## Rule-area index
+
+| Rule area | Primary implementation files |
 | --- | --- |
-| `tailwind.config.js`、`src/index.css` | 品牌/状态色、line、圆角、阴影、字体与助手动画 |
-| `src/main.tsx` | 本地字体与应用挂载 |
-| `src/App.tsx` | 错误边界、TooltipProvider、Toaster、ModalHost |
-| `src/components/layout/AppLayout.tsx` | 白色固定外壳、16/24px padding、菜单路由守卫、Agent 返回条 |
-| `src/components/layout/Sidebar.tsx` | 224/88px 导航、64px 品牌区、搜索/助手/账号入口 |
-| `src/components/nav/` | 展开与 mini 导航、中性选中态与橙色当前位置 |
-| `src/components/common/PageHeader.tsx`、`PageSkeleton.tsx`、`EmptyState.tsx`、`CopyButton.tsx` | 页面标题、匹配骨架、空态与约 1800ms 复制反馈 |
-| `src/ui/` | 36px 控件、8/12/16px 圆角、ARIA 表单、异步弹窗、表格与反馈 API |
-| `src/components/common/FixedTable.tsx` | 实际滚动容器、行虚拟化、操作列与静默预取 |
-| `src/hooks/useInfinitePage.ts`、`useInfiniteScrollLoader.ts`、`useFixedRowVirtualizer.ts` | 20 条分批、代次隔离、1200px/0.5 阈值、窗口化 |
-| `src/pages/users/index.tsx`、`src/pages/roles/index.tsx` | 标准管理列表、角色权限树、1280px 操作列可见 |
-| `src/pages/settings/index.tsx` | 256/288px 分类卡、独立内容滚动、演示重置 |
-| `src/pages/assistant/index.tsx`、`src/pages/settings/AgentConfigPanel.tsx` | 助手资料、预览、模型配置与掩码密钥 |
-| `src/pages/dashboard/index.tsx` | 主区域滚动、指标卡与活动列表 |
-| `src/pages/login/index.tsx` | 380px 居中白色表单、40px 输入、内联错误 |
-| `src/components/search/GlobalSearchPalette.tsx` | 720px Cmd+K 搜索、按用户持久化的最近访问 |
-| `src/components/assistant/AssistantRuntime.tsx`、`useAssistantChat.ts` | 路由上层唯一运行时、流式处理、竞态保护、草稿与会话 |
-| `src/components/assistant/AssistantPanel.tsx`、`AssistantHeader.tsx`、`Composer.tsx` | 440/720px 面板、180ms 入场、固定头尾 |
-| `src/components/assistant/SessionHistory.tsx`、`useAssistantScroll.ts` | 历史分组、sentinel 无限追加、向上分页和滚动锚点 |
-| `src/components/assistant/SelectionCard.tsx`、`ExecutionPlanCard.tsx`、`PageActionCard.tsx` | 通用交互卡、计划真实状态、客户端操作 |
-| `src/agent/AgentPage.tsx` | 56px Agent 顶栏、260px 会话侧栏、与面板共享消息 |
-| `src/mock/agent/`、`src/api/services/agentService.ts`、`src/api/sse.ts` | Mock 意图/计划与真实后端 SSE 接缝 |
-| `src/config/menus.ts`、`src/mock/access.ts` | 菜单、页面、按钮及独立助手权限组 |
+| Shell geometry, sidebar, navigation states | `src/components/layout/AppLayout.tsx`, `src/components/layout/Sidebar.tsx`, `src/components/nav/`, `src/index.css` |
+| Colors, type, radii, shadows, motion | `tailwind.config.js`, `src/index.css`, `src/main.tsx` |
+| Cards, toolbars, page headers | `src/ui/card.tsx`, `src/components/common/PageHeader.tsx` |
+| Buttons, inputs, select, form, selection controls | `src/ui/button.tsx`, `src/ui/input.tsx`, `src/ui/select.tsx`, `src/ui/form.tsx`, `src/ui/controls.tsx` |
+| Tables, virtualization, fixed columns | `src/ui/table.tsx`, `src/ui/data-table.tsx`, `src/components/common/FixedTable.tsx`, `src/hooks/useFixedRowVirtualizer.ts` |
+| Infinite loading, query state, prefetch | `src/hooks/useInfinitePage.ts`, `src/hooks/useInfiniteScrollLoader.ts` |
+| Dialogs, drawers, toasts, file drop zone | `src/ui/modal.tsx`, `src/ui/message.tsx`, `src/ui/file-drop-zone.tsx` |
+| Assistant panel, runtime, session history, Agent page | `src/components/assistant/`, `src/agent/AgentPage.tsx`, `src/store/assistantStore.ts` |
+| Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
+| Global search | `src/components/search/GlobalSearch.tsx`, `src/components/search/GlobalSearchPalette.tsx` |
+| Permissions and menus | `src/config/menus.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
 
-## 实现选择
+## Evidence map
 
-- 管理外壳没有全局顶栏；56px 只用于独立 Agent 页。
-- 导航与卡片保留当前 Lucide 图标、实线边界和 source 组件 API；规范中的旧图标/虚线描述已统一。
-- 字体全部本地托管，普通文本与交互层保持中性。
-- 标准用户列表查询采用 350ms 防抖的搜索即输入，不需要额外点击搜索。
-- 模型配置仅用于演示启用状态，不进行网络请求。文件正文只在浏览器局部计算行数，消息仅带元数据。
-- 静态示例不代表真实应用的权限、持久化、会话或所有组件；验证以真实页面为准。
+| Location | What it establishes |
+| --- | --- |
+| `src/index.css` | Layout variables (224/88/56), font stack, white canvas, 14px scrollbars, assistant entrance/history animations, reduced-motion handling |
+| `tailwind.config.js` | Brand and status palettes, custom gray scale, `line` tokens, radii, shadows, dialog/popover/drawer keyframes |
+| `src/main.tsx` | Local Fontsource imports: Open Sans Variable, Noto Sans SC 400/500/600, JetBrains Mono 400/500/600 |
+| `src/App.tsx` | Application providers, error boundary, tooltip provider, toaster, modal host |
+| `src/components/layout/AppLayout.tsx` | White fixed shell, sidebar offset, 16/24px main padding, route guards, Agent return banner |
+| `src/components/layout/Sidebar.tsx` | 224/88px navigation, 64px brand area, search trigger, assistant/help/account footer |
+| `src/components/layout/AccountMenu.tsx` | 240px account dropdown, 32px avatar, menu items, danger sign-out |
+| `src/components/nav/` | Expanded and mini navigation, 40/36/58px geometry, neutral active states, brand icon signal |
+| `src/components/common/PageHeader.tsx` | 20px/600 title, 28px back control, 13px description and meta, 10px action gaps |
+| `src/components/common/PageSkeleton.tsx` | Route skeleton with 52px rows and a toolbar placeholder |
+| `src/components/common/EmptyState.tsx` | 48px icon tile, 14px/500 title, 12px description, centered layout |
+| `src/components/common/CopyButton.tsx` | 13px copy control, event isolation, 1800ms success state, secret-safe toast |
+| `src/components/common/FixedTable.tsx` | Card-filling table wrapper that enables row windowing and prefetch |
+| `src/ui/card.tsx` | 16px card, 15px/600 title, `CardToolbar`, `ListToolbar`, `CardBar` paddings |
+| `src/ui/button.tsx` | Neutral outlined default, slate-900 primary, filled destructive, ghost/subtle/danger variants, sizes |
+| `src/ui/input.tsx` | 36/32/40px inputs, slate focus halo, clear and count affordances, search prefix |
+| `src/ui/select.tsx` | 36px combobox, bounded 256px menu, neutral selected state, forwarded ARIA attributes |
+| `src/ui/form.tsx` | Vertical form layout, required marks, `aria-invalid` / `aria-describedby` wiring, inline errors |
+| `src/ui/controls.tsx` | Switch, checkbox, number input, alert, progress, tag geometry and states |
+| `src/ui/badge.tsx` | 22px badge and `CodeTag` with automatic title |
+| `src/ui/modal.tsx` | 16px dialog, overlay shadow, async `onOk` pending contract, focus entry, drawer variants |
+| `src/ui/table.tsx` | Native table primitives, 44px sticky header, 24px outer cell padding |
+| `src/ui/data-table.tsx` | Grid table, sticky header, measured virtualization, skeleton, empty state, infinite sentinel, fixed-column divider |
+| `src/ui/tabs.tsx` | 2px brand underline tabs and `SectionBar` |
+| `src/ui/row-action.tsx` | 28/32px row icon buttons, tooltip labels, disabled reasons |
+| `src/ui/file-drop-zone.tsx` | Dashed neutral drop zone, keyboard activation, loading/disabled states |
+| `src/ui/message.tsx` | Top-center Sonner toaster, 3s duration, white 12px card |
+| `src/hooks/useInfinitePage.ts` | 20-record pages, stable-ID merge, version isolation, append-error retry, scope reset |
+| `src/hooks/useInfiniteScrollLoader.ts` | 1200px / 0.5 prefetch threshold, real-scroller resolution, passive listener, observer containment |
+| `src/hooks/useFixedRowVirtualizer.ts` | Fixed-row range math, overscan 8, spacers, resize handling |
+| `src/pages/users/index.tsx` | Standard list, 350ms search, 26/22/24% columns, 144px actions, status switch, create/edit/reset dialogs |
+| `src/pages/roles/index.tsx` | Standard list, 30/22/18% columns, 920px permission matrix, `refreshMe` after writes |
+| `src/pages/menus/index.tsx` | 288/320px tree card, metadata grid, button table, 84px action column, rename dialog |
+| `src/pages/settings/index.tsx` | 256/288px category rail, 20px gap, tab semantics, content scroll, save footer, demo reset |
+| `src/pages/settings/AgentConfigPanel.tsx` | Model table, 460px model dialog, 150-character fields, masked key |
+| `src/pages/assistant/index.tsx` | Section cards, greeting with live preview, maximum six quick prompts, permission gates |
+| `src/pages/dashboard/index.tsx` | Main-region scrolling, 2/4-column metrics, 28px values, todo and activity cards |
+| `src/pages/login/index.tsx` | 380px centered form, 40px inputs, slate-900 submit, inline errors, demo accounts |
+| `src/components/search/GlobalSearchPalette.tsx` | 720px global search, 620px height, 54% list, preview pane, per-user recent history |
+| `src/components/assistant/AssistantRuntime.tsx` | Single runtime above the routes, shared panel/Agent state, per-user lifecycle |
+| `src/components/assistant/AssistantPanel.tsx` | 440/720px panel, 24px inset, mobile bottom sheet, 16px radius, overlay shadow |
+| `src/components/assistant/AssistantHeader.tsx` | 64px panel header, 13px/600 title, icon actions |
+| `src/components/assistant/Composer.tsx` | Fixed 48px-minimum textarea, attachment chip, send/stop control |
+| `src/components/assistant/SessionHistory.tsx` | Day groups, 13px titles, 11px metadata, sentinel loading, slide-over animation |
+| `src/components/assistant/MessageList.tsx` | 640px panel messages, 760px Agent messages, Markdown spacing |
+| `src/agent/AgentPage.tsx` | 56px top bar, 260px history rail, 48px toolbar, 792px conversation wrapper, 403 guard |
+| `src/api/services/agentService.ts`, `src/api/sse.ts` | Streaming seam, abort support, real-backend adapter |
+| `src/mock/agent/` | Mock intent matching, plans, tool registry, RBAC checks |
+| `src/config/menus.ts`, `src/mock/access.ts` | Stable menu and button permissions, independent assistant permission group |
+
+## Conflicts and explicit decisions
+
+| Implementation detail | Interpretation in this specification |
+| --- | --- |
+| `Card` uses `#E6EAF0`, while controls, modals, and tables use `#E2E8F0` | Document both by role: a 16px surface card uses the slightly cooler `#E6EAF0`; controls and line separators use `line` (`#E2E8F0`) |
+| Table skeleton rows are 56px; real rows are about 45px single-line and 61-65px two-line; route skeleton rows are 52px | Skeletons are structural placeholders, not pixel matches; 56px belongs to the fixed-row workbench pattern |
+| `DataTable` estimates 57px per row | The estimate only seeds measured virtualization; real heights win after measurement |
+| The table scroller reserves `scrollbar-gutter: stable`, so 1006px of card content yields 992px of usable width at 1280 | Quote the usable width when checking column fit; include the gutter in column calculations |
+| Settings pages use a side-by-side split with no mobile stacking | Specified as a desktop composition; mobile fallback is marked as a portability completion |
+| The gray-200 palette value is `#F4F6F8`, but every shell paints white | White is the baseline; do not introduce a gray application canvas |
+| Modal footer OK is outlined, including danger confirmation | Dialogs use outlined actions; filled primary is reserved for login, assistant confirmation cards, and similar single strong actions |
+| Toasts are top-center, while many admin systems use top-right | Follow the center placement and 3s duration |
+| Sidebar group labels are 12px sentence case, not 11px uppercase | Follow the local 12px sentence-case treatment; mini captions remain 11px |
+| Account dropdown is 240px, not the 248px used by some similar shells | Use 240px |
+| The composer textarea keeps a 48px minimum and scrolls internally rather than auto-growing | Bounded composer height is the local rule; do not build an auto-expanding input |
+| `useInfinitePage` relies on a version guard rather than aborting the HTTP request | Treat request abortion as a portability completion when wiring a real API; stale handlers already cannot mutate the new query |
+| Global search is 720x620 with a 54% list column | The preview pane is part of the pattern; keep both panes and the keycap footer |
+| Session history is a slide-over in the panel and inline in the Agent rail | Same data and loader, two presentations; do not build a second history service |
+| Role permission dialog is 920px, not a round 900px | The measured width wins |
+| The Agent page conversation wrapper is 792px with 760px messages | Preserve both widths; the difference is intentional padding |
+| No batch selection or editing workbench exists in list pages | Marked as future patterns; table selection primitives already support the mechanics |
+| `FileDropZone` uses a dashed border while all surfaces are solid | The dashed border is the deliberate file-target exception |
+| Assistant settings page caps at 1440px | It is the only settings-like page with a max width; ordinary pages fill the viewport |
+| The app renders no help center, only an optional help link | Help-center page patterns are omitted rather than invented |
+
+## Fidelity boundary
+
+This specification supplies exact values where the code makes them observable and explicit decisions where evidence conflicts. It does not promise automatic pixel identity across browsers, operating systems, fonts, or component libraries. For pixel-level acceptance, compare the running page at a matched viewport using the same font and icon resources and inspect computed styles.
+
+The reusable identity is the shared geometry, density, colors, component states, and scroll behavior. Business labels, routes, records, and backend integrations remain properties of the target project.

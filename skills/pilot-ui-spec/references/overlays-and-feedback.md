@@ -1,49 +1,203 @@
-# 覆盖层与反馈
+# Overlays and Feedback
 
-## 弹窗与抽屉
+## Contents
 
-白色表面、16px 圆角、1px #E2E8F0 边界、overlay 阴影。标题约 15px/600，正文表单约 13px；头尾 nonshrinking，body min-h-0 / overflow:auto。宽度不超过视口两侧各 16px，footer 始终可达。
+1. Standard dialogs
+2. Detail drawers
+3. Imports, files, and long operations
+4. Assistant panel and Agent page
+5. Empty, loading, success, and error states
 
-| 用途 | 参考宽度 |
+## 1. Standard dialogs
+
+Use a white surface, 16px radius, 1px `#E2E8F0` border, and the overlay shadow in visual-system.md. Headers have a compact icon/title arrangement with a light bottom separation. Titles use approximately 15px/600; form text stays compact (13px). The body owns its scroll; header and footer are nonshrinking.
+
+The shared `Modal` is constrained by `max-height: calc(100vh - 48px)` and `width: calc(100vw - 32px)`, so it never touches the viewport edge. The body is a `min-height: 0` flex child with `overflow-y: auto`. Keep Save/Cancel reachable when content is long or the viewport is short.
+
+### Width examples from the application
+
+| Dialog role | Width |
 | --- | --- |
-| 修改密码 | 400px |
-| 通用创建/入口 | 440–480px |
-| 模型配置 | 460px |
-| 结构化批量操作 | 640px，复杂双栏可用 900px |
-| 全局搜索 | 720px |
+| Reset password | 420px |
+| Created-user credentials | 440px |
+| Model configuration | 460px |
+| Role create/edit | 480px |
+| User create/edit | 520px (component default) |
+| Batch role assignment (assistant) | 640px |
+| Global search | 720px |
+| Role permission matrix | 920px |
 
-footer 右对齐、间距 10px、36px 普通描边按钮，上方轻分隔与约 14px 纵 padding。onOk 返回 Promise 时，内部 pending 阻止重复提交；取消、Esc、关闭和 mask 在提交中 inert。成功由调用方关闭，失败保留输入并释放 pending。外部 confirmLoading 不能永久锁住已完成实例；忽略过期 promise。
+These are role-specific anchors, not a global dialog width. Simple forms generally fit a compact 420-520px surface; structured details use about 640px; side-by-side permission matrices need a wider surface.
 
-Dialog 用可见标题命名，无标题必须显式 ariaLabel。打开聚焦第一个可编辑项或内容区域，modal 时 contain focus 并使后台不可交互，关闭归还触发点。标准 Esc 可关闭；批量分配角色是明确的特例，禁用 Esc 和 mask，不把特例扩散到全部弹窗。
+Normal footer: actions right aligned, 10px gap, 36px outlined buttons. A light `line-soft` separator and approximately 14px vertical padding distinguish the footer. Saving shows local progress and preserves entered values on failure. The dialog's default OK button is **outlined**, not filled; `okType="danger"` switches it to the filled destructive style.
 
-浮动详情抽屉 top/right/bottom 各 16px，高为视口 −32px，16px 外角，头部纵 16/横 20px padding，body 有限列。结构化元信息可用两列 12px gap；长值有自己的 scroller（可参考 max 48vh），不会推走操作区。
+### Async submit contract
 
-## 文件与长操作
+An `onOk` handler may return a promise. While that promise is pending:
 
-dropzone 采用 slate-50/60、浅框、12px 圆角，hover/drag 加强中性边界，不加橙色底。状态区分未选择、读取/解析、验证失败、可执行、进行中、完成、部分成功和连接失败；失败保留已成功结果，不能把关弹窗说成取消任务。
+- The OK button shows its spinner and is disabled; repeated clicks are ignored.
+- Cancel, Escape, the close button, and mask clicks are inert, so the dialog cannot be dismissed mid-write.
+- On success the page usually closes the dialog itself; on failure the dialog stays open with the user's input, and pending is released so the user can retry.
+- Pending is owned by the dialog instance. External `confirmLoading` may still show progress, but it must not permanently block dismissal of a dialog whose own operation has finished. Reset pending when the dialog closes and ignore stale promise results.
 
-文件只保留 metadata：名称、大小、MIME 和可选行数。正文仅在浏览器局部用于文本行数统计，永远不进入助手消息、持久层或请求。附件 chip 支持解析状态、错误和移除；输入高度增长有上限 144px。
+This contract applies to create/edit dialogs and confirmation dialogs alike. Closing a progress view is not proof that the server job was cancelled.
 
-长操作日志在有限区域追加。用户接近底部时跟随，否则保持阅读锚点并提供“回到最新”。进度不能反复改变整个面板尺寸。计划的停止让当前步骤完成后不再开启下一步；停止生成则真正 AbortSignal 取消当前流。
+### Focus, naming, and dismissal
 
-## 助手面板与 Agent
+- Name the dialog through its visible title. A title-less dialog (for example the global search palette) must pass an explicit `ariaLabel`; do not fall back to the generic 「对话框」 when the role is known.
+- Move focus to the first editable field in the body, or to the content region when there is none. Contain focus while modal, and return it to the trigger when closed.
+- Escape and close-button behavior should agree with the target operation. Do not universally disable dismissal outside the async contract above.
+- A workflow may disable Escape, the mask, and the close button while its own save is in flight; the menu rename dialog does this explicitly. The assistant's batch role dialog disables Escape and mask dismissal for its whole lifetime. Treat both as workflow-specific exceptions, not the standard for every dialog.
+- Overlay backgrounds cannot remain interactive while the dialog is modal.
+- Unsaved work and running operations need explicit product behavior. Do not assume closing the view cancels the server operation.
 
-- 没有悬浮 launcher，侧栏底部入口位于帮助/账号上方，显示 Ctrl/⌘J 与生成信号。
-- 桌面宽 440px / 展开 720px，right/bottom 24px，高 min(760px, viewport −48px)，16px 角，白色浅框与 overlay 阴影。1280px 展开时不遮住侧栏。
-- 小屏可贴底全宽、仅顶角，height min(760px,100dvh)；桌面验证是本项目基线。
-- header/composer 固定；消息和历史各自拥有 scroller。正文 12–13px，Markdown 段落紧凑，代码/表格只在自身横向滚动。
-- 入场 180ms，轻微上移与 scale；思考点为错峰小橙点，生成点/条同时有文字；尊重 reduced-motion。
-- 历史按今天/昨天/近7天/更早分组，13px 标题、11px 元信息，title 展示完整截断值；共享 loader +1px sentinel，无常驻加载更多按钮。
-- Esc 先退历史，再关面板；关闭归还触发点。panel 非模态，操作弹窗为 modal；弹层键盘处理不能互相穿透。
-- 面板和 `/agent` 共享唯一 Runtime，切换不重发、不取消流。草稿/会话按用户隔离，恢复历史不重新执行确认卡或计划。
-- 没有可用配置时展示清晰空态，只有有权限用户看到设置链接。agent:use 被撤销时立即释放请求和界面。
+### Detail formatting
 
-## 空、加载、成功和错误
+Use a two-column metadata grid with a 12px gap, a quiet `slate-50/70` internal card, a copyable identifier field, and long text in its own bordered surface. Preserve line breaks in detail text while keeping code-like identifiers breakable at extreme length.
 
-空态填满可用 body，居中 48px 图标 tile（12px 角、24px 图标），14px/500 标题和 12px slate-500 描述，间隔约 12px，横24/纵32px padding。区分无记录、无匹配、未选中、无权限与失败，避免插画和装饰阴影。
+The created-user confirmation is a good compact pattern: a bordered list of label/value rows (account, initial password), monospace values, a copy control per row, and one closing note that the password will not be shown again. Show this result once; never include the password in the list query.
 
-骨架匹配最终布局：44px 表头、约7行（常规约52px，固定编辑56px）、70%灰200填充；只作轻微 pulse，reduced-motion 时停。不要先闪假空态再进骨架。
+The role permission dialog is the wide structured pattern:
 
-成功用局部已复制状态或一致的短 toast，无感叹号，确认真实成功后再提示。错误：字段内联；初次失败 body 重试；追加失败保留行并暂停自动请求；保存失败保留表单；长任务失败保留进度。不要暴露原始 stack trace 给用户。
+- A summary strip with selected menu and button counts plus "select all" and "clear" actions.
+- A warning alert explaining the menu/button linkage rule.
+- One bordered card per module: module header with icon, checkbox, route, child count, and a module-level action; then a 12-column row per page with the page checkbox, a 2/4-column button grid, and a per-page action.
+- Disabled resources stay visible but non-grantable, so the operator understands why a box cannot be selected.
+- The body scrolls; the footer save action stays visible.
 
-所有字段错误关联 aria-invalid / aria-describedby，登录页编辑立即清错且焦点移到相应字段。长列表追加用简洁 aria-live 通知，不朗读全部虚拟行；loading 区域 aria-busy。状态同时使用文字和图标，不只颜色或动画。
+### Confirmation dialogs
+
+`Modal.confirm` is a compact 420px surface with a 36px round icon, a 15px/600 title, 13px body text, and right-aligned actions. Destructive confirmations use the filled destructive OK button. The confirmation body may contain structured content, but the dialog itself does not grow a second scroll region; long content belongs in a full dialog.
+
+## 2. Detail drawers
+
+`Drawer` is available in two variants and is demonstrated in `/examples/components`. Use it when a temporary detail should preserve the list position.
+
+### Floating drawer
+
+- Top, right, and bottom offsets: 16px.
+- Width: 560px by default, capped at `calc(100vw - 32px)`.
+- Outer corners: 16px; overflow hidden; overlay shadow.
+- Header: 56px high, 20px horizontal padding; white; 1px `line-soft` boundary.
+- Body: finite flexible column with its own scroll.
+- Footer: optional, right aligned, 10px gap, 14px vertical padding.
+
+### Flush drawer
+
+The flush variant is pinned to the right edge with a 1px left boundary, no outer radius, and the same header/body/footer structure. Keep its containing block finite; do not treat it as a second independent full-screen shell.
+
+### Detail interior
+
+*The following composition has no reference implementation in Pilot Admin yet; follow it when adding an approval or inspection detail.*
+
+Use a 370px left information column and a flexible right discussion column. The left column has a faint gray surface, a right boundary, 16px padding, and 12px gaps. Left composition: natural-height metadata card, flexible long-text card, natural-height lifecycle/status card. Internal cards are white, 12px radius, light border, about 14px padding. Long text scrolls inside the middle card. The right column has a nonshrinking action/sort header and independently scrolling comments with 24px horizontal padding.
+
+Comment hierarchy uses indentation and continuous fine guide lines rather than a new elevated card for every reply. Keep author, time, state, content, and local actions distinct. An action inside a comment must not unexpectedly select or navigate the whole record. When fixed metadata is too tall for a short viewport, allow the left column itself to scroll; on narrow layouts, use tabs or a single-column detail flow.
+
+## 3. Imports, files, and long operations
+
+### File selection
+
+`FileDropZone` is the shared affordance. It uses a `slate-50/60` fill, a **dashed** `slate-300/80` border, 12px corners, 32px padding, and a centered 48px icon tile with a 26px icon. Drag or hover strengthens the neutral border to slate-400 and deepens the fill to slate-50; never introduce an orange wash. The zone is a real button (`role="button"`, `tabIndex=0`, Enter/Space) and hides the native input. Disabled or loading states reduce opacity and block interaction.
+
+File metadata uses small monospace text and truncation. The assistant attachment chip shows the file name, size, optional line count, parse status, an inline error state, and a remove control.
+
+### Import dialog
+
+*No reference implementation in Pilot Admin yet; follow these rules when you add one.* Reference composition: explanatory notice, optional validation error, and a two-column file/preview plus parsed-result layout. The body is bounded at approximately 60vh and scrolls as needed. Each preview region is around 360px high and owns its internal content scrolling.
+
+### Distinct states
+
+| State | Required feedback |
+| --- | --- |
+| No file | Drop/select affordance and accepted formats |
+| Reading/parsing | File identity and local progress; preserve preview dimensions |
+| Validation failure | Readable error next to the file/preview, with correction path |
+| Parsed | Real preview and accurate counts |
+| Importing | Processed/total, progress, success/skipped/failed counts |
+| Complete | Outcome summary and appropriate close/continue action |
+| Partial failure | Successful results retained, failed-item details reachable |
+| Connection failure | Last known state plus explicit recovery or status lookup |
+
+Progress updates cannot repeatedly resize the modal or list card. A running server job and its open progress view are different lifetimes. Define close, cancel, retry, and reconnect according to the actual API. Do not manufacture cancellation support or restart a write operation merely to refresh its display.
+
+### Streaming and long logs
+
+Append bounded logs inside their own region. Do not force-scroll a user reading older messages; auto-follow only while they remain near the bottom, with an explicit return-to-latest action when appropriate.
+
+Assistant plans have two distinct stop semantics that must not be merged:
+
+- **Stop plan** lets the current step finish, marks the remaining steps stopped, and reports the partial result. Resuming starts a new execution and skips completed steps.
+- **Stop generation** aborts the current stream with `AbortSignal`, so no late delta lands in the conversation.
+
+### File privacy
+
+Files provide metadata only: name, size, MIME type, and an optional line count. Text line counts are computed locally in the browser; the body is never placed into messages, persistent storage, or requests. The default maximum is 5 MB. This rule survives any future import UI.
+
+## 4. Assistant panel and Agent page
+
+The assistant is part of Pilot Admin, not an optional illustration. Both hosts share one runtime above the routes.
+
+- There is no floating launcher. The entry point is the sidebar footer row above the help and account rows; the row toggles the panel and exposes Ctrl/⌘J with `aria-keyshortcuts`. The Agent page is the full-screen host of the same runtime, not a second chat product.
+- Desktop panel: **440px** wide, **720px** when expanded, anchored **24px** from the right and bottom, height `min(760px, viewport - 48px)`, 16px radius, white, light slate border, overlay shadow, `z-index: 80`.
+- Small-screen panel: full width, anchored to the bottom, top corners only, height `min(760px, 100dvh)`.
+- The panel is `aria-modal="false"`. It does not block the page, but it is labelled by its title and described by a short subtitle.
+- Header and composer remain stationary. Message history and session history own their vertical scrolling. Messages cap at 640px in the panel and 760px on the Agent page.
+- Body typography is mainly 12-13px; user/assistant shapes stay compact. Rich text uses restrained paragraph/list spacing; code blocks and tables scroll horizontally inside themselves.
+- The header is 64px high with a 28px mark, a 13px/600 title, an 11px subtitle, and 28px icon actions. The composer wrapper sits in a 16px padded footer; its textarea keeps a 48px minimum height and scrolls internally rather than growing without bound.
+- Entrance: 180ms, subtle upward movement and scale; thinking dots are 4px orange dots with staggered animation. Respect reduced motion.
+- Session history is an independent slide-over with day groups (`今天` / `昨天` / `近 7 天` / `更早`), 13px titles, 11px metadata, and infinite scrolling. It uses the shared sentinel loader (no 「加载更多」 button) and shows a quiet spinner row while appending. It animates in over 240ms and out over 180ms; closing it must return focus to the history trigger.
+
+Keep history changes from moving the entire panel. When the user reads older messages, new streamed text should not steal scroll position. Escape closes history first, then the panel. Always preserve keyboard access, dialog/layer ordering, and an accessible close action.
+
+### Agent page
+
+The full-screen Agent page uses the same runtime and conversation state:
+
+- 56px top bar: 28px logo, 14px/600 title, help link, back-to-console link, account menu.
+- 260px history rail with a 64px "new conversation" row, the same session list, and a short footnote explaining that sessions are shared with the panel.
+- A 48px conversation toolbar holding the history toggle and the notification toggle.
+- Conversation column centered at 792px with 760px message content.
+- A page opened from an Agent conversation carries a safe return state; the admin shell shows a slim return banner above the main region. Only same-site `/agent` targets with a valid session parameter are accepted.
+
+### Runtime guarantees
+
+- Drafts, sessions, and generation state are per user.
+- Switching between the panel and `/agent` does not resend, cancel, or restart a stream.
+- Restoring history does not re-execute confirmation cards or plans.
+- Losing `agent:use` immediately releases the request, hides the panel, and blocks the Agent route.
+- Missing configuration shows one clear empty state, with a settings link only for accounts holding the configuration permission.
+- Notifications fire only for live completions, not for restored history.
+
+## 5. Empty, loading, success, and error states
+
+### Empty
+
+Fill the available body and center both axes. Use a 48px white tile with a fine border, 12px corners, and a 24px slate-400 icon, followed by a 14px/500 slate-600 title and an optional 12px slate-500 description. Gap is around 12px; body padding is 24px horizontal and 32px vertical. Keep only one message: if the title already states the fact, omit a redundant description.
+
+Distinguish no records, no matching results, no selected item, and no permission. Never show an ordinary empty state for a failed request. Do not add large illustrations or blurred decorative shadows to a table empty state.
+
+### Skeleton
+
+Match the final layout: toolbar shapes, a 44px header, approximately seven data rows, quiet gray rounded text bars, and optional circular avatar placeholders. The table skeleton waits about 200ms before appearing, so fast responses go straight to content.
+
+- `TableSkeleton` rows are 56px; the route-level `PageSkeleton` rows are 52px. Real table rows are content-driven: about 45px for a single-line row and 61-65px for a two-line identity cell. Treat the skeleton as a structural placeholder, not a pixel match of a 56px editing row.
+- Skeleton fill is the custom gray-200 at approximately 70% (`bg-gray-200/70`).
+- Pulse subtly and respect reduced motion. Reserve actual heights and widths so replacement does not shift the card.
+- Avoid switching through a false empty state before data arrives.
+
+### Success
+
+Use a short confirmation near the action or a compact toast. The toast host is **top-center**, shows at most 4 at once, stays for 3 seconds, and uses a white 12px-radius card with a fine border, popover shadow, a 13px/500 title, and a 12px description. Use one consistent toast system; preserve local state feedback such as the copied check or a cleared dirty marker. Keep toast copy short and unpunctuated; do not end success messages with an exclamation mark.
+
+### Error
+
+Field errors remain with the field. Initial list failures have an in-body retry or a page-level alert with retry. Append failures preserve records and pause automatic loading. Save failures retain user input. Long-operation failures retain last known progress and provide a supported recovery path.
+
+Field-level validation must not be reported only through a toast. Empty required fields, malformed identifiers, and wrong credentials render an inline message below the control, mark the control `aria-invalid`, and associate the message with `aria-describedby`. Login demonstrates this for account and password: the form width stays stable, the inline message clears as soon as the user edits the field, and focus moves to the password after a failed sign-in or to the account when it is empty.
+
+Do not expose raw stack traces in product copy. Preserve diagnostic information in the target's logging mechanism where authorized. Avoid reporting success until the relevant operation actually succeeded.
+
+### Accessibility completions
+
+Use visible focus, semantic labels, error descriptions, `aria-busy` for loading regions, and polite live updates for meaningful changes. Announce a batch append succinctly rather than reading every newly mounted virtual row. Keep status text available when color or animation is not perceived. Dialog titles, icon-only actions, and the assistant panel must all have accessible names.
