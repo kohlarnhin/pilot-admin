@@ -1,3 +1,4 @@
+import { useCan } from '@/hooks/usePermission';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from '@/ui/modal';
 import { Switch } from '@/ui/controls';
@@ -13,7 +14,6 @@ import type { AgentConfig } from '@/types';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FixedTable } from '@/components/common/FixedTable';
 import { Icon } from '@/components/icon';
-import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/ui/button';
 import { Card, CardContent } from '@/ui/card';
 import { SectionBar } from '@/ui/tabs';
@@ -23,7 +23,7 @@ import dayjs from 'dayjs';
 export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const requestSequence = useRef(0);
   const initialLoadSettled = useRef(false);
-  const permissions = useAuthStore((state) => state.permissions);
+  const can = useCan();
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,7 +33,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const [changingStatusIds, setChangingStatusIds] = useState<Set<string | number>>(new Set());
   const [form] = Form.useForm();
 
-  const canAdd = permissions.includes('agent-config:update');
+  const canAdd = can('agent-config:update');
   const canUpdate = canAdd;
 
   const loadConfigs = useCallback(async () => {

@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/usePermission';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal } from 'lucide-react';
@@ -17,7 +18,7 @@ import { PasswordChangeModal } from './PasswordChangeModal';
  */
 export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   const user = useAuthStore((state) => state.user);
-  const canUseAgent = useAuthStore((state) => state.permissions.includes('agent:use'));
+  const canUseAgent = usePermission('agent:use');
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();

@@ -8,7 +8,8 @@ import { useAppStore } from '@/store/appStore';
 import { Sidebar } from './Sidebar';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
 import { PageSkeleton } from '../common/PageSkeleton';
-import { flattenMenuTree } from '@/api/services/menuService';
+import { canAccessPage } from '@/routes/access';
+import { usePermission } from '@/hooks/usePermission';
 import { isKnownPageRoute, preloadRoute } from '@/routes/routeModules';
 
 export const AppLayout: React.FC = () => {
@@ -21,13 +22,12 @@ export const AppLayout: React.FC = () => {
   const { pathname } = location;
   const agentReturnTo = agentReturnPath(location.state?.agentReturnTo);
   const permissions = useAuthStore((state) => state.permissions);
-  const canUseAgent = permissions.includes('agent:use');
+  const canUseAgent = usePermission('agent:use');
   const routePath = (() => {
     try { return decodeURI(pathname).replace(/\/+$/, '').toLowerCase() || '/'; }
     catch { return pathname; }
   })();
-  const hasRoutePermission = flattenMenuTree(menus).some((menu) => menu.visible !== 0 && menu.status !== 0 && menu.route_path === routePath);
-  const forbidden = isKnownPageRoute(routePath) && (!hasRoutePermission || (routePath === '/system/assistant' && !permissions.includes('agent-config:view')));
+  const forbidden = isKnownPageRoute(routePath) && !canAccessPage(routePath, { menus, permissions });
 
   useEffect(() => { void initAuth(); }, [initAuth]);
 

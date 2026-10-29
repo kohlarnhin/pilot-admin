@@ -42,21 +42,3 @@ export const menuService = {
 export const flattenMenuTree = (tree: Menu[]): Menu[] => (
   (tree || []).flatMap((menu) => [menu, ...flattenMenuTree(menu.children || [])])
 );
-
-export const getFirstAccessibleRoute = (menus?: Menu[]): string => {
-  const valid = (menus || [])
-    .filter((menu) => menu.visible !== 0 && menu.status !== 0)
-    .sort((a, b) => a.sort_no - b.sort_no);
-
-  for (const menu of valid) {
-    if (menu.children?.length) {
-      const childRoute = getFirstAccessibleRoute(menu.children);
-      if (childRoute !== '/403') {
-        return childRoute;
-      }
-    } else if (menu.route_path && !['/', '/403', '/404'].includes(menu.route_path)) {
-      return menu.route_path;
-    }
-  }
-  return '/403';
-};

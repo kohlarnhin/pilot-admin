@@ -1,3 +1,4 @@
+import { usePermission } from '@/hooks/usePermission';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '@/store/authStore';
@@ -109,10 +110,11 @@ export function useAssistantRuntime() {
 /** 只有一个聊天实例；控制台面板和独立 Agent 页面在同一实例上切换。 */
 export function AssistantRuntimeLayout() {
   const location = useLocation();
-  const { user, permissions, isAuthenticated, initAuth } = useAuthStore();
+  const { user, isAuthenticated, initAuth } = useAuthStore();
   useEffect(() => { void initAuth(); }, [initAuth]);
   // 登录页保持原挂载位置，认证成功时不重挂登录表单或丢失本次选择弹窗。
-  const enabled = location.pathname.replace(/\/+$/, '') !== '/login' && isAuthenticated && user && permissions.includes('agent:use');
+  const canUseAgent = usePermission('agent:use');
+  const enabled = location.pathname.replace(/\/+$/, '') !== '/login' && isAuthenticated && user && canUseAgent;
   return enabled
     ? <AssistantProvider key={user.id} userId={user.id}><Outlet /></AssistantProvider>
     : <Outlet />;

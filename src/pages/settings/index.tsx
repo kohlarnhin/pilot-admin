@@ -1,7 +1,7 @@
+import { useCan } from '@/hooks/usePermission';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { settingsService } from '@/api/services/settingsService';
-import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Icon } from '@/components/icon';
@@ -24,9 +24,9 @@ const SECTIONS = [
 ] as const;
 
 export const SettingsPage: React.FC = () => {
-  const permissions = useAuthStore((state) => state.permissions);
-  const canSave = permissions.includes('settings:update');
-  const canReset = permissions.includes('settings:reset');
+  const can = useCan();
+  const canSave = can('settings:update');
+  const canReset = can('settings:reset');
   const loadBrand = useAppStore((state) => state.loadBrand);
   const [params, setParams] = useSearchParams();
   const tab = SECTIONS.find((section) => section.key === params.get('tab')) || SECTIONS[0];

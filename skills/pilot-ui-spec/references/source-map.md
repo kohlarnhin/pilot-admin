@@ -20,7 +20,7 @@ The package separates observable design intent, current implementation variants,
 | Assistant panel, runtime, session history, Agent page | `src/components/assistant/`, `src/agent/AgentPage.tsx`, `src/store/assistantStore.ts` |
 | Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
 | Global search | `src/components/search/GlobalSearch.tsx`, `src/components/search/GlobalSearchPalette.tsx` |
-| Permissions and menus | `src/config/menus.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
+| Permissions and menus | `src/config/menus.ts`, `src/routes/routeModules.ts`, `src/routes/access.ts`, `src/mock/permissionCatalog.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
 
 ## Evidence map
 
@@ -75,6 +75,9 @@ The package separates observable design intent, current implementation variants,
 | `src/api/services/agentService.ts`, `src/api/sse.ts` | Streaming seam, abort support, real-backend adapter |
 | `src/mock/agent/` | Mock intent matching, plans, tool registry, RBAC checks |
 | `src/config/menus.ts`, `src/mock/access.ts` | Stable menu and button permissions, independent assistant permission group |
+| `src/routes/routeModules.ts`, `src/routes/access.ts` | Module-scope page registry, cached lazy/preload loaders, shared page access and landing rules |
+| `src/mock/permissionCatalog.ts` | Recursive permission catalog, add-only grants and route-less ancestor closure |
+| `src/hooks/usePermission.ts`, `src/components/common/Access.tsx`, `src/hooks/useDataChanged.ts` | Permission primitives and stable assistant data-change subscriptions |
 
 ## Conflicts and explicit decisions
 

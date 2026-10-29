@@ -26,7 +26,8 @@ UI 工作必须先读 `skills/pilot-ui-spec/SKILL.md`、`references/visual-syste
 - `src/pages`：页面组合；页面不能直接读写 Mock DB。
 - `src/config/app.ts`：唯一品牌配置；logo 与 favicon 可独立替换。
 - `src/config/menus.ts`：稳定菜单与按钮权限，角色授权不能靠硬编码账号。
-- `src/routes/routeModules.ts`：cached lazy loader 与悬停预取。注册页面时同步路由和菜单。
+- `src/routes/routeModules.ts`：页面注册表、cached lazy loader 与悬停预取；新增页面只注册一次并声明菜单。
+- `src/routes/access.ts`：页面访问、首页与导航落点的统一判断。
 - `src/api/services`：唯一数据接缝。当前调用 `src/mock`，接真后端时只替换 service 函数体。
 - `src/mock`：类型化种子、延迟、分页与持久化；形状升级时 bump 版本并保留损坏数据回退。
 - `src/components/assistant` 和 `src/agent`：两个宿主共用路由上层的一个运行时。

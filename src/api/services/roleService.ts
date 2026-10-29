@@ -6,12 +6,21 @@ import { currentUser, mockMenus, requireMenu, requirePermission } from '@/mock/a
 import { addActivity, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 import { cachedQuery } from '../queryCache';
+import type { MockRole } from '@/mock/seed';
+import { addRouteLessAncestors, collectMenuCatalog, getDeclaredPermissionCounts, getDeclaredRoleGrants } from '@/mock/permissionCatalog';
 
 export type RoleWithPermissions = Role & {
   menuIds: string[];
   buttonIds: string[];
   permissionsLoaded: boolean;
 };
+
+const publicRole = ({ auto_grant: _autoGrant, ...role }: MockRole): RoleWithPermissions => ({
+  ...role,
+  ...getDeclaredRoleGrants(role),
+  ...getDeclaredPermissionCounts(role),
+  permissionsLoaded: true,
+});
 
 const getRole = (id: string) => {
   const role = getMockDb().roles.find((item) => item.id === id);
@@ -27,12 +36,7 @@ export const roleService = {
     requireMenu('/system/roles');
     const roles = getMockDb().roles
       .filter((role) => matchesKeyword(params.keyword, role.role_name, role.role_code))
-      .map((role) => ({
-        ...role,
-        menu_count: role.menuIds.length,
-        button_count: role.buttonIds.length,
-        permissionsLoaded: true,
-      }));
+      .map(publicRole);
 
     return response(pageResult(roles, params));
   },
@@ -42,10 +46,7 @@ export const roleService = {
     currentUser();
     return cachedQuery('roles:all', async () => {
       await delay();
-      return structuredClone(getMockDb().roles.map((role) => ({
-        ...role,
-        permissionsLoaded: true,
-      })));
+      return structuredClone(getMockDb().roles.map(publicRole));
     });
   },
 
@@ -59,10 +60,7 @@ export const roleService = {
     await delay();
     requireMenu('/system/roles');
     const role = getRole(roleId);
-    return {
-      menuIds: [...role.menuIds],
-      buttonIds: [...role.buttonIds],
-    };
+    return getDeclaredRoleGrants(role);
   },
 
   getMenusAndButtons: async (): Promise<ApiResponse<{ menus: Menu[]; buttons: Button[] }>> => {
@@ -97,6 +95,7 @@ export const roleService = {
       status: 1 as const,
       menuIds: [],
       buttonIds: [],
+      auto_grant: false,
       menu_count: 0,
       button_count: 0,
       create_by: actor.id,
@@ -108,7 +107,7 @@ export const roleService = {
       db.roles.push(role);
     });
     addActivity(actor.user_name, `创建了角色 ${role.role_name}`, 'shield-check');
-    return response(role);
+    return response(publicRole(role));
   },
 
   updateRole: async (roleId: string, data: {
@@ -132,7 +131,7 @@ export const roleService = {
         role.description = data.description;
       }
     });
-    return response(getRole(roleId));
+    return response(publicRole(getRole(roleId)));
   },
 
   updateRoleStatus: async (roleId: string, status: 0 | 1): Promise<ApiResponse<void>> => {
@@ -149,24 +148,18 @@ export const roleService = {
     await delay();
     const actor = requirePermission('role:permissions');
     getRole(roleId);
-    const menus = flattenMenuTree(mockMenus());
+    const catalog = collectMenuCatalog(mockMenus());
+    const menus = catalog.entries.map(({ menu }) => menu);
     const menuMap = new Map(menus.map((menu) => [menu.id, menu]));
     const selected = new Set(menuIds.filter((id) => menuMap.has(id)));
     const selectedButtons = menus.flatMap((menu) => menu.buttons || []).filter((button) => buttonIds.includes(button.id));
 
     selectedButtons.forEach((button) => selected.add(button.menu_id));
-    const addParent = (id: string) => {
-      const parent = menuMap.get(id)?.parent_id;
-      if (parent && !selected.has(parent)) {
-        selected.add(parent);
-        addParent(parent);
-      }
-    };
-    [...selected].forEach(addParent);
+    const selectedMenus = addRouteLessAncestors([...selected], catalog);
 
     updateMockDb((db) => {
       const role = db.roles.find((item) => item.id === roleId)!;
-      role.menuIds = [...selected];
+      role.menuIds = selectedMenus;
       role.buttonIds = selectedButtons.map((button) => button.id);
       role.menu_count = role.menuIds.length;
       role.button_count = role.buttonIds.length;

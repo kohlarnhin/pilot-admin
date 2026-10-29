@@ -50,11 +50,11 @@ src/
     sse.ts            真实后端流式事件解析器（默认不用）
     services/         唯一数据接缝；当前调用 mock
   mock/
-    seed.ts db.ts     确定性数据、v3 存储与重置
+    seed.ts db.ts     确定性数据、v4 存储与重置
     agent/            通用流式引擎、会话与 tools 工具注册表
   hooks/ store/       无限列表、虚拟化、认证、应用和助手状态
   pages/              登录、概览、系统页面、组件示例与错误页
-  routes/             懒加载、悬停预取与路由配置
+  routes/             页面注册表、访问判断、悬停预取与路由配置
   types/ utils/       通用类型、错误恢复等
 skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现映射
 ```
@@ -68,13 +68,27 @@ skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现�
 
 ## 添加页面与权限
 
-1. 在 `src/pages/<feature>/index.tsx` 导出页面，复用 PageHeader、Card、FixedTable 和现有 UI。先读 `skills/pilot-ui-spec/SKILL.md` 及相关 references。
-2. 在 `src/routes/routeModules.ts` 添加 cached loader、lazy 导出与 `routeLoaders` 映射，供 hover/focus 预取复用。
-3. 在 `src/routes/index.tsx` 的管理外壳 children 中注册路由。
-4. 在 `src/config/menus.ts` 添加菜单（稳定 id、route_path、icon）及按钮权限。图标选择 `src/components/icon/registry.ts` 已注册的 Lucide 名称；需要时在 `menuIcons.ts` 增加路径映射。
-5. 在角色管理中授予菜单和按钮。基础角色种子也需补充授权；页面隐藏/禁用按钮，service 仍执行 `requireMenu` / `requirePermission` 校验。
+只需三个步骤，无需修改 `routes/index.tsx`、预取映射或图标路径表：
 
-非路由权限可放在类似 `ai-permissions` 的独立组中。空组不出现在侧栏，但其按钮会进入 me 的权限集合。`/agent` 通过 `agent:use` 守卫，助手设置同时需要页面菜单与 `agent-config:view`。
+1. 在 `src/pages/<feature>/index.tsx` 导出页面，复用 PageHeader、Card、FixedTable 和现有 UI。先读 `skills/pilot-ui-spec/SKILL.md` 及相关 references。
+2. 在 `src/routes/routeModules.ts` 的 `adminPages` 中添加一个 `definePage`：
+
+   ```ts
+   definePage({
+     path: '/examples/projects',
+     load: () => import('../pages/projects').then((module) => ({ default: module.ProjectsPage })),
+   }),
+   ```
+
+3. 在 `src/config/menus.ts` 添加菜单（稳定 `id`、相同的 `route_path`、`sort_no`、`icon`）及可选按钮权限。图标直接使用 `src/components/icon/registry.ts` 已注册的 Lucide 名称；不需要另一份路径映射。
+
+注册表在模块作用域创建 lazy 组件；路由、已知页面判断与 hover/focus 预取共用缓存 loader。无路由分组不预取，实际重定向沿用统一的可访问首页选择。
+
+默认 `access: 'menu'` 要求已授权、可见且启用的菜单。额外条件写为 `requires: ['project:manage']`，所有权限都满足才可进入；路由守卫、侧栏、搜索、首页和登录落点使用 `src/routes/access.ts` 的同一个规则。`access: 'authenticated'` 用于不需要菜单的登录后页面，可通过链接进入。页面用 `usePermission('project:create')`、`useCan()` 或 `<Access permission={...} fallback={...}>` 控制按钮，service 仍须重新校验权限。`useCan()` / `Access` 支持数组和 `mode="all" | "any"`（默认 all）。`useDataChanged(handler)` 订阅助手写入后的数据变更信号。
+
+Mock DB 的权限目录递归覆盖所有层级。种子只有管理员角色设有内部 `auto_grant: true`；新增角色默认为 false。DB 加载及跨标签页存储重载时，auto_grant 角色只获得目录中新出现的菜单/按钮，已手动撤回的旧权限不会恢复；所有角色都会补齐已授权菜单缺失的无路由祖先，不会自动授予有路由的祖先。历史目录只增不减，删除的声明和残留授权不生效，角色计数只统计当前声明。因此新增页面通常无需改角色种子或重置数据；其他角色仍在角色管理中按需授权，角色种子只用于可选的默认授权。真实后端自行决定并校验授权，不依赖这套 Mock 同步。
+
+非路由权限可放在类似 `ai-permissions` 的独立组中。空组不出现在侧栏，但其按钮会进入 me 的权限集合。`/agent` 通过 `agent:use` 守卫，助手设置同时需要页面菜单与 `agent-config:view`。已持久化的菜单自定义名称始终优先于默认名称。
 
 ## 添加 service 与 Mock
 
@@ -171,7 +185,7 @@ export const myTool: AgentTool = {
 
 系统设置 → 演示数据 →「重置演示数据」恢复所有种子，包含 150 用户、3 角色、模型资料和 25 个管理员历史会话，清理助手草稿/对话缓存并重新载入。也可从 service 调用 `settingsService.resetDemoData()`，内部使用 `resetMockDb()`。
 
-DB key 为 `pilot-admin:mock-db:v3`。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
+DB key 为 `pilot-admin:mock-db:v4`；本次从 v3 升级会一次性重置演示数据，并在读取时清理旧版本 DB key。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
 
 ## 环境变量
 
@@ -202,7 +216,6 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 
 ## 路线图
 
-- 二次开发体验：统一页面注册表、访问判断与权限目录同步，减少新增模块的重复配置。
 - 国际化：逐步提供 zh-CN / en-US，覆盖管理页面、助手和工具交互。
 - 通用功能：操作日志、标准 CRUD 模板与个人中心。
 - 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。

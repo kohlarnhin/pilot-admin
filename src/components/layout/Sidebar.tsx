@@ -14,7 +14,8 @@ import { cn } from '@/utils';
 import { NavVertical, NavMini, type NavProps, type NavItemDataProps } from '@/components/nav';
 import { BookOpen, ChevronsLeft, ChevronsRight, Sparkles } from 'lucide-react';
 import { AccountMenu } from './AccountMenu';
-import { getFirstAccessibleRoute } from '../../api/services/menuService';
+import { canAccessPage, getFirstAccessiblePage } from '@/routes/access';
+import { usePermission } from '@/hooks/usePermission';
 import type { Menu } from '../../types';
 import { preloadRoute } from '../../routes/routeModules';
 
@@ -26,7 +27,7 @@ const convertChildren = (children?: Menu[]): NavItemDataProps[] => {
     .map((child) => ({
       title: child.menu_name,
       path: child.route_path || '',
-      icon: getMenuIcon(child.route_path, child.icon),
+      icon: getMenuIcon(child.icon, Boolean(child.children?.length)),
       children: convertChildren(child.children),
     }));
 };
@@ -59,7 +60,7 @@ const convertMenusToNavData = (menus: Menu[]): NavProps['data'] => {
           {
             title: menu.menu_name,
             path: menu.route_path,
-            icon: getMenuIcon(menu.route_path, menu.icon),
+            icon: getMenuIcon(menu.icon),
           },
         ],
       });
@@ -71,14 +72,24 @@ const convertMenusToNavData = (menus: Menu[]): NavProps['data'] => {
 
 export const Sidebar: React.FC = () => {
   const assistant = useAssistantStore();
-  const canUseAgent = useAuthStore((state) => state.permissions.includes('agent:use'));
+  const canUseAgent = usePermission('agent:use');
   const shortcut = getAssistantShortcut();
   const menus = useAuthStore((state) => state.menus);
+  const permissions = useAuthStore((state) => state.permissions);
   const siteName = useAppStore((state) => state.siteName);
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
-  const navData = useMemo(() => convertMenusToNavData(menus), [menus]);
-  const homePath = useMemo(() => getFirstAccessibleRoute(menus), [menus]);
+  const navData = useMemo(() => {
+    const accessibleMenus = (items: Menu[]): Menu[] => items.flatMap((menu) => {
+      if (menu.visible === 0 || menu.status === 0) return [];
+      const children = accessibleMenus(menu.children || []);
+      if (menu.route_path && !canAccessPage(menu.route_path, { menus, permissions })) return children;
+      if (!menu.route_path && !children.length) return [];
+      return [{ ...menu, children }];
+    });
+    return convertMenusToNavData(accessibleMenus(menus));
+  }, [menus, permissions]);
+  const homePath = useMemo(() => getFirstAccessiblePage(menus, permissions), [menus, permissions]);
   const homeHref = homePath === '/403' ? '/' : homePath;
 
   return (

@@ -1,8 +1,10 @@
 import { clearQueryCache } from '@/api/queryCache';
 import { createSeed, type MockDb } from './seed';
+import { syncPermissionCatalog } from './permissionCatalog';
 
 export const MOCK_DB_RESET_EVENT = 'pilot-admin:mock-db-reset';
-export const MOCK_DB_KEY = 'pilot-admin:mock-db:v3';
+const MOCK_DB_VERSION = 4;
+export const MOCK_DB_KEY = `pilot-admin:mock-db:v${MOCK_DB_VERSION}`;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -15,7 +17,8 @@ const hasAudit = (value: Record<string, unknown>) => (
 
 // 旧版本、截断 JSON 和形状损坏均回退到确定性种子。
 function isMockDb(value: unknown): value is MockDb {
-  if (!isRecord(value) || value.version !== 3 || !Array.isArray(value.users) || !Array.isArray(value.roles)
+  if (!isRecord(value) || value.version !== 4 || !Array.isArray(value.users) || !Array.isArray(value.roles)
+    || !isRecord(value.permissionCatalog) || !isStringArray(value.permissionCatalog.menuIds) || !isStringArray(value.permissionCatalog.buttonIds)
     || !isStringMap(value.menuNames) || !isStringMap(value.buttonNames) || !Array.isArray(value.activities)) {
     return false;
   }
@@ -32,6 +35,7 @@ function isMockDb(value: unknown): value is MockDb {
 
   if (!value.roles.every((role) => isRecord(role) && hasAudit(role)
     && typeof role.id === 'string' && typeof role.role_name === 'string' && typeof role.role_code === 'string'
+    && typeof role.auto_grant === 'boolean'
     && (role.status === 0 || role.status === 1) && isStringArray(role.menuIds) && isStringArray(role.buttonIds))) {
     return false;
   }
@@ -80,9 +84,26 @@ function isMockDb(value: unknown): value is MockDb {
 
 function readDb(): MockDb {
   try {
+    // 只清理更低版本，避免旧构建的标签页删除新版本数据。
+    for (const key of Object.keys(localStorage)) {
+      const version = Number(/^pilot-admin:mock-db:v(\d+)$/.exec(key)?.[1]);
+      if (version < MOCK_DB_VERSION) localStorage.removeItem(key);
+    }
+  } catch {
+    // 清理旧版本失败不影响当前数据读取。
+  }
+  try {
     const stored: unknown = JSON.parse(localStorage.getItem(MOCK_DB_KEY) || 'null');
     if (isMockDb(stored)) {
-      return stored;
+      const reconciled = syncPermissionCatalog(stored);
+      if (reconciled.changed) {
+        try {
+          localStorage.setItem(MOCK_DB_KEY, JSON.stringify(reconciled.db));
+        } catch {
+          // 同步持久化失败仍保留补齐后的内存数据，不回退种子。
+        }
+      }
+      return reconciled.db;
     }
   } catch {
     // 无效存储使用初始数据。

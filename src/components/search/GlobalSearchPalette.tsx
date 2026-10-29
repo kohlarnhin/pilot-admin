@@ -30,7 +30,8 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     } catch { return []; }
   });
   const menus = useAuthStore((state) => state.menus);
-  const pages = useMemo(() => searchTargets(menus), [menus]);
+  const permissions = useAuthStore((state) => state.permissions);
+  const pages = useMemo(() => searchTargets(menus, permissions), [menus, permissions]);
   const canSearchUsers = pages.some((page) => page.route === '/system/users');
   const [query, setQuery] = useState('');
   const queryText = query.trim();
@@ -61,7 +62,11 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
   const matches = (value: string) => queryText.toLowerCase().split(/\s+/).every((token) => value.toLowerCase().includes(token));
   const pageResults: Result[] = pages.filter((page) => !queryText || matches(`${page.title} ${page.route}`)).map((page) => ({ kind: 'page', id: `page:${page.route}`, page }));
   const userResults: Result[] = queryText && bundle.query === queryText && canSearchUsers ? bundle.users.map((user) => ({ kind: 'user', id: `user:${user.id}`, user })) : [];
-  const recentResults = recent.filter((item) => item.kind === 'user' ? canSearchUsers : pages.some((page) => page.route === item.page.route));
+  const recentResults = recent.flatMap<Result>((item) => {
+    if (item.kind === 'user') return canSearchUsers ? [item] : [];
+    const page = pages.find((page) => page.route === item.page.route);
+    return page ? [{ ...item, page }] : [];
+  });
   const sections = queryText ? [{ title: '用户', items: userResults }, { title: '页面', items: pageResults }] : [{ title: '最近访问', items: recentResults }, { title: '常用页面', items: pageResults.filter((item) => !recentResults.some((recentItem) => recentItem.id === item.id)) }];
   const results = sections.flatMap((section) => section.items);
   const activeIndex = Math.max(0, results.findIndex((result) => result.id === activeId));

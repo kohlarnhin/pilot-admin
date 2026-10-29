@@ -1,9 +1,9 @@
+import { useCan } from '@/hooks/usePermission';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AgentConfigPanel } from '@/pages/settings/AgentConfigPanel';
 import { agentProfileService, type AgentProfile } from '@/api/services/agentProfileService';
 import { EmptyState } from '@/components/assistant/EmptyState';
 import { Icon } from '@/components/icon';
-import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { FieldLabel } from '@/ui/form';
@@ -18,9 +18,9 @@ function Section({ title, description, action, children }: { title: string; desc
 }
 
 export function AgentSettingsPage() {
-  const permissions = useAuthStore(s => s.permissions);
-  const canView = permissions.includes('agent-config:view');
-  const canUpdate = permissions.includes('agent-config:update');
+  const can = useCan();
+  const canView = can('agent-config:view');
+  const canUpdate = can('agent-config:update');
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -40,9 +40,9 @@ export function AgentSettingsPage() {
   const saveButton = (section: string, input: Parameters<typeof agentProfileService.save>[0], invalid = false) =>
     <Button variant="outline" size="sm" disabled={!canUpdate || saving !== null || invalid} loading={saving === section} onClick={() => void save(section, input)}>保存{section}</Button>;
 
-  return <div className="mx-auto min-h-0 w-full max-w-[1440px] space-y-5 overflow-y-auto px-1 pb-6 pr-3" aria-label="AI 助手设置">
+  return <div className="mx-auto min-h-0 w-full max-w-[1440px] space-y-5 overflow-y-auto px-1 pb-6 pr-3" aria-label="助手设置">
     <div className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl border border-line bg-white"><Icon icon="bot" size={21} className="text-slate-600" /></div>
-      <div><h1 className="text-xl font-semibold tracking-tight text-slate-900">AI 助手</h1><p className="mt-1 text-xs text-slate-500">配置模型、助手资料与快捷提问</p></div>
+      <div><h1 className="text-xl font-semibold tracking-tight text-slate-900">助手设置</h1><p className="mt-1 text-xs text-slate-500">配置模型、助手资料与快捷提问</p></div>
     </div>
     <Section title="模型配置" description="模型配置仅保存于本地演示数据，不会请求所填地址。"><AgentConfigPanel active /></Section>
     {!profile ? <div role="status" className="rounded-xl border border-line bg-white p-8 text-center text-sm text-slate-500">{failed ? <Button variant="outline" onClick={load}>重新加载助手资料</Button> : '正在加载助手资料…'}</div> : <>

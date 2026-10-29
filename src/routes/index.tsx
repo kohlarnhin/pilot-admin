@@ -5,13 +5,14 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Spin } from '@/ui/spinner';
 import { Page403, Page404 } from '@/pages/error';
 import { RouteErrorPage } from '@/pages/error/RouteErrorPage';
-import { getFirstAccessibleRoute } from '@/api/services/menuService';
+import { getFirstAccessiblePage } from './access';
 import { useAuthStore } from '@/store/authStore';
-import { ComponentsPage, DashboardPage, LoginPage, MenusPage, RolesPage, SettingsPage, UsersPage, AgentPage, AgentSettingsPage } from './routeModules';
+import { adminPages, LoginPage, AgentPage } from './routeModules';
 
 const IndexRedirect = () => {
   const menus = useAuthStore((state) => state.menus);
-  return <Navigate to={getFirstAccessibleRoute(menus)} replace />;
+  const permissions = useAuthStore((state) => state.permissions);
+  return <Navigate to={getFirstAccessiblePage(menus, permissions)} replace />;
 };
 
 export const router = createBrowserRouter([{ element: <AssistantRuntimeLayout />, errorElement: <RouteErrorPage fullScreen />, children: [
@@ -24,14 +25,8 @@ export const router = createBrowserRouter([{ element: <AssistantRuntimeLayout />
     path: '/', element: <AppLayout />, errorElement: <RouteErrorPage fullScreen />,
     children: [{ errorElement: <RouteErrorPage />, children: [
       { index: true, element: <IndexRedirect /> },
-      { path: 'dashboard', element: <DashboardPage /> },
       { path: 'system', element: <IndexRedirect /> },
-      { path: 'system/users', element: <UsersPage /> },
-      { path: 'system/roles', element: <RolesPage /> },
-      { path: 'system/menus', element: <MenusPage /> },
-      { path: 'system/assistant', element: <AgentSettingsPage /> },
-      { path: 'system/settings', element: <SettingsPage /> },
-      { path: 'examples/components', element: <ComponentsPage /> },
+      ...adminPages.map(({ path, Component }) => ({ path: path.slice(1), element: <Component /> })),
       { path: '403', element: <Page403 /> },
       { path: '404', element: <Page404 /> },
       { path: '*', element: <Page404 /> },

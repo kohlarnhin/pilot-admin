@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, type ComponentType } from 'react';
 
 let pendingRouteLoads = 0;
 
@@ -24,34 +24,36 @@ export const hasPendingRouteLoads = (): boolean => pendingRouteLoads > 0;
 // lazy() 与导航意图预取共用同一个 Promise；鼠标悬停命中后，点击不会再次等待新 Promise。
 const loadLoginPage = createCachedLoader(() => import('../pages/login').then((module) => ({ default: module.LoginPage })));
 export const LoginPage = lazy(loadLoginPage);
-const loadDashboardPage = createCachedLoader(() => import('../pages/dashboard').then((module) => ({ default: module.DashboardPage })));
-export const DashboardPage = lazy(loadDashboardPage);
-const loadUsersPage = createCachedLoader(() => import('../pages/users').then((module) => ({ default: module.UsersPage })));
-export const UsersPage = lazy(loadUsersPage);
-const loadRolesPage = createCachedLoader(() => import('../pages/roles').then((module) => ({ default: module.RolesPage })));
-export const RolesPage = lazy(loadRolesPage);
-const loadMenusPage = createCachedLoader(() => import('../pages/menus').then((module) => ({ default: module.MenusPage })));
-export const MenusPage = lazy(loadMenusPage);
-const loadSettingsPage = createCachedLoader(() => import('../pages/settings').then((module) => ({ default: module.SettingsPage })));
-export const SettingsPage = lazy(loadSettingsPage);
-const loadComponentsPage = createCachedLoader(() => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })));
-export const ComponentsPage = lazy(loadComponentsPage);
-
 const loadAgentPage = createCachedLoader(() => import('../agent/AgentPage').then((module) => ({ default: module.AgentPage })));
 export const AgentPage = lazy(loadAgentPage);
-const loadAgentSettingsPage = createCachedLoader(() => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })));
-export const AgentSettingsPage = lazy(loadAgentSettingsPage);
+
+interface PageDefinition {
+  path: string;
+  load: () => Promise<{ default: ComponentType }>;
+  requires?: string[];
+  access?: 'menu' | 'authenticated';
+}
+
+/** 仅在模块作用域注册：lazy 与预取始终共用同一个缓存 loader。 */
+export function definePage({ load, access = 'menu', requires = [], ...definition }: PageDefinition) {
+  const loader = createCachedLoader(load);
+  return { ...definition, access, requires, load: loader, Component: lazy(loader) };
+}
+
+export const adminPages = [
+  definePage({ path: '/dashboard', load: () => import('../pages/dashboard').then((module) => ({ default: module.DashboardPage })) }),
+  definePage({ path: '/system/users', load: () => import('../pages/users').then((module) => ({ default: module.UsersPage })) }),
+  definePage({ path: '/system/roles', load: () => import('../pages/roles').then((module) => ({ default: module.RolesPage })) }),
+  definePage({ path: '/system/menus', load: () => import('../pages/menus').then((module) => ({ default: module.MenusPage })) }),
+  definePage({ path: '/system/settings', load: () => import('../pages/settings').then((module) => ({ default: module.SettingsPage })) }),
+  definePage({ path: '/system/assistant', requires: ['agent-config:view'], load: () => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })) }),
+  definePage({ path: '/examples/components', load: () => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })) }),
+];
 
 const routeLoaders: Record<string, () => Promise<unknown>> = {
   '/agent': loadAgentPage,
-  '/system/assistant': loadAgentSettingsPage,
   '/login': loadLoginPage,
-  '/dashboard': loadDashboardPage,
-  '/system/users': loadUsersPage,
-  '/system/roles': loadRolesPage,
-  '/system/menus': loadMenusPage,
-  '/system/settings': loadSettingsPage,
-  '/examples/components': loadComponentsPage,
+  ...Object.fromEntries(adminPages.map((page) => [page.path, page.load])),
 };
 
 export const isKnownPageRoute = (path: string) => Boolean(routeLoaders[path]);
@@ -60,7 +62,6 @@ const preloadPromises = new Map<string, Promise<unknown>>();
 
 const normalizeRoutePath = (path: string): string => {
   const pathname = path.split(/[?#]/, 1)[0] || '/';
-  if (pathname === '/system') return '/system/users';
   return pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
 };
 

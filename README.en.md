@@ -57,7 +57,15 @@ Edit `src/config/app.ts`, replace `src/components/logo/index.tsx` and `public/fa
 
 ### Add a page and permissions
 
-Create an exported page, then add its cached loader / lazy export / preload mapping in `src/routes/routeModules.ts` and its admin child route in `src/routes/index.tsx`. Add a stable menu/button definition in `src/config/menus.ts`, an icon mapping when needed, and grants in the role seed or role editor. Services must still check access. [Full guide](README.md#添加页面与权限).
+Adding a page takes three steps:
+
+1. Export the page from `src/pages/<feature>/index.tsx`.
+2. Add one `definePage({ path, load })` entry to `adminPages` in `src/routes/routeModules.ts`. Routes and cached hover/focus preloading derive from it.
+3. Add one menu entry with a stable ID, matching route and an icon name from `src/components/icon/registry.ts` to `src/config/menus.ts`. No route or icon-path mapping is needed elsewhere.
+
+The default `access: 'menu'` checks an enabled, visible granted menu. Add `requires: ['feature:manage']` for extra permissions, or use `access: 'authenticated'` for a signed-in page without a menu. Guards, navigation, search and landing routes share `src/routes/access.ts`. Use `usePermission`, `useCan` or `<Access>` for buttons, and `useDataChanged` to refresh after assistant writes. Services must still check access.
+
+Mock catalog sync is recursive, monotonic and add-only. Only the seeded admin role has the internal `auto_grant` flag; newly created roles do not. New permissions are granted on DB load/storage reload without resetting demo data or changing role seeds. Revoked old permissions stay revoked. All roles gain missing route-less ancestors of their existing menus; routed ancestors are never granted implicitly. Removed definitions remain inert and counts reflect current definitions. Other roles need explicit grants; real backends decide and enforce grants server-side. Custom menu names override defaults. [Full guide](README.md#添加页面与权限).
 
 ### Add a service or connect a backend
 
@@ -94,11 +102,11 @@ Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm type
 
 ## Demo storage and reset
 
-Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key is `pilot-admin:mock-db:v3`; each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
+Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key is `pilot-admin:mock-db:v4`. Upgrading from v3 resets demo data once and removes stale DB keys on read; each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
 
 ## Roadmap
 
-Upcoming milestones cover a page registry and permission catalog sync, zh-CN / en-US localization, audit logs, a standard CRUD template, a profile page, and UX/performance improvements. These are planned features, not current capabilities.
+Upcoming milestones cover zh-CN / en-US localization, audit logs, a standard CRUD template, a profile page, and UX/performance improvements. These are planned features, not current capabilities.
 
 ## Contributing and security
 

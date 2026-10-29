@@ -28,7 +28,7 @@ export const menuConfig: MenuConfig[] = [
     ] },
     { id: 'menus', menu_name: '菜单管理', route_path: '/system/menus', icon: 'list-tree', sort_no: 3,
       buttons: [{ id: 'menu-update', button_name: '重命名', permission: 'menu:update' }] },
-    { id: 'assistant', menu_name: 'AI 助手', route_path: '/system/assistant', icon: 'wand-sparkles', sort_no: 5 },
+    { id: 'assistant', menu_name: '助手设置', route_path: '/system/assistant', icon: 'wand-sparkles', sort_no: 5 },
     { id: 'settings', menu_name: '系统设置', route_path: '/system/settings', icon: 'settings-2', sort_no: 4, buttons: [
       { id: 'settings-update', button_name: '保存设置', permission: 'settings:update' },
       { id: 'settings-reset', button_name: '重置演示数据', permission: 'settings:reset' },

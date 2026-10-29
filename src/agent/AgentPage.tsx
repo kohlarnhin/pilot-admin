@@ -17,6 +17,7 @@ import { appConfig } from '@/config/app';
 function AgentWorkspace() {
   const { chat, notifications, busy, startNewConversation } = useAssistantRuntime();
   const menus = useAuthStore(state => state.menus);
+  const permissions = useAuthStore(state => state.permissions);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [params, setParams] = useSearchParams();
   const requestedSession = params.get('session');
@@ -37,7 +38,7 @@ function AgentWorkspace() {
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {appConfig.helpUrl ? <a href={appConfig.helpUrl} target="_blank" rel="noreferrer" className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-800"><BookOpen className="size-3.5" />使用手册</a> : null}
-        <Link to={getConsoleRoute(menus)} className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-800"><ArrowLeft className="size-3.5" />返回管理后台</Link>
+        <Link to={getConsoleRoute(menus, permissions)} className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-800"><ArrowLeft className="size-3.5" />返回管理后台</Link>
         <span className="ml-1 border-l border-line pl-2"><AccountMenu collapsed /></span>
       </div>
     </header>

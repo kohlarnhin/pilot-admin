@@ -1,3 +1,4 @@
+import { useCan } from '@/hooks/usePermission';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { FixedTable } from '../../components/common/FixedTable';
@@ -25,12 +26,12 @@ import dayjs from 'dayjs';
 
 
 export const RolesPage: React.FC = () => {
-  const permissions = useAuthStore((state) => state.permissions);
+  const can = useCan();
   const refreshMe = useAuthStore((state) => state.refreshMe);
-  const canCreate = permissions.includes('role:create');
-  const canEdit = permissions.includes('role:update');
-  const canConfigure = permissions.includes('role:permissions');
-  const canDelete = permissions.includes('role:delete');
+  const canCreate = can('role:create');
+  const canEdit = can('role:update');
+  const canConfigure = can('role:permissions');
+  const canDelete = can('role:delete');
   const [menus, setMenus] = useState<Menu[]>([]);
   const [buttons, setButtons] = useState<MenuButton[]>([]);
   const [loadError, setLoadError] = useState('');
@@ -88,7 +89,7 @@ export const RolesPage: React.FC = () => {
           break;
         }
         visitedMenuIds.add(currentMenu.id);
-        hierarchyMenuIds.push(currentMenu.id);
+        if (currentMenu.id === menu.id || !currentMenu.route_path) hierarchyMenuIds.push(currentMenu.id);
         if (currentMenu.status !== 1) grantable = false;
 
         const parentId = currentMenu.parent_id;
@@ -368,7 +369,7 @@ export const RolesPage: React.FC = () => {
     setSelectedButtonIds((currentIds) => Array.from(new Set([...currentIds, button.id])));
   };
 
-  const resolveMenuIcon = (menu: Menu) => getMenuIcon(menu.route_path, menu.icon, Boolean(menu.children?.length));
+  const resolveMenuIcon = (menu: Menu) => getMenuIcon(menu.icon, Boolean(menu.children?.length));
 
   // 全选时跳过已停用资源，避免提交后端无法授予的权限。
   const handleSelectAll = () => {

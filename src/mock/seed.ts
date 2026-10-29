@@ -1,5 +1,6 @@
 import { appConfig } from '@/config/app';
 import { DEFAULT_MENUS } from '@/config/menus';
+import { collectMenuCatalog, type PermissionCatalog } from './permissionCatalog';
 import type {
   Activity,
   AgentConfig,
@@ -18,6 +19,7 @@ export interface MockUser extends User {
 }
 
 export interface MockRole extends Role {
+  auto_grant: boolean;
   menuIds: string[];
   buttonIds: string[];
 }
@@ -31,7 +33,8 @@ export interface MockDb {
   agentSessions: MockAgentSession[];
   agentProfile: AgentProfile;
   agentConfigs: (AgentConfig & { apiKey: string })[];
-  version: 3;
+  version: 4;
+  permissionCatalog: PermissionCatalog;
   users: MockUser[];
   roles: MockRole[];
   menuNames: Record<string, string>;
@@ -52,8 +55,7 @@ const audit = {
   last_update_by: 'system',
   last_update_date: '2026-01-01T08:00:00+08:00',
 };
-const flatMenus = DEFAULT_MENUS.flatMap((menu) => [menu, ...(menu.children || [])]);
-const allButtons = flatMenus.flatMap((menu) => menu.buttons || []);
+const { menuIds: allMenuIds, buttonIds: allButtonIds } = collectMenuCatalog(DEFAULT_MENUS);
 
 export function createSeed(): MockDb {
   const role = (
@@ -63,6 +65,7 @@ export function createSeed(): MockDb {
     description: string,
     menuIds: string[],
     buttonIds: string[],
+    auto_grant = false,
   ): MockRole => ({
     ...audit,
     id,
@@ -72,6 +75,7 @@ export function createSeed(): MockDb {
     status: 1,
     menuIds,
     buttonIds,
+    auto_grant,
     menu_count: menuIds.length,
     button_count: buttonIds.length,
   });
@@ -81,8 +85,9 @@ export function createSeed(): MockDb {
       '超级管理员',
       'ROLE_ADMIN',
       '管理所有菜单、账号与系统配置',
-      flatMenus.map((menu) => menu.id),
-      allButtons.map((button) => button.id),
+      [...allMenuIds],
+      [...allButtonIds],
+      true,
     ),
     role(
       'role-operator',
@@ -172,7 +177,8 @@ export function createSeed(): MockDb {
         last_update_date: audit.last_update_date,
       },
     ],
-    version: 3,
+    version: 4,
+    permissionCatalog: { menuIds: [...allMenuIds], buttonIds: [...allButtonIds] },
     users,
     roles,
     menuNames: {},

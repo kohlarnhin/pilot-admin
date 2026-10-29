@@ -6,6 +6,10 @@
 
 ### 新增
 
+- M4：页面注册表与统一访问规则，新增页面只需页面文件、注册项和菜单声明。
+- Mock DB v4：递归、只增的权限目录，内部 auto_grant 与无路由祖先补齐；升级时重置演示数据一次。
+- 权限 hooks / Access 组件与稳定的数据变更订阅；助手设置入口统一更名为「助手设置」。
+
 - M3：MIT 许可证、项目元数据、Node 版本约定与 EditorConfig。
 - API base 与可选开发代理的环境配置示例，保持默认 Mock 和无代理行为。
 - ESLint flat config 与 lint 命令；GitHub CI 执行安装、lint、类型检查和构建。

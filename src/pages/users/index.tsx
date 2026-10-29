@@ -1,4 +1,5 @@
-import { AGENT_DATA_CHANGED_EVENT } from '@/api/services/agentService';
+import { useCan } from '@/hooks/usePermission';
+import { useDataChanged } from '@/hooks/useDataChanged';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { CopyButton } from '../../components/common/CopyButton';
@@ -27,12 +28,12 @@ import { useSearchParams } from 'react-router';
 
 export const UsersPage: React.FC = () => {
   const currentUser = useAuthStore((state) => state.user);
-  const permissions = useAuthStore((state) => state.permissions);
+  const can = useCan();
   const refreshMe = useAuthStore((state) => state.refreshMe);
-  const canCreate = permissions.includes('user:create');
-  const canEdit = permissions.includes('user:update');
-  const canDelete = permissions.includes('user:delete');
-  const canResetPassword = permissions.includes('user:reset-password');
+  const canCreate = can('user:create');
+  const canEdit = can('user:update');
+  const canDelete = can('user:delete');
+  const canResetPassword = can('user:reset-password');
   const [resetTarget, setResetTarget] = useState<User | null>(null);
   const [passwordForm] = Form.useForm();
   const [roles, setRoles] = useState<Role[]>([]);
@@ -134,10 +135,7 @@ export const UsersPage: React.FC = () => {
     setQueryKeyword(normalizedKeyword);
   };
 
-  useEffect(() => {
-    window.addEventListener(AGENT_DATA_CHANGED_EVENT, refreshUsers);
-    return () => window.removeEventListener(AGENT_DATA_CHANGED_EVENT, refreshUsers);
-  }, [refreshUsers]);
+  useDataChanged(refreshUsers);
 
   const handleOpenAddModal = () => {
     setEditingUser(null);

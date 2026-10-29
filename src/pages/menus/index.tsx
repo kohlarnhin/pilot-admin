@@ -1,3 +1,4 @@
+import { useCan } from '@/hooks/usePermission';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -22,9 +23,9 @@ import type { Button as MenuButton, Menu } from '@/types';
 type RenameTarget = { kind: 'menu'; menu: Menu } | { kind: 'button'; menu: Menu; button: MenuButton };
 
 export const MenusPage: React.FC = () => {
-  const permissions = useAuthStore((state) => state.permissions);
+  const can = useCan();
   const refreshMe = useAuthStore((state) => state.refreshMe);
-  const canRename = permissions.includes('menu:update');
+  const canRename = can('menu:update');
   const [tree, setTree] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
@@ -112,7 +113,7 @@ export const MenusPage: React.FC = () => {
           style={{ paddingLeft: 10 + depth * 20 }}
         >
           {hasChildren ? <ChevronRight className={cn('size-4 shrink-0 text-slate-400', expanded && 'rotate-90')} /> : <span className="size-4 shrink-0" />}
-          <Icon icon={getMenuIcon(menu.route_path, menu.icon, hasChildren)} size={16} className="shrink-0 text-slate-400" />
+          <Icon icon={getMenuIcon(menu.icon, hasChildren)} size={16} className="shrink-0 text-slate-400" />
           <span className="truncate" title={menu.menu_name}>{menu.menu_name}</span>
           {menu.visible === 0 && <span className="ml-auto text-xs font-normal text-slate-400">隐藏</span>}
         </button>

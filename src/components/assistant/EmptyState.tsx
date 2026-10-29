@@ -5,15 +5,15 @@ import { EmptyState as CommonEmptyState } from '@/components/common/EmptyState';
 import { Button, buttonVariants } from '@/ui/button';
 import { DEFAULT_AGENT_PROFILE, type AgentProfile } from '@/api/services/agentProfileService';
 import { useAuthStore } from '@/store/authStore';
-import { flattenMenuTree } from '@/api/services/menuService';
+import { canAccessPage } from '@/routes/access';
 
 export function EmptyState({ profile = DEFAULT_AGENT_PROFILE, notConfigured, disabled, onPrompt, fullScreen = false }: {
   profile?: AgentProfile; notConfigured?: boolean; disabled?: boolean; onPrompt: (prompt: string) => void; fullScreen?: boolean;
 }) {
   const { menus, permissions } = useAuthStore();
-  const canConfigure = permissions.includes('agent-config:view') && flattenMenuTree(menus).some((menu) => menu.route_path === '/system/assistant');
+  const canConfigure = canAccessPage('/system/assistant', { menus, permissions });
   if (notConfigured) return <CommonEmptyState icon="settings-2" title="尚未配置可用模型" description={canConfigure ? '请启用一个模型配置后再试。' : '请联系管理员配置可用模型。'}
-    className="min-h-64 [&>div:last-child]:text-slate-500" action={canConfigure ? <Link to="/system/assistant" className={buttonVariants({ size: 'sm' })}>前往 AI 助手设置</Link> : undefined} />;
+    className="min-h-64 [&>div:last-child]:text-slate-500" action={canConfigure ? <Link to="/system/assistant" className={buttonVariants({ size: 'sm' })}>前往助手设置</Link> : undefined} />;
   return <div className={`mx-auto flex w-full flex-col items-center px-1 py-10 sm:py-12 ${fullScreen ? 'my-auto max-w-[640px]' : 'max-w-md'}`}>
     <div className="mb-5 rounded-2xl border border-line-soft bg-slate-50 p-3"><LogoMark size={40} /></div>
     {fullScreen ? <p className="mb-2 font-mono text-[11px] tracking-[0.18em] text-brand-700">AGENT / 工作空间</p> : null}

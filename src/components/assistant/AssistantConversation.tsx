@@ -42,7 +42,7 @@ export function AssistantConversation({ fullScreen = false }: { fullScreen?: boo
       onPlanAdjust={() => { chat.setDraft('请调整计划：'); requestAnimationFrame(() => inputRef.current?.focus()); }}
       onRetry={chat.retryLastMessage} onProgressToggle={scroll.preserveScrollAnchor} />
     {chat.hasConfig === false && chat.messages.length > 0
-      ? <p className="px-5 pb-2 text-xs text-slate-500" role="status">尚未配置可用模型，请前往 AI 助手页面配置。</p> : null}
+      ? <p className="px-5 pb-2 text-xs text-slate-500" role="status">尚未配置可用模型，请前往助手设置页面配置。</p> : null}
     <div className={fullScreen ? 'mx-auto w-full max-w-[792px] shrink-0 px-4 pb-3' : 'shrink-0'}>
       <Composer attachment={runtime.attachment} parsingAttachment={runtime.parsingAttachment}
         onAttach={file => { void runtime.handleAttach(file); }} onRemoveAttachment={runtime.removeAttachment}
