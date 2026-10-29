@@ -77,13 +77,15 @@ function responseCode(body: unknown): number | undefined {
 
 // --- axios 实例 ---
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 export const http = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 
 const refreshClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 

@@ -1,4 +1,4 @@
-import { ApiRequestError, refreshAccessToken } from './http';
+import { API_BASE_URL, ApiRequestError, refreshAccessToken } from './http';
 import { syncStoredTokens } from './tokenStorage';
 import type { AgentChatProgress } from '@/types';
 
@@ -24,7 +24,11 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
   const cancel = () => { void reader?.cancel().catch(() => {}); };
   try {
     mergedSignal.throwIfAborted();
-    const request = () => fetch(url, { method: 'POST', headers, body: JSON.stringify(payload), signal: mergedSignal });
+    // 根路径和完整 URL 按调用方原样使用；无前导斜杠的路径相对 API base。
+    const requestUrl = url.startsWith('/') || /^[a-z][a-z\d+.-]*:/i.test(url)
+      ? url
+      : `${API_BASE_URL.replace(/\/+$/, '')}/${url.replace(/^\.\//, '')}`;
+    const request = () => fetch(requestUrl, { method: 'POST', headers, body: JSON.stringify(payload), signal: mergedSignal });
     let response = await request();
     if (response.status === 401 && accessToken) {
       accessToken = await refreshAccessToken(accessToken);

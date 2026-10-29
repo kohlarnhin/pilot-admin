@@ -4,7 +4,7 @@ import { FixedTable } from '../../components/common/FixedTable';
 import { roleService, type RoleWithPermissions } from '../../api/services/roleService';
 import { useInfinitePage } from '../../hooks/useInfinitePage';
 import type { Menu, Button as MenuButton } from '../../types';
-import { Card, CardContent, ListToolbar } from '@/ui/card';
+import { Card, CardContent } from '@/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
 import { RowAction, RowActions } from '@/ui/row-action';
 import { Button } from '@/ui/button';

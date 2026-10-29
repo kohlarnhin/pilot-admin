@@ -1,13 +1,24 @@
+中文 | [English](README.en.md)
+
 # Pilot Admin（领航）
 
 可直接 fork 的通用 React 管理端起点，包含设计系统、固定侧栏、Mock 登录与 RBAC、管理页面、组件示例、AI 助手面板和全屏 Agent 模式。所有数据和助手执行都在浏览器中完成；默认没有后端请求或真实模型调用。
+
+## 开箱即用
+
+- 紧凑的白色 / slate 设计体系，固定侧栏、独立滚动区域与通用 UI 控件。
+- Mock 登录、三种演示角色、菜单与按钮 RBAC，用户 / 角色 / 菜单 / 设置页面。
+- 概览、全局搜索、虚拟化无限列表、路由懒加载与悬停预取。
+- 共用会话运行时的 AI 助手与 Agent 模式，包含多轮工具、确认卡、计划执行和附件元数据演示。
+- 可替换的 service 数据接缝、HTTP / SSE 工具、持久化演示数据及随仓库分发的 UI 规范。
+- ESLint、类型检查、构建 CI，以及贡献、安全和双语入门文档。
 
 ## 快速开始
 
 使用 Node 22+ 和 pnpm 10（仓库锁定 pnpm 10.8）。
 
 ```sh
-pnpm i
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
@@ -72,7 +83,7 @@ skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现�
 1. 在 `src/types/index.ts` 定义类型，在 `src/mock/seed.ts` 添加确定性种子。
 2. 在 `db.ts` 补充形状校验；不兼容的存储结构要升级 `MOCK_DB_KEY` 和 `version`。损坏或旧结构回退种子。
 3. service 使用 `delay()`、`response()`、`pageResult()`，返回 `ApiResponse<T>` 或 `PageResult<T>`。分页字段为 `records / pageNo / pageSize / total / hasNext`。
-4. 使用 `updateMockDb()` 持久化，失败抛 `ApiRequestError`。不要在页面重复实现延迟、分页或权限。
+4. 使用 `updateMockDb()` 持久化，存储失败会抛错。不要在页面重复实现延迟、分页或权限。
 5. 大列表接 `useInfinitePage` 与 `FixedTable`，保留每页 20 条、静默追加、ID 去重、代次隔离和显式重试；不增加页码分页。
 
 `createUser()` 统一生成默认 10 位随机密码并返回 `initial_password`。若密码策略要求更长，则使用策略长度。页面只在创建成功弹窗中展示和复制；查询接口不返回密码。助手新增用户使用同一接口，并在本次创建回复中显示账号和初始密码；该回复随会话保留。
@@ -162,13 +173,46 @@ export const myTool: AgentTool = {
 
 DB key 为 `pilot-admin:mock-db:v3`。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
 
+## 环境变量
+
+默认不需要 `.env` 文件。需要配置真实后端接缝时，可将 `.env.example` 复制为 `.env.local`；`.env*` 文件被 Git 忽略，仅提交 `.env.example`。
+
+| 变量 | 默认值 | 用途 |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | `/api` | HTTP 两个 Axios 实例及 SSE 相对路径的基础地址，可设根路径或完整 HTTP(S) URL |
+| `VITE_DEV_PROXY_TARGET` | 空 | 仅开发服务使用的代理目标，留空不启用代理 |
+
+代理按 API base 的路径部分匹配同源请求，保留路径前缀，设置 `changeOrigin: true`，不代理 WebSocket。例如 base 为 `/api`、target 为 `http://localhost:8080` 时，`/api/users` 转发到 `http://localhost:8080/api/users`。完整 API URL 会直接访问对应地址，不经过开发代理。`pnpm preview` 不启用代理，默认 Mock 流程也不会因为配置了变量而自动调用后端。
+
+HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`./agent/chat` 使用 API base；以 `/` 开头的路径和完整 URL 按原值请求，因此现有 `/api/agent/chat` 不会重复加前缀。需要跟随自定义 base 时，使用无前导斜杠的 SSE 路径。
+
+`VITE_*` 变量可被客户端读取，不得填写密码、Token 或模型密钥。修改环境变量后需重启开发服务；生产配置在构建时生效。
+
 ## 脚本与验证
 
 | 命令 | 用途 |
 | --- | --- |
-| `pnpm dev` | 0.0.0.0:3300 开发服务，不自动打开浏览器，无代理 |
+| `pnpm dev` | 0.0.0.0:3300 开发服务，不自动打开浏览器，默认无代理 |
+| `pnpm lint` | ESLint 检查，须无 error；保留 Hooks 依赖和 Fast Refresh 警告 |
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm build` | `tsc -b && vite build` |
 | `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |
 
-提交前跑 `pnpm install --frozen-lockfile && pnpm typecheck && pnpm build`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、权限、焦点与错误状态。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
+提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
+
+## 路线图
+
+- 二次开发体验：统一页面注册表、访问判断与权限目录同步，减少新增模块的重复配置。
+- 国际化：逐步提供 zh-CN / en-US，覆盖管理页面、助手和工具交互。
+- 通用功能：操作日志、标准 CRUD 模板与个人中心。
+- 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
+
+以上为后续里程碑，当前功能以代码和本文前述说明为准。
+
+## 参与贡献
+
+开发流程、提交规范和验证要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全边界与私密漏洞报告方式见 [SECURITY.md](SECURITY.md)，版本记录见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 许可证
+
+项目代码使用 [MIT 许可证](LICENSE)。第三方依赖遵循各自的许可证。

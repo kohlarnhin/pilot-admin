@@ -187,9 +187,10 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       if (request !== sessionRequestRef.current) return;
       setSessionError('获取会话列表失败，请重试');
     } finally {
-      if (request !== sessionRequestRef.current) return;
-      loadingSessionsRef.current = false;
-      setIsLoadingSessions(false);
+      if (request === sessionRequestRef.current) {
+        loadingSessionsRef.current = false;
+        setIsLoadingSessions(false);
+      }
     }
   }, []);
 

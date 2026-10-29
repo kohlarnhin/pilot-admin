@@ -49,8 +49,7 @@ export const cachedQuery = <T>(
   } | undefined;
   if (pending?.generation === generation && pending.version === version) return pending.promise;
 
-  let request: Promise<T>;
-  request = query()
+  const request: Promise<T> = query()
     .then((value) => {
       if (cacheGeneration === generation && (queryVersions.get(key) ?? 0) === version) {
         queryCache.set(key, { value, expiresAt: Date.now() + ttl });

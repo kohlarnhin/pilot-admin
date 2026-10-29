@@ -37,7 +37,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
 
 const components: Components = {
   pre: CodeBlock,
-  a: ({ node, children, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>,
+  a: ({ node: _node, children, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>,
   table: ({ children }) => (
     <div className="ai-assistant-scroll my-3 max-w-full overflow-x-auto rounded-lg border border-line outline-none focus-visible:ring-2 focus-visible:ring-slate-300" role="region" aria-label="表格，可横向滚动" tabIndex={0}>
       <table className="w-full border-collapse whitespace-nowrap text-left text-xs leading-5">{children}</table>

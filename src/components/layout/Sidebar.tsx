@@ -1,6 +1,6 @@
 import { GlobalSearchTrigger } from '@/components/search/GlobalSearch';
 import React, { useMemo } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link } from 'react-router';
 import { useAssistantStore } from '@/store/assistantStore';
 import { getAssistantShortcut } from '@/components/assistant/assistantUtils';
 import { Kbd } from '@/components/common/Kbd';

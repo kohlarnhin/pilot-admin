@@ -189,14 +189,12 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       <SectionBar
         description="本地演示配置 · 不会发起模型调用"
         actions={
-          true ? (
-              <Tooltip title={canAdd ? undefined : '无新增权限'}>
-                <Button disabled={!canAdd} onClick={openCreate}>
-                  <Icon icon="plus" size={16} />
-                  新增配置
-                </Button>
-              </Tooltip>
-            ) : undefined
+          <Tooltip title={canAdd ? undefined : '无新增权限'}>
+            <Button disabled={!canAdd} onClick={openCreate}>
+              <Icon icon="plus" size={16} />
+              新增配置
+            </Button>
+          </Tooltip>
         }
       />
       <Card className="min-h-0 flex-1">

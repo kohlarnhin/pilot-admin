@@ -1,0 +1,36 @@
+name: 问题反馈
+description: 报告可复现的功能、交互或工程问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: 请先搜索已有 Issue。安全漏洞请按 SECURITY.md 私密报告，不要公开密钥或敏感数据。
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+      description: 请填写版本号或 git commit，以及是否有二次开发改动。
+      placeholder: main / 提交哈希
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 写明页面、演示账号角色、操作顺序；可提供最小复现。
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 预期与实际结果
+      description: 可附截图、控制台错误或脱敏后的日志。
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 操作系统、浏览器版本、视口尺寸、Node 与 pnpm 版本，以及使用 dev 还是 preview。
+    validations:
+      required: true
