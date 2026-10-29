@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import { getFirstAccessibleRoute } from '@/api/services/menuService';
+import { canAccessAgent, getLoginLandingRoute } from '@/agent/access';
+import { AgentEntryDialog } from '@/agent/AgentEntryDialog';
 import { appConfig } from '@/config/app';
 import { message } from '@/ui/message';
 import { Input } from '@/ui/input';
@@ -24,6 +25,7 @@ export const LoginPage: React.FC = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
   const siteName = useAppStore((state) => state.siteName);
   const navigate = useNavigate();
+  const [askEntry, setAskEntry] = useState(false);
   const [loginName, setLoginName] = useState('');
   const [password, setPassword] = useState('');
   const [isPreparingPage, setIsPreparingPage] = useState(false);
@@ -45,7 +47,9 @@ export const LoginPage: React.FC = () => {
     try {
       await login(loginName.trim(), password);
       setIsPreparingPage(true);
-      const target = getFirstAccessibleRoute(useAuthStore.getState().menus);
+      const state = useAuthStore.getState();
+      if (canAccessAgent(state.menus, state.permissions) && state.preferences.agent_mode_entry === 'ask') { setAskEntry(true); setIsPreparingPage(false); return; }
+      const target = getLoginLandingRoute(state.menus, state.permissions, state.preferences);
       const preloading = preloadRoute(target);
       if (preloading) await Promise.race([preloading, new Promise<void>((resolve) => window.setTimeout(resolve, 500))]);
       message.success('登录成功');
@@ -59,6 +63,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-slate-900">
+      {askEntry ? <AgentEntryDialog onChoose={(agent) => { setAskEntry(false); const state = useAuthStore.getState(); navigate(agent ? '/agent' : getLoginLandingRoute(state.menus, state.permissions, { agent_mode_entry: 'console' }), { replace: true }); }} /> : null}
       <ParticleField clearRef={contentRef} className="pointer-events-none absolute inset-0 h-full w-full" />
       <div ref={contentRef} className="relative w-full max-w-[380px] animate-fade-up">
         <div className="flex flex-col items-center text-center">

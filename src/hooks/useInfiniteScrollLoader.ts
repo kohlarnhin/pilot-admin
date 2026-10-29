@@ -41,7 +41,7 @@ const resolveScrollContainer = (
 
 /**
  * 统一的无感无限滚动：在用户触底前预取下一页，底部哨兵不占据可见空间。
- * 加载锁会在新数据追加后释放，避免同一页被滚动和 IntersectionObserver 重复触发。
+ * 加载状态变化或数据合并后释放锁，避免刷新条数不变时阻塞后续追加。
  */
 export const useInfiniteScrollLoader = <T extends HTMLElement>({
   containerRef,
@@ -56,7 +56,6 @@ export const useInfiniteScrollLoader = <T extends HTMLElement>({
   onLoadMore,
 }: UseInfiniteScrollLoaderOptions<T>) => {
   const loadTriggeredRef = useRef(false);
-  const previousItemCountRef = useRef(itemCount);
   const safePreloadDistance = Math.max(0, preloadDistance);
   const safePreloadRemainingRatio = Math.min(1, Math.max(0, preloadRemainingRatio));
 
@@ -83,10 +82,8 @@ export const useInfiniteScrollLoader = <T extends HTMLElement>({
   }, [safePreloadDistance, safePreloadRemainingRatio]);
 
   useEffect(() => {
-    if (previousItemCountRef.current === itemCount) return;
-    previousItemCountRef.current = itemCount;
     loadTriggeredRef.current = false;
-  }, [itemCount]);
+  }, [itemCount, initialLoading, loadingMore]);
 
   // 绑定真实滚动容器的 passive 监听，避免表格内部滚动时父级 React 事件拿不到位置。
   useEffect(() => {

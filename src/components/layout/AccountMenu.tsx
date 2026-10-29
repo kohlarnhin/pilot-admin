@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BookOpen, ChevronsUpDown, KeyRound, LogOut } from 'lucide-react';
+import { BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { appConfig } from '@/config/app';
 import { Dropdown } from '@/ui/dropdown';
@@ -8,6 +8,7 @@ import { message } from '@/ui/message';
 import { Tooltip } from '@/ui/tooltip';
 import { Avatar, AvatarFallback } from '@/ui/avatar';
 import { cn } from '@/utils';
+import { AgentPreferencesDialog } from '@/agent/AgentPreferencesDialog';
 import { PasswordChangeModal } from './PasswordChangeModal';
 
 /**
@@ -16,6 +17,8 @@ import { PasswordChangeModal } from './PasswordChangeModal';
  */
 export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   const user = useAuthStore((state) => state.user);
+  const canUseAgent = useAuthStore((state) => state.permissions.includes('agent:use'));
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -75,6 +78,7 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
         menu={{
           items: [
             appConfig.helpUrl ? { key: 'help', label: '使用手册', icon: <BookOpen />, onClick: () => window.open(appConfig.helpUrl, '_blank', 'noopener,noreferrer') } : null,
+            canUseAgent ? { key: 'agent-preferences', label: 'Agent 模式偏好', icon: <SquareTerminal />, onClick: () => setPreferencesOpen(true) } : null,
             { key: 'password', label: '修改密码', icon: <KeyRound />, onClick: () => setPasswordModalOpen(true) },
             { key: 'logout', label: '退出登录', icon: <LogOut />, danger: true, onClick: handleLogout },
           ],
@@ -92,6 +96,7 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
         {collapsed ? <Tooltip title={displayName} placement="right"><span className="block">{trigger}</span></Tooltip> : trigger}
       </Dropdown>
 
+      {preferencesOpen && canUseAgent ? <AgentPreferencesDialog onClose={() => setPreferencesOpen(false)} /> : null}
       <PasswordChangeModal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} onPasswordChanged={handleLogout} />
     </>
   );

@@ -70,7 +70,6 @@ export interface CountResult { count: number }
 export interface AuthTokens { accessToken: string; refreshToken: string }
 export interface UserPreferences {
   agent_mode_entry: 'ask' | 'agent' | 'console';
-  agent_entries_prompt: 'ask' | 'banner' | 'hidden';
 }
 export interface AuthMeResponse {
   user: User;
@@ -102,4 +101,131 @@ export interface DashboardData {
   totalMenus: number;
   todos: { id: string; title: string; description: string; route: string; icon: string }[];
   activities: Activity[];
+}
+
+export type AgentMessageRole = 'user' | 'assistant';
+export interface AgentChoice {
+  id: string;
+  label: string;
+}
+export interface AgentAttachmentMetadata {
+  attachmentId: string;
+  fileName: string;
+  size: number;
+  mimeType: string;
+  lineCount?: number;
+}
+export interface AgentSelection {
+  type: 'selection';
+  version: 1;
+  title: string;
+  options: { id: string; label: string; description: string; disabled?: boolean }[];
+  defaultSelectedIds: string[];
+  minSelected: number;
+  maxSelected: number;
+}
+export interface AgentPageActionOutcome {
+  status: 'completed' | 'cancelled';
+  summary: string;
+  count?: number;
+  finishedAt: string;
+}
+export interface AgentPageAction {
+  type: 'page_action';
+  version: 1;
+  action: 'navigate' | 'modal';
+  title: string;
+  description: string;
+  route?: string;
+  actionKey?: string;
+  autoOpen?: boolean;
+  outcome?: AgentPageActionOutcome;
+}
+export type AgentPlanStepStatus = 'pending' | 'running' | 'completed' | 'waiting_user' | 'failed' | 'stopped';
+export interface AgentPlanStep {
+  type: 'check';
+  title: string;
+  description: string;
+  status: AgentPlanStepStatus;
+  reason?: string;
+  outcome?: Record<string, number>;
+}
+export interface AgentExecutionPlan {
+  type: 'execution_plan';
+  version: 1;
+  title: string;
+  status: 'proposed' | 'running' | 'waiting_user' | 'failed' | 'stopped' | 'completed';
+  steps: AgentPlanStep[];
+  executionId?: string;
+  reason?: string;
+  revision?: number;
+}
+export type AgentInteraction = AgentSelection | AgentPageAction | AgentExecutionPlan | {
+  type: 'attachment_metadata';
+  attachments: AgentAttachmentMetadata[];
+} | {
+  type: 'selection_submission';
+  selectedIds: string[];
+};
+export interface AgentTaskContext {
+  tool: string;
+  data: Record<string, unknown>;
+}
+export interface AgentMessage {
+  id: string | number;
+  sequence_no: number;
+  role: AgentMessageRole;
+  kind?: 'message' | 'progress' | 'error';
+  content: string;
+  data_changed: boolean;
+  choices?: AgentChoice[];
+  create_date: string;
+  source_message_id?: string | number;
+  selected_choice_id?: string;
+  interaction?: AgentInteraction;
+  task_context?: AgentTaskContext;
+}
+export interface AgentSession {
+  id: string | number;
+  title: string;
+  message_count: number;
+  context_character_count: number;
+  create_date: string;
+  last_message_date: string;
+}
+export interface AgentSessionDetail extends AgentSession {
+  messages: AgentMessage[];
+  has_more_before: boolean;
+}
+export interface AgentChatResult {
+  sessionId: string | number;
+  messageId: string | number;
+  message: string;
+  data_changed: boolean;
+  choices: AgentChoice[];
+  interaction?: AgentInteraction;
+}
+export interface AgentChatProgress {
+  stage: string;
+  message: string;
+  elapsedSeconds: number;
+  messageId?: string | number;
+  sequenceNo?: number;
+  createDate?: string;
+}
+export interface AgentConfig {
+  id: string;
+  provider: string;
+  base_url: string;
+  model_code: string;
+  model_name: string;
+  api_key_masked: string;
+  status: 1 | 0;
+  create_date: string;
+  last_update_date: string;
+}
+export interface AgentProfile {
+  name: string;
+  greeting: string;
+  suggestions: { label: string; prompt: string }[];
 }

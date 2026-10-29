@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" class="pilot-example-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilot Admin UI Reference</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="console.css">
+  <script src="reference.js" defer></script>
+</head>
+<body>
+  <!-- 通用 SVG 示意图标；真实应用使用现有 Lucide 注册表。 -->
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="pilot-grid" viewBox="0 0 24 24"><g fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2" opacity=".4"/><rect x="3" y="13" width="8" height="8" rx="2" opacity=".4"/><rect x="13" y="13" width="8" height="8" rx="2"/></g></symbol>
+      <symbol id="pilot-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".15"/><path d="m7.5 12 3 3 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="pilot-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".15"/><path d="M9 8v8m6-8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="pilot-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+      <symbol id="pilot-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.2 7.2a7 7 0 0 1 11.9-.7L20 9M4 15l1.9 2.5a7 7 0 0 0 11.9-.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="pilot-history-icon" viewBox="0 0 24 24"><path d="M3 5v5h5M3.6 10a8.5 8.5 0 1 1 .4 5M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="pilot-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+      <symbol id="pilot-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+      <symbol id="pilot-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+      <symbol id="pilot-arrow" viewBox="0 0 24 24"><path d="m14 7-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+  <div id="pilot-app" class="pilot-app">
+    <button id="pilot-nav-mask" class="pilot-nav-mask" type="button" aria-label="Close navigation"></button>
+    <aside class="pilot-sidebar" aria-label="Application navigation">
+      <div class="pilot-brand">
+        <svg class="pilot-logo" aria-hidden="true"><use href="#pilot-grid"/></svg>
+        <div class="pilot-brand-copy"><div class="pilot-brand-name">Pilot Admin</div><div class="pilot-brand-description">通用管理端</div></div>
+        <button id="pilot-collapse" class="pilot-collapse" type="button" aria-label="Collapse navigation" aria-expanded="true"><svg width="12" height="12" aria-hidden="true"><use href="#pilot-arrow"/></svg></button>
+      </div>
+      <nav class="pilot-nav-scroll" aria-label="Resource views">
+        <div class="pilot-nav-group">管理端</div>
+        <button class="pilot-nav-item" type="button" data-filter="all" aria-current="page"><svg aria-hidden="true"><use href="#pilot-grid"/></svg><span>All resources</span></button>
+        <button class="pilot-nav-item" type="button" data-filter="enabled"><svg aria-hidden="true"><use href="#pilot-check"/></svg><span>Enabled</span></button>
+        <button class="pilot-nav-item" type="button" data-filter="paused"><svg aria-hidden="true"><use href="#pilot-pause"/></svg><span>Paused</span></button>
+      </nav>
+      <div class="pilot-sidebar-status"><span><i class="pilot-status-dot" aria-hidden="true"></i>演示已就绪</span><span class="pilot-mono pilot-muted">v1.0</span></div>
+    </aside>
+    <div class="pilot-main-column">
+      <main class="pilot-main">
+        <div class="pilot-page">
+          <section class="pilot-panel" aria-labelledby="pilot-page-title">
+            <header class="pilot-panel-heading">
+              <div class="pilot-title-group"><div class="pilot-title-icon"><svg aria-hidden="true"><use href="#pilot-grid"/></svg></div><div><div class="pilot-heading-line"><h1 id="pilot-page-title">Resource management</h1><span id="pilot-total" class="pilot-badge">Resources</span></div><p class="pilot-subtitle">Manage shared resources and their availability.</p></div></div>
+              <form id="pilot-search-form" class="pilot-toolbar" role="search">
+                <label class="pilot-search"><span class="pilot-sr-only">Search resource name or code</span><svg aria-hidden="true"><use href="#pilot-search"/></svg><input id="pilot-search-input" class="pilot-input" type="search" placeholder="Search name or code" autocomplete="off"></label>
+                <button class="pilot-btn" type="submit">Search</button>
+                <button id="pilot-refresh-button" class="pilot-btn pilot-btn--icon" type="button" aria-label="Refresh resources" title="Refresh resources"><svg aria-hidden="true"><use href="#pilot-refresh"/></svg></button>
+                <button id="pilot-history-button" class="pilot-btn" type="button" aria-expanded="false" aria-controls="pilot-history"><svg aria-hidden="true"><use href="#pilot-history-icon"/></svg>History</button>
+              </form>
+            </header>
+            <div id="pilot-table-region" class="pilot-panel-body" aria-busy="true">
+              <div id="pilot-table-scroll" class="pilot-scroller" tabindex="0" role="region" aria-label="Resource table">
+                <table class="pilot-table" aria-label="Resources"><colgroup><col style="width:29%"><col><col style="width:120px"><col style="width:174px"><col style="width:72px"></colgroup><thead><tr><th scope="col">Resource code</th><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Last updated</th><th scope="col" class="pilot-action-cell">View</th></tr></thead><tbody id="pilot-rows"></tbody></table>
+              </div>
+              <div id="pilot-empty" class="pilot-empty" hidden><div class="pilot-empty-icon"><svg aria-hidden="true"><use href="#pilot-grid"/></svg></div><h2 id="pilot-empty-title">No resources found</h2><p id="pilot-empty-description">Try a different name or clear your search.</p><button id="pilot-initial-retry" class="pilot-btn" type="button" hidden>Retry</button></div>
+              <div id="pilot-feedback" class="pilot-feedback" role="alert" hidden><span>Resources could not be loaded. Your current results are preserved.</span><button id="pilot-append-retry" class="pilot-btn" type="button">Retry</button></div>
+            </div>
+          </section>
+          <aside id="pilot-history" class="pilot-panel pilot-history" aria-labelledby="pilot-history-title" hidden><header class="pilot-history-heading"><h2 id="pilot-history-title">Recent activity</h2><button id="pilot-history-close" class="pilot-btn pilot-btn--icon pilot-btn--ghost" type="button" aria-label="Close history"><svg aria-hidden="true"><use href="#pilot-close"/></svg></button></header><div id="pilot-history-scroll" class="pilot-scroller" tabindex="0" role="region" aria-label="History records"><ol id="pilot-history-list" class="pilot-history-list"></ol></div></aside>
+        </div>
+      </main>
+    </div>
+    <div id="pilot-announcement" class="pilot-sr-only" aria-live="polite"></div>
+  </div>
+  <dialog id="pilot-detail" class="pilot-dialog" aria-labelledby="pilot-detail-title"><header class="pilot-dialog-heading"><h2 id="pilot-detail-title" tabindex="-1">Resource details</h2><button id="pilot-detail-close" class="pilot-btn pilot-btn--icon pilot-btn--ghost" type="button" aria-label="Close details"><svg aria-hidden="true"><use href="#pilot-close"/></svg></button></header><div id="pilot-detail-body" class="pilot-dialog-body"></div><footer class="pilot-dialog-footer"><button id="pilot-detail-done" class="pilot-btn" type="button">Close</button></footer></dialog>
+</body>
+</html>

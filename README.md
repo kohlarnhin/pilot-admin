@@ -1,0 +1,174 @@
+# Pilot Admin（领航）
+
+可直接 fork 的通用 React 管理端起点，包含设计系统、固定侧栏、Mock 登录与 RBAC、管理页面、组件示例、AI 助手面板和全屏 Agent 模式。所有数据和助手执行都在浏览器中完成；默认没有后端请求或真实模型调用。
+
+## 快速开始
+
+使用 Node 22+ 和 pnpm 10（仓库锁定 pnpm 10.8）。
+
+```sh
+pnpm i
+pnpm dev
+```
+
+打开 http://localhost:3300 。
+
+| 账号 | 密码 | 可用范围 |
+| --- | --- | --- |
+| admin | admin123 | 全部页面、操作、助手与模型配置 |
+| operator | operator123 | 概览、用户查看/编辑、组件示例、助手；无新增/删除用户权限 |
+| viewer | viewer123 | 概览与组件示例；无助手权限 |
+
+首次登录可选择管理后台或 Agent 模式，并记住选择；在账号菜单的「Agent 模式偏好」中修改。Ctrl/⌘K 搜索页面与用户，最近访问按账号保存；Ctrl/⌘J 打开助手，Esc 先关闭历史再关闭面板。侧栏折叠状态会保留。
+
+演示数据包含 150 位用户、3 个角色和管理员的 25 个历史会话，其中一个会话有 60 条消息。写操作、偏好、草稿和会话均保存在当前浏览器中。同源标签页共享演示 DB；它不是服务端账号系统。
+
+## 目录
+
+```text
+src/
+  config/             品牌与静态菜单、按钮权限
+  ui/                 基础控件与反馈组件
+  components/
+    layout/ nav/      管理外壳与导航
+    common/ search/   通用组件与全局搜索
+    assistant/        面板、共享运行时、交互卡和 actions 注册表
+  agent/              全屏 Agent、入口和偏好弹窗
+  api/
+    http.ts           真实后端 Axios 接缝、Token 与 401 刷新
+    sse.ts            真实后端流式事件解析器（默认不用）
+    services/         唯一数据接缝；当前调用 mock
+  mock/
+    seed.ts db.ts     确定性数据、v3 存储与重置
+    agent/            通用流式引擎、会话与 tools 工具注册表
+  hooks/ store/       无限列表、虚拟化、认证、应用和助手状态
+  pages/              登录、概览、系统页面、组件示例与错误页
+  routes/             懒加载、悬停预取与路由配置
+  types/ utils/       通用类型、错误恢复等
+skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现映射
+```
+
+## 换品牌
+
+1. 修改 `src/config/app.ts` 的 `name`、`shortName`、`zhName` 和 `description`。未配置 `helpUrl` 时，所有「使用手册」入口隐藏。
+2. 替换 `src/components/logo/index.tsx` 和 `public/favicon.svg`。本地演示助手资料的默认值在 `src/mock/seed.ts`，运行时默认资料在 `agentProfileService.ts`。
+3. 按需修改 `tailwind.config.js` 中的 `brand` 色阶。橙色仅表示品牌、当前位置与进行中，按钮、focus、checkbox 和 switch 保持 slate。
+4. 已持久化的站点名称优先于种子。改动默认值后，重置演示数据查看新品牌。
+
+## 添加页面与权限
+
+1. 在 `src/pages/<feature>/index.tsx` 导出页面，复用 PageHeader、Card、FixedTable 和现有 UI。先读 `skills/pilot-ui-spec/SKILL.md` 及相关 references。
+2. 在 `src/routes/routeModules.ts` 添加 cached loader、lazy 导出与 `routeLoaders` 映射，供 hover/focus 预取复用。
+3. 在 `src/routes/index.tsx` 的管理外壳 children 中注册路由。
+4. 在 `src/config/menus.ts` 添加菜单（稳定 id、route_path、icon）及按钮权限。图标选择 `src/components/icon/registry.ts` 已注册的 Lucide 名称；需要时在 `menuIcons.ts` 增加路径映射。
+5. 在角色管理中授予菜单和按钮。基础角色种子也需补充授权；页面隐藏/禁用按钮，service 仍执行 `requireMenu` / `requirePermission` 校验。
+
+非路由权限可放在类似 `ai-permissions` 的独立组中。空组不出现在侧栏，但其按钮会进入 me 的权限集合。`/agent` 通过 `agent:use` 守卫，助手设置同时需要页面菜单与 `agent-config:view`。
+
+## 添加 service 与 Mock
+
+页面只从 `src/api/services/*` 获取数据，不直接访问 DB。新增实体时：
+
+1. 在 `src/types/index.ts` 定义类型，在 `src/mock/seed.ts` 添加确定性种子。
+2. 在 `db.ts` 补充形状校验；不兼容的存储结构要升级 `MOCK_DB_KEY` 和 `version`。损坏或旧结构回退种子。
+3. service 使用 `delay()`、`response()`、`pageResult()`，返回 `ApiResponse<T>` 或 `PageResult<T>`。分页字段为 `records / pageNo / pageSize / total / hasNext`。
+4. 使用 `updateMockDb()` 持久化，失败抛 `ApiRequestError`。不要在页面重复实现延迟、分页或权限。
+5. 大列表接 `useInfinitePage` 与 `FixedTable`，保留每页 20 条、静默追加、ID 去重、代次隔离和显式重试；不增加页码分页。
+
+`createUser()` 统一生成默认 10 位随机密码并返回 `initial_password`。若密码策略要求更长，则使用策略长度。页面只在创建成功弹窗中展示和复制；查询接口不返回密码。助手新增用户使用同一接口，并在本次创建回复中显示账号和初始密码；该回复随会话保留。
+
+## 接真实后端
+
+逐个替换 `src/api/services/*` 的函数体，页面和 UI 不需要依赖 Mock：
+
+```ts
+const response = await http.get<ApiResponse<PageResult<User>>>('/users', { params });
+return response.data;
+```
+
+`src/api/http.ts` 默认 baseURL 为 `/api`，附加 access token；401 用 refresh token 单飞刷新，并兼顾跨标签页轮换与未授权退出。`authService` 的 login/getMe/changePassword/patchPreferences 应改为服务端接口，返回现有类型。`authStore` 继续负责 initAuth、generation 隔离、me 刷新与 logout；`tokenStorage.ts` 负责持久化及跨标签页会话变化。真实后端必须自行执行 RBAC；Mock token 只用于本地演示。
+
+在 `agentService.ts` 中将 `chatStream` / `continuePlan` 改为 `runSseStream<AgentChatResult>()`，其余会话与计划方法改用 http。`sse.ts` 默认未被运行时使用，不会发起请求。
+
+```ts
+return runSseStream<AgentChatResult>('/api/agent/chat', payload, {
+  onStart, onDelta, onProgress, signal,
+});
+```
+
+SSE 使用 UTF-8、POST JSON、`Authorization: Bearer …`；支持一次 401 刷新重试。每个事件由空行结束，data 可跨行：
+
+```text
+event: start
+data: {"sessionId":"s1","userMessageId":"m1"}
+
+event: delta
+data: {"content":"正在整理"}
+
+event: progress
+data: {"stage":"checking","message":"正在检查账号…","elapsedSeconds":1}
+
+event: result
+data: {"code":0,"message":"success","data":{"sessionId":"s1","messageId":"m2","message":"完成","data_changed":false,"choices":[]}}
+
+```
+
+错误用 `event: error` 和 `{"code":123,"message":"可读错误"}`。兼容源协议的 `done` 终态别名；缺少结果的断流视为错误。配置超时或 AbortSignal 会取消 reader。真实 agentService 在 `data_changed` 后调用 `triggerDataChangeSideEffects()`，通知概览和用户页刷新。模型配置的 API key 由真实后端保存密文，列表只返回掩码；当前演示配置只保存在浏览器且从不调用。
+
+## 新增助手能力
+
+每个工具是 `src/mock/agent/tools/` 中的独立模块，实现 `types.ts` 的 `AgentTool`，在 `index.ts` 的有序 `agentTools` 注册表中加入；fallback 始终最后。新增多轮工具无需修改 `engine.ts`。以 `createUser.ts` 为完整参考：
+
+1. `match(text, ctx)` 匹配入口，`handle(ctx)` 校验权限并返回角色 choices，同时用 `task: { name }` 保存下一轮所需状态。
+2. 引擎将工具 ID 和状态保存在消息的 `task_context: { tool, data }` 中。点击选项时，自动调用该工具的 `onChoice(ctx, choiceId, task)`，不再按输入文字猜测工具。
+3. `onChoice` 处理角色选择，返回确认 choices 和新的 `task: { name, roleId }`；确认后通过 `userService` 创建账号并返回 Markdown。每轮继续校验权限，修改成功后调用 `triggerDataChangeSideEffects()`，让已打开页面刷新。
+
+```ts
+export const myTool: AgentTool = {
+  id: 'my-tool',
+  match: text => text.includes('我的任务'),
+  handle: async () => ({
+    message: '是否继续？',
+    choices: [{ id: 'next', label: '继续' }],
+    task: { stage: 'ready' },
+  }),
+  onChoice: async (ctx, choiceId, task) => {
+    ctx.signal?.throwIfAborted();
+    return { message: `收到 ${choiceId}，上一步状态为 ${task.data.stage}。` };
+  },
+};
+```
+
+`ctx` 含当前用户 ID、菜单、权限、AbortSignal 和附件元数据。可选 hooks 还包括 `onSelection(ctx, selectedIds, task)`（参考 `disableUsers.ts`）与 `onActionOutcome(ctx, outcome, task)`（参考 `assignRoles.ts`）。通用 `prompt:*` choices 会重新匹配注册表，`cancel` 由引擎取消；其他 choice ID 交给工具。只接受最新且未提交的交互，选择数量与选项 ID 由引擎校验，具体操作仍由 service 重新校验。
+
+计划工具参考 `accountAudit.ts`：首轮返回 `execution_plan` 卡片，工具的 `plan.runStep(ctx, plan, stepIndex, task)` 负责每一步读取、计算和最终报告，返回 `ToolReply`。若返回 `task`，引擎会更新原计划的状态数据，供下一步或继续执行时使用。引擎统一管理 executionId、步骤状态、持久化和停止语义；「停止」让当前步骤完成，其余步骤停止，「继续执行」使用新 executionId 跳过已完成步骤。工具处理耗时工作时应检查 `ctx.signal`。
+
+内置工具还包括帮助、概况统计、查找用户、打开页面、模拟错误、附件元数据与 fallback。所有读写均通过 service；operator 新增用户会被拒绝，确认不会提升权限。弹窗工具配合下方的**客户端操作注册表**，工具 hook 负责结果续话，弹窗负责交互和 service 调用。
+
+附件规则：仅接收名称、大小、MIME 类型和可选行数。`.txt/.csv/.json` 的行数在浏览器局部计算；不把文件正文、原始文件或解析内容放进消息、持久层或网络。默认最大 5 MB。
+
+## 添加助手弹窗操作
+
+1. 在 `src/components/assistant/actions/` 创建组件，接收 `AssistantActionProps` 的 `onComplete(outcome)` 和 `onCancel()`。
+2. 调用 `registerAssistantAction('feature.action', Component)`，并在 `PageActionCard.tsx` 的模块入口引入注册模块。
+3. 工具返回 `interaction: { type: 'page_action', version: 1, action: 'modal', actionKey: 'feature.action', title, description }`。
+4. 弹窗通过 service 执行业务，完成后 `await onComplete({ status: 'completed', summary, count })`；取消走 `onCancel`。PageActionCard 统一调用 `recordPageActionOutcome`，保存卡片终态并在原会话续上摘要。保存失败可重试，不能重复执行已成功的写入。
+
+内置 `users.assign-role` 演示用户分页选择、角色替换、部分成功后重试与取消。面板和 `/agent` 只有一个 AssistantRuntime；不要在新页面另建聊天实例。执行计划的「停止」等待当前步骤完成，「停止生成」取消当前流。
+
+## 重置与存储边界
+
+系统设置 → 演示数据 →「重置演示数据」恢复所有种子，包含 150 用户、3 角色、模型资料和 25 个管理员历史会话，清理助手草稿/对话缓存并重新载入。也可从 service 调用 `settingsService.resetDemoData()`，内部使用 `resetMockDb()`。
+
+DB key 为 `pilot-admin:mock-db:v3`。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
+
+## 脚本与验证
+
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm dev` | 0.0.0.0:3300 开发服务，不自动打开浏览器，无代理 |
+| `pnpm typecheck` | TypeScript strict 检查 |
+| `pnpm build` | `tsc -b && vite build` |
+| `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |
+
+提交前跑 `pnpm install --frozen-lockfile && pnpm typecheck && pnpm build`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、权限、焦点与错误状态。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。

@@ -1,12 +1,10 @@
 import type { PageResult } from '../../types';
-
 export interface PageQuery {
   pageNo?: number;
   pageSize?: number;
   keyword?: string;
   status?: 0 | 1;
 }
-
 interface RawPageResult<T> {
   records?: T[];
   page_no?: number;
@@ -14,7 +12,6 @@ interface RawPageResult<T> {
   has_next?: boolean;
   total?: number;
 }
-
 export const normalizePageResult = <T>(data: RawPageResult<T>): PageResult<T> => ({
   records: data.records || [],
   pageNo: data.page_no ?? 1,
@@ -22,15 +19,10 @@ export const normalizePageResult = <T>(data: RawPageResult<T>): PageResult<T> =>
   hasNext: !!data.has_next,
   total: data.total ?? data.records?.length ?? 0,
 });
-
-export const collectAllPages = async <T>(
-  fetchPage: (pageNo: number, pageSize: number) => Promise<PageResult<T>>,
-  pageSize = 200
-): Promise<T[]> => {
+export const collectAllPages = async <T>(fetchPage: (pageNo: number, pageSize: number) => Promise<PageResult<T>>, pageSize = 200): Promise<T[]> => {
   const records: T[] = [];
   let pageNo = 1;
   let hasNext = true;
-
   while (hasNext) {
     const page = await fetchPage(pageNo, pageSize);
     records.push(...page.records);
@@ -40,6 +32,5 @@ export const collectAllPages = async <T>(
     hasNext = page.hasNext;
     pageNo += 1;
   }
-
   return records;
 };

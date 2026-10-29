@@ -1,3 +1,4 @@
+import { AGENT_DATA_CHANGED_EVENT } from '@/api/services/agentService';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import dayjs from 'dayjs';
@@ -25,6 +26,7 @@ export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  useEffect(() => { const refresh = () => setAttempt((value) => value + 1); window.addEventListener(AGENT_DATA_CHANGED_EVENT, refresh); return () => window.removeEventListener(AGENT_DATA_CHANGED_EVENT, refresh); }, []);
   useEffect(() => {
     let active = true;
     setError('');

@@ -20,11 +20,23 @@ type Result = { kind: 'page'; id: string; page: SearchPage } | { kind: 'user'; i
 
 export default function GlobalSearchPalette({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.user?.id || '');
+  const recentKey = `pilot-admin:search:recent:v1:${userId}`;
+  const [recent, setRecent] = useState<Result[]>(() => {
+    try {
+      const value: unknown = JSON.parse(localStorage.getItem(recentKey) || '[]');
+      if (!Array.isArray(value)) return [];
+      return value.filter((item): item is Result => item && typeof item.id === 'string' && ((item.kind === 'page' && typeof item.page?.route === 'string') || (item.kind === 'user' && typeof item.user?.id === 'string' && typeof item.user?.login_name === 'string'))).slice(0, 12);
+    } catch { return []; }
+  });
   const menus = useAuthStore((state) => state.menus);
   const pages = useMemo(() => searchTargets(menus), [menus]);
   const canSearchUsers = pages.some((page) => page.route === '/system/users');
   const [query, setQuery] = useState('');
-  const q = useDebouncedValue(query.trim(), 200);
+  const queryText = query.trim();
+  const q = useDebouncedValue(queryText, 200);
+  const queryRef = useRef(queryText);
+  queryRef.current = queryText;
   const [bundle, setBundle] = useState<{ query: string; users: User[] }>({ query: '', users: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,16 +51,18 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     setError('');
     if (!q || !canSearchUsers) { setLoading(false); return; }
     setLoading(true);
-    searchService.searchUsers(q).then((users) => { if (active) setBundle({ query: q, users }); })
-      .catch((cause: Error) => { if (active) setError(cause.message || '搜索失败，请重试'); })
+    searchService.searchUsers(q).then((users) => { if (active && queryRef.current === q) setBundle({ query: q, users }); })
+      .catch((cause: Error) => { if (active && queryRef.current === q) setError(cause.message || '搜索失败，请重试'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [q, canSearchUsers, attempt]);
 
-  const matches = (value: string) => q.toLowerCase().split(/\s+/).every((token) => value.toLowerCase().includes(token));
-  const pageResults: Result[] = pages.filter((page) => !q || matches(`${page.title} ${page.route}`)).map((page) => ({ kind: 'page', id: `page:${page.route}`, page }));
-  const userResults: Result[] = q && bundle.query === q && canSearchUsers ? bundle.users.map((user) => ({ kind: 'user', id: `user:${user.id}`, user })) : [];
-  const sections = [{ title: q ? '用户' : '常用页面', items: q ? userResults : pageResults }, ...(q ? [{ title: '页面', items: pageResults }] : [])];
+  const searchLoading = Boolean(queryText && canSearchUsers && (loading || q !== queryText));
+  const matches = (value: string) => queryText.toLowerCase().split(/\s+/).every((token) => value.toLowerCase().includes(token));
+  const pageResults: Result[] = pages.filter((page) => !queryText || matches(`${page.title} ${page.route}`)).map((page) => ({ kind: 'page', id: `page:${page.route}`, page }));
+  const userResults: Result[] = queryText && bundle.query === queryText && canSearchUsers ? bundle.users.map((user) => ({ kind: 'user', id: `user:${user.id}`, user })) : [];
+  const recentResults = recent.filter((item) => item.kind === 'user' ? canSearchUsers : pages.some((page) => page.route === item.page.route));
+  const sections = queryText ? [{ title: '用户', items: userResults }, { title: '页面', items: pageResults }] : [{ title: '最近访问', items: recentResults }, { title: '常用页面', items: pageResults.filter((item) => !recentResults.some((recentItem) => recentItem.id === item.id)) }];
   const results = sections.flatMap((section) => section.items);
   const activeIndex = Math.max(0, results.findIndex((result) => result.id === activeId));
   const selected = results[activeIndex];
@@ -56,9 +70,12 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
 
   const openResult = (result?: Result) => {
     if (!result) return;
+    const next = [result, ...recent.filter((item) => item.id !== result.id)].slice(0, 12);
+    setRecent(next);
+    try { localStorage.setItem(recentKey, JSON.stringify(next)); } catch { /* 私密浏览仅在本次生效。 */ }
     onClose(); navigate(routeFor(result));
   };
-  useEffect(() => { setActiveId(null); listRef.current?.scrollTo({ top: 0 }); }, [q]);
+  useEffect(() => { setActiveId(null); setError(''); listRef.current?.scrollTo({ top: 0 }); }, [queryText]);
   useEffect(() => { listRef.current?.querySelector(`[data-result-index="${activeIndex}"]`)?.scrollIntoView({ block: 'nearest' }); }, [activeIndex, activeId]);
 
   const row = (result: Result) => {
@@ -94,12 +111,13 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
         <Button variant="ghost" size="xs" onClick={onClose}>Esc</Button>
       </div>
       <div className="flex min-h-0 flex-1">
-        <div ref={listRef} id="global-search-results" role="listbox" aria-label="搜索结果" aria-busy={loading} className="min-h-0 min-w-0 w-[54%] overflow-y-auto overscroll-contain p-2">
-          {sections.map((section) => <div key={section.title} role="group" aria-label={section.title} className="mb-3">
+        <div ref={listRef} id="global-search-results" role="listbox" aria-label="搜索结果" aria-busy={searchLoading} className="min-h-0 min-w-0 w-[54%] overflow-y-auto overscroll-contain p-2">
+          {sections.filter((section) => section.items.length || ['用户', '最近访问'].includes(section.title)).map((section) => <div key={section.title} role="group" aria-label={section.title} className="mb-3">
             <div className="px-3 pb-1 pt-2 text-[11px] font-medium text-slate-500">{section.title}</div>{section.items.map(row)}
-            {section.title === '用户' && loading && !userResults.length && <div aria-label="正在搜索" className="space-y-5 px-3 py-4">{[0, 1, 2].map((index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-4/5" /><Skeleton className="h-3 w-3/5" /></div>)}</div>}
+            {section.title === '最近访问' && !section.items.length && <p className="px-3 py-4 text-xs text-slate-400">打开的页面和用户会出现在这里</p>}
+            {section.title === '用户' && searchLoading && !userResults.length && <div aria-label="正在搜索" className="space-y-5 px-3 py-4">{[0, 1, 2].map((index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-4/5" /><Skeleton className="h-3 w-3/5" /></div>)}</div>}
             {section.title === '用户' && !canSearchUsers && <p className="px-3 py-5 text-xs text-slate-500">当前角色可搜索已授权页面</p>}
-            {section.title === '用户' && canSearchUsers && !loading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">没有匹配的用户</p>}
+            {section.title === '用户' && canSearchUsers && !searchLoading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">没有匹配的用户</p>}
           </div>)}
           {error && <p role="alert" className="px-3 py-4 text-xs text-slate-600">{error}<Button size="xs" className="ml-2" onClick={() => setAttempt((value) => value + 1)}>重试</Button></p>}
         </div>

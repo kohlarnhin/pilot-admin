@@ -1,3 +1,4 @@
+import { AGENT_DATA_CHANGED_EVENT } from '@/api/services/agentService';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { CopyButton } from '../../components/common/CopyButton';
@@ -118,11 +119,11 @@ export const UsersPage: React.FC = () => {
     void Promise.all([loadRoles(), loadCount()]);
   }, [loadCount, loadRoles]);
 
-  const refreshUsers = () => {
+  const refreshUsers = useCallback(() => {
     setLoadError(null);
     reload();
     void loadCount();
-  };
+  }, [reload, loadCount]);
 
   const handleSearch = () => {
     const normalizedKeyword = keyword.trim();
@@ -132,6 +133,11 @@ export const UsersPage: React.FC = () => {
     }
     setQueryKeyword(normalizedKeyword);
   };
+
+  useEffect(() => {
+    window.addEventListener(AGENT_DATA_CHANGED_EVENT, refreshUsers);
+    return () => window.removeEventListener(AGENT_DATA_CHANGED_EVENT, refreshUsers);
+  }, [refreshUsers]);
 
   const handleOpenAddModal = () => {
     setEditingUser(null);
@@ -166,13 +172,11 @@ export const UsersPage: React.FC = () => {
         message.success('用户信息更新成功');
         setIsModalOpen(false);
       } else {
-        const generatedPassword = `Pilot${crypto.randomUUID().replace(/-/g, '')}1`;
-        const finalPassword = values.password_hash || generatedPassword;
-        await userService.createUser({
+        const created = await userService.createUser({
           login_name: values.login_name,
           user_name: values.user_name,
           email: values.email,
-          password_hash: finalPassword,
+          password_hash: values.password_hash || undefined,
           role_ids: values.role_ids || [],
         });
         setIsModalOpen(false);
@@ -184,7 +188,7 @@ export const UsersPage: React.FC = () => {
               <div className="mt-1 divide-y divide-line-soft rounded-lg border border-line bg-slate-50/70">
                 {[
                   ['账号', values.login_name],
-                  ['密码', finalPassword],
+                  ['密码', created.data.initial_password],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center gap-3 px-3 py-2">
                     <span className="w-8 shrink-0 text-xs text-slate-400">{label}</span>

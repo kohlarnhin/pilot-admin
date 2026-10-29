@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pilot Admin UI 规范"
+  short_description: "延续领航管理端的布局、视觉和交互契约"
+  default_prompt: "使用 $pilot-ui-spec，在当前技术栈实现 Pilot Admin 的布局、控件、滚动与助手交互；先读取相关 references 并验证真实页面。"

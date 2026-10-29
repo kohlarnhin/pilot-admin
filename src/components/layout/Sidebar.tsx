@@ -1,6 +1,9 @@
 import { GlobalSearchTrigger } from '@/components/search/GlobalSearch';
 import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router';
+import { useAssistantStore } from '@/store/assistantStore';
+import { getAssistantShortcut } from '@/components/assistant/assistantUtils';
+import { Kbd } from '@/components/common/Kbd';
 import { appConfig } from '@/config/app';
 import { Tooltip } from '@/ui/tooltip';
 import { useAuthStore } from '../../store/authStore';
@@ -9,7 +12,7 @@ import { Logo } from '@/components/logo';
 import { getMenuIcon } from '@/components/icon/menuIcons';
 import { cn } from '@/utils';
 import { NavVertical, NavMini, type NavProps, type NavItemDataProps } from '@/components/nav';
-import { BookOpen, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { BookOpen, ChevronsLeft, ChevronsRight, Sparkles } from 'lucide-react';
 import { AccountMenu } from './AccountMenu';
 import { getFirstAccessibleRoute } from '../../api/services/menuService';
 import type { Menu } from '../../types';
@@ -67,6 +70,9 @@ const convertMenusToNavData = (menus: Menu[]): NavProps['data'] => {
 };
 
 export const Sidebar: React.FC = () => {
+  const assistant = useAssistantStore();
+  const canUseAgent = useAuthStore((state) => state.permissions.includes('agent:use'));
+  const shortcut = getAssistantShortcut();
   const menus = useAuthStore((state) => state.menus);
   const siteName = useAppStore((state) => state.siteName);
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
@@ -141,8 +147,9 @@ export const Sidebar: React.FC = () => {
 
       {/* 固定底部入口与当前账号 */}
       <div className="shrink-0 border-t border-line-soft p-3">
-        {/* Milestone 2：AI 助手入口插槽，位于帮助与账号菜单上方。 */}
-        <div data-slot="sidebar-assistant-entry" />
+        <div data-slot="sidebar-assistant-entry">{canUseAgent ? <Tooltip title={sidebarCollapsed ? `AI 助手 · ${shortcut.label}` : undefined} placement="right"><button type="button" aria-label="AI 助手" aria-controls="ai-assistant-panel" aria-expanded={assistant.panelOpen} aria-keyshortcuts={shortcut.ariaKeyShortcuts} onClick={(event) => assistant.togglePanel(event.currentTarget)} className={cn('group mb-2 flex h-10 w-full items-center rounded-lg text-13 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300', sidebarCollapsed ? 'justify-center' : 'gap-3 px-3', assistant.panelOpen && 'bg-slate-100')}>
+          <span className="relative flex size-[22px] shrink-0 items-center justify-center"><Sparkles size={18} className="text-slate-500" />{assistant.streaming ? <span role="status" aria-label="助手正在生成" className="absolute -right-0.5 -top-0.5 size-1.5 animate-pulse rounded-full bg-brand-500 motion-reduce:animate-none" /> : null}</span>{!sidebarCollapsed ? <><span className="flex-1 text-left">AI 助手</span><Kbd className="!border-slate-200 !bg-white !text-slate-400">{shortcut.label}</Kbd></> : null}
+        </button></Tooltip> : null}</div>
         {appConfig.helpUrl && (
         <div key={sidebarCollapsed ? 'mini-help' : 'vertical-help'} className="mb-2 animate-overlay-in">
           <Tooltip title={sidebarCollapsed ? '使用手册' : undefined} placement="right" mouseEnterDelay={0.2}>

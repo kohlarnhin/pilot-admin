@@ -37,7 +37,14 @@ export const SettingsPage = lazy(loadSettingsPage);
 const loadComponentsPage = createCachedLoader(() => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })));
 export const ComponentsPage = lazy(loadComponentsPage);
 
+const loadAgentPage = createCachedLoader(() => import('../agent/AgentPage').then((module) => ({ default: module.AgentPage })));
+export const AgentPage = lazy(loadAgentPage);
+const loadAgentSettingsPage = createCachedLoader(() => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })));
+export const AgentSettingsPage = lazy(loadAgentSettingsPage);
+
 const routeLoaders: Record<string, () => Promise<unknown>> = {
+  '/agent': loadAgentPage,
+  '/system/assistant': loadAgentSettingsPage,
   '/login': loadLoginPage,
   '/dashboard': loadDashboardPage,
   '/system/users': loadUsersPage,

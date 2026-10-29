@@ -12,8 +12,7 @@ interface MenuConfig {
 
 // 路由与权限的静态定义，显示名称可在菜单管理中覆盖。
 export const menuConfig: MenuConfig[] = [
-  { id: 'dashboard', menu_name: '概览', route_path: '/dashboard', icon: 'layout-dashboard', sort_no: 1,
-    buttons: [{ id: 'agent-use', button_name: '使用 Agent', permission: 'agent:use' }] },
+  { id: 'dashboard', menu_name: '概览', route_path: '/dashboard', icon: 'layout-dashboard', sort_no: 1 },
   { id: 'system', menu_name: '系统管理', route_path: '', icon: 'settings-2', sort_no: 2, children: [
     { id: 'users', menu_name: '用户管理', route_path: '/system/users', icon: 'users', sort_no: 1, buttons: [
       { id: 'user-create', button_name: '新增用户', permission: 'user:create' },
@@ -29,10 +28,16 @@ export const menuConfig: MenuConfig[] = [
     ] },
     { id: 'menus', menu_name: '菜单管理', route_path: '/system/menus', icon: 'list-tree', sort_no: 3,
       buttons: [{ id: 'menu-update', button_name: '重命名', permission: 'menu:update' }] },
+    { id: 'assistant', menu_name: 'AI 助手', route_path: '/system/assistant', icon: 'wand-sparkles', sort_no: 5 },
     { id: 'settings', menu_name: '系统设置', route_path: '/system/settings', icon: 'settings-2', sort_no: 4, buttons: [
       { id: 'settings-update', button_name: '保存设置', permission: 'settings:update' },
       { id: 'settings-reset', button_name: '重置演示数据', permission: 'settings:reset' },
     ] },
+  ] },
+  { id: 'ai-permissions', menu_name: 'AI 助手权限', route_path: '', icon: 'wand-sparkles', sort_no: 4, buttons: [
+    { id: 'agent-use', button_name: '使用助手与 Agent', permission: 'agent:use' },
+    { id: 'agent-config-view', button_name: '查看助手配置', permission: 'agent-config:view' },
+    { id: 'agent-config-update', button_name: '修改助手配置', permission: 'agent-config:update' },
   ] },
   { id: 'examples', menu_name: '示例', route_path: '', icon: 'component', sort_no: 3, children: [
     { id: 'components', menu_name: '组件示例', route_path: '/examples/components', icon: 'component', sort_no: 1 },

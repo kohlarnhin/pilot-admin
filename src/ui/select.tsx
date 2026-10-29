@@ -58,6 +58,8 @@ export interface SelectProps<V = any> {
   className?: string;
   style?: React.CSSProperties;
   id?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
   "aria-required"?: boolean;
@@ -334,6 +336,8 @@ function SelectInner<V = any>(props: SelectProps<V>) {
           ref={triggerRef}
           id={showSearch ? undefined : id}
           role="combobox"
+          aria-label={props["aria-label"]}
+          aria-labelledby={props["aria-labelledby"]}
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-invalid={invalid || undefined}
