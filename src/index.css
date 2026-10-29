@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Slash Admin 字体体系：Open Sans Variable（西文/数字）+ Noto Sans SC（中文，轻量） */
+  --font-sans: 'Open Sans Variable', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Pilot Admin CSS Variables - Neutral UI */
+  --layout-nav-width: 224px;
+  --layout-nav-width-mini: 88px;
+  --layout-header-height: 56px;
+
+  --background: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5715;
+  background-color: var(--background);
+  color: #1E293B;
+  /* 全局普通文字 400，避免中文粗黑厚重感 */
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 滚动条：细而克制，悬浮时加深 */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #C4CDD5;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #919EAB;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .scrollbar-hover {
+    background-color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    transition: background-color .2s;
+  }
+
+  .scrollbar-hover:hover,
+  .scrollbar-hover-zone:hover .scrollbar-hover {
+    background-color: #C4CDD5;
+  }
+
+  .scrollbar-hover::-webkit-scrollbar-thumb {
+    background-color: inherit;
+  }
+
+  .scrollbar-hover::-webkit-scrollbar-thumb:hover {
+    background-color: #919EAB;
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .scrollbar-hover {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-hover:hover {
+    scrollbar-color: #C4CDD5 transparent;
+  }
+}
+
+/* 文本选区：轻量品牌色 */
+::selection {
+  @apply bg-brand-500/20;
+}
+
+/* 刷新进度条：表头下方的细线往返流动 */
+@keyframes table-refresh {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+.table-refresh-bar {
+  animation: table-refresh 1.1s ease-in-out infinite;
+}
+
+/* 进度条进行中：柔和光泽扫过 */
+@keyframes progress-shine {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+
+.progress-active {
+  background-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%) !important;
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: progress-shine 1.6s ease-in-out infinite;
+}
+
+/* =========================================================================
+   数据就绪内容淡入：骨架屏 → 真实内容切换时的平滑过渡，消除闪烁感
+   ========================================================================= */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in,
+  .table-refresh-bar,
+  .progress-active {
+    animation: none;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
