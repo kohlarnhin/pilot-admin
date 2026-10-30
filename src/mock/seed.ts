@@ -104,15 +104,15 @@ export function createSeed(): MockDb {
       text.roles.operator.name,
       'ROLE_OPERATOR',
       text.roles.operator.description,
-      ['dashboard', 'system', 'users', 'examples', 'components', 'ai-permissions'],
-      ['user-update', 'agent-use'],
+      ['dashboard', 'system', 'users', 'examples', 'components', 'crud-example', 'ai-permissions'],
+      ['user-update', 'agent-use', 'example-create', 'example-update'],
     ),
     role(
       'role-viewer',
       text.roles.viewer.name,
       'ROLE_VIEWER',
       text.roles.viewer.description,
-      ['dashboard', 'examples', 'components'],
+      ['dashboard', 'examples', 'components', 'crud-example'],
       [],
     ),
   ];
@@ -157,15 +157,23 @@ export function createSeed(): MockDb {
     };
   });
 
-  const exampleProjects: MockExampleProject[] = Array.from({ length: 80 }, (_, index) => ({
-    ...audit,
-    id: `project-${String(index + 1).padStart(3, '0')}`,
-    name: `${text.exampleProjects.names[index % text.exampleProjects.names.length]} ${index + 1}`,
-    code: `PRJ-${String(index + 1).padStart(3, '0')}`,
-    owner: users[(index * 7) % users.length].user_name,
-    status: (['active', 'paused', 'archived'] as const)[index % 3],
-    description: text.exampleProjects.description,
-  }));
+  const projectAnchor = Date.parse('2026-10-28T09:00:00+08:00');
+  const exampleProjects: MockExampleProject[] = Array.from({ length: 80 }, (_, index) => {
+    const updatedAt = projectAnchor - index * 6 * 60 * 60 * 1000 - (index * 17 % 60) * 60 * 1000;
+    const createdAt = updatedAt - (3 + Math.floor(index / 10)) * 24 * 60 * 60 * 1000;
+    return {
+      id: `project-${String(index + 1).padStart(3, '0')}`,
+      name: `${text.exampleProjects.names[index % text.exampleProjects.names.length]} ${index + 1}`,
+      code: `PRJ-${String(index + 1).padStart(3, '0')}`,
+      owner: users[(index * 7) % users.length].user_name,
+      status: (['active', 'paused', 'archived'] as const)[index % 3],
+      description: text.exampleProjects.description,
+      create_by: users[index % users.length].id,
+      create_date: new Date(createdAt).toISOString(),
+      last_update_by: users[(index * 7) % users.length].id,
+      last_update_date: new Date(updatedAt).toISOString(),
+    };
+  });
 
   return {
     agentSessions: seedAgentSessions(roles),

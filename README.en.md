@@ -2,7 +2,7 @@
 
 # Pilot Admin
 
-A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, admin pages, non-Agent messages and demo data support zh-CN / en-US; assistant conversations and tools follow in M5c.
+A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, admin pages, service messages, demo data, assistant conversations and tools support zh-CN / en-US.
 
 ## Features
 
@@ -114,9 +114,17 @@ System → Audit Logs provides combined keyword/module/result filters, virtualiz
 
 To add an action, update the typed map, runtime allowlist, both `audit.ts` dictionaries and `src/audit/format.ts`. Wire codes such as `auth.login_failed` map to camelCase message keys such as `audit.action.auth.loginFailed`. Sentences translate at render/export, while recorded names remain data. [Implementation guide](README.md#操作日志).
 
-DB v5 introduces capped `auditLogs` (1000 newest-first entries, 120 historical seed entries) and `exampleProjects` (80 deterministic rows), removes `activities` and resets older demo data once. M6b/M6c reuse this schema. Demo reset records its own action in the same persisted write.
+DB v5 introduces capped `auditLogs` (1000 newest-first entries, 120 historical seed entries) and `exampleProjects` (80 deterministic rows), removes `activities` and resets older demo data once. The CRUD template uses this same schema. Demo reset records its own action in the same persisted write.
 
 CSV exports the current filters, capped at 5000 service rows (1000 currently stored). `src/utils/csv.ts` quotes every cell, doubles quotes, uses CRLF and includes a UTF-8 BOM. Cells beginning with `=`, `+`, `-`, `@`, Tab or CR, including after leading whitespace, receive an apostrophe prefix so spreadsheets open them as text. This also applies to user-provided names.
+
+## Start a module from the CRUD template
+
+Examples → Standard List (`/examples/crud`) demonstrates paged virtualized lists, filters, forms with inline duplicate-code errors, selection, atomic batch deletion and safe CSV. Export deliberately requires page access only; Audit Logs demonstrates a dedicated export permission. Existing v5 databases grant the new module automatically to auto-grant admins. Operator create/edit and viewer read-only defaults appear after resetting demo data. The template collection ships in DB v5, so adding the page needs no version bump.
+
+Follow the ordered [copy checklist](README.md#从模板开始一个新模块): copy entity/status types; add the mock collection, seed text and `isMockDb` validation (bump the version for a new persisted shape); extend audit types, runtime catalog, target validation, format maps and both audit dictionaries; copy the service and server-error namespace; copy the entire page/form folder; copy both locale namespaces and register them; register one `definePage` plus menu/buttons; optionally seed non-admin grants; run all checks and the real-page matrix. Extend the exhaustive module-target map in `auditSeed.ts`; exclude the new module in its action filter if no historical demo entries are needed.
+
+Rename consistently: `ExampleProject` → your entity, `exampleProjects` → your collection/namespace, `exampleProjectService` → your service, `ProjectInput`/`ProjectFilters` and `PROJECT_CODE_EXISTS` → your equivalents, `example:*` → your permissions, `example.*` → your audit codes, and `/examples/crud` → your route. Rename menu/button IDs, dictionary keys, page/form exports and the English source import too. The numeric duplicate-code error is the field-mapping contract; never compare localized error messages.
 
 ## Commands and verification
 
@@ -137,7 +145,7 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 
 ## Roadmap
 
-Upcoming milestones cover zh-CN / en-US localization, audit logs, a standard CRUD template, a profile page, and UX/performance improvements. These are planned features, not current capabilities.
+zh-CN / en-US localization, audit logs and the standard CRUD template are available. Next comes a profile page, followed by UX/performance improvements and documentation updates.
 
 ## Contributing and security
 

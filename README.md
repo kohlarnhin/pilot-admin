@@ -264,9 +264,24 @@ return response(undefined, traceId);
 
 系统管理 → 操作日志支持关键词、模块、结果组合筛选、无限追加、虚拟化、详情抽屉和追踪 ID 复制。关键词匹配操作人、目标、操作代码和追踪 ID。列表/计数要求该菜单，导出额外要求 `audit-log:export`；内置管理员具备，操作员和访客不具备。概览只拿最近 5 条成功记录的受限投影，排除 `auth.login` 和 `auth.logout` 会话事件，不包含操作人/目标 ID、追踪 ID、失败原因或任意原始参数；每行以操作句子为主行、操作人与时间为元信息，只有可访问日志页的账号看到「查看全部」。
 
-DB v5 一次性引入 `auditLogs`（最新在前，上限 1000）与 `exampleProjects`（80 条确定性种子），移除 `activities`。首次升级会重置演示数据一次；M6b/M6c 沿用 v5。初始审计记录为固定锚点前 30 天的 120 条历史示例。
+DB v5 一次性引入 `auditLogs`（最新在前，上限 1000）与 `exampleProjects`（80 条确定性种子），移除 `activities`。首次升级会重置演示数据一次；模板使用同一 v5 结构。初始审计记录为固定锚点前 30 天的 120 条历史示例。
 
 CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转义、CRLF 行尾。以 `=`、`+`、`-`、`@`、Tab、CR 开头（含前导空白）的单元格加 `'` 前缀，供电子表格按文本打开；该安全转换也会作用于显示名。导出当前筛选结果，服务最多返回 5000 条（当前存储上限 1000）。
+
+## 从模板开始一个新模块
+
+示例 → 标准列表页（`/examples/crud`）是完整的 CRUD 参考：分页与虚拟化、组合筛选、内联校验、单条/批量删除和安全 CSV。导出有意只要求页面访问，访客也可导出；需要独立导出权限时参考操作日志页。管理员自动取得新菜单/按钮；已有本地 v5 数据不改写其他角色的授权，运营（新增/编辑）与访客（只读）的默认菜单需在「重置演示数据」后出现。模板沿用 DB v5，不重置已有数据。
+
+按下面顺序复制，避免只复制页面却遗漏服务、类型或权限。以 `Widget` 为例，统一替换 `ExampleProject` → `Widget`、`ExampleProjectStatus` → `WidgetStatus`、`exampleProjects` → `widgets`、`exampleProjectService` → `widgetService`、`ProjectInput/ProjectFilters` → `WidgetInput/WidgetFilters`、`PROJECT_CODE_EXISTS` → `WIDGET_CODE_EXISTS`、`example:*` → `widget:*`、`example.*` → `widget.*`、`/examples/crud` → `/examples/widgets`；菜单 ID `crud-example` → `widgets`、按钮 ID `example-*` → `widget-*`，字典键相应改为 `menu.widgets` / `button.widgetCreate|Update|Delete`。
+
+1. **类型**：在 `src/types/index.ts` 复制 `ExampleProject` / `ExampleProjectStatus`，保留 `AuditFields`；按实际字段修改。
+2. **Mock 集合**：在 `src/mock/seed.ts` 复制别名 `MockExampleProject`、`MockDb.exampleProjects` 与 80 行种子生成/返回代码；在两种语言的 `seed.ts` 及 `src/i18n/seed.ts` 增加对应种子文本。在 `src/mock/db.ts` 的 `isMockDb` 加入集合数组和逐行形状校验。新增持久化集合/形状通常应同步提升 `MOCK_DB_VERSION` 与 `MockDb.version`/`createSeed().version`，并注明演示重置；模板集合已随 DB v5 提供，加入模板页面无需再次提升版本。旧版本只清理更低版本。
+3. **审计目录**：在 `src/types/index.ts` 扩展 `AuditModule`、`AuditParamsMap`、`AuditLog.target_type`；在 `src/audit/catalog.ts` 增加模块与动作白名单（批量删除仅 `{ count }`），在 `src/mock/db.ts` 扩展目标类型校验，在 `src/audit/format.ts` 增加动作/模块/目标映射。两种语言 `audit.ts` 增加句子、模块及目标名称。在 `src/mock/auditSeed.ts` 的模块目标映射中增加新模块目标（该表覆盖所有 `AuditModule`）；若不需要历史演示记录，在动作筛选中排除新模块。不要把原始输入或错误放入日志。
+4. **服务**：复制 `src/api/services/exampleProjectService.ts` 为 `widgetService.ts`，替换集合、类型、路由、权限、审计代码和业务错误常量。两种语言 `serverErrors.ts` 增加 `widget` 分组；保留服务校验、数字重复码、同 draft 审计、失败不覆盖原错，以及批量先验证后一次提交的逻辑。
+5. **页面**：复制整个 `src/pages/examples/crud/` 为 `src/pages/examples/widgets/`，重命名 `ProjectFormModal.tsx` / 导出组件与 import、`CrudExamplePage`，按上面的映射替换类型/服务/权限/字典；定制列、筛选、表单规则与 CSV 字段。`// 模板：…` 标出了需要按产品取舍的位置。页面保持只调用服务。
+6. **文案**：复制两种语言的 `exampleProjects.ts` 为 `widgets.ts`，英文的 source import 也要改名，并在两种语言 `index.ts` 注册；在 `menu.ts` / `button.ts` 添加菜单和按钮键。保留语义 camelCase 命名及占位符一致性。
+7. **注册与授权**：在 `src/routes/routeModules.ts` 增加一个 `definePage`（新的路径、文件与导出名）；在 `src/config/menus.ts` 增加一个菜单项及 create/update/delete 按钮。图标从现有 registry 选择。Mock 的 `auto_grant` 角色会自动取得新权限；如需其他默认角色，在 `src/mock/seed.ts` 配置其菜单/按钮 ID，并重置演示数据验证。真实后端决定实际授权。
+8. **验证**：运行 `pnpm lint`、`pnpm typecheck`、`pnpm build`、`pnpm i18n:check`。用三角色与双语检查 1280×720 / 1440×900，覆盖重复编码、批量失败、分页、选择与语言切换、导出和审计；确认新集合刷新后仍存在。
 
 ## 脚本与验证
 
@@ -284,10 +299,10 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 ## 路线图
 
 - 国际化：已覆盖 zh-CN / en-US 管理页面、助手和工具交互。
-- 通用功能：操作日志已提供，接下来完善标准 CRUD 模板与个人中心。
+- 通用功能：操作日志与标准 CRUD 模板已提供，接下来完善个人中心。
 - 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
 
-以上为后续里程碑，当前功能以代码和本文前述说明为准。
+接下来先完善个人中心，再进行体验、性能与文档优化。
 
 ## 参与贡献
 

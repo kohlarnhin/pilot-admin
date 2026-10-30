@@ -49,6 +49,7 @@ export const adminPages = [
   definePage({ path: '/system/settings', load: () => import('../pages/settings').then((module) => ({ default: module.SettingsPage })) }),
   definePage({ path: '/system/assistant', requires: ['agent-config:view'], load: () => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })) }),
   definePage({ path: '/examples/components', load: () => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })) }),
+  definePage({ path: '/examples/crud', load: () => import('../pages/examples/crud').then((module) => ({ default: module.CrudExamplePage })) }),
 ];
 
 const routeLoaders: Record<string, () => Promise<unknown>> = {

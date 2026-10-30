@@ -1,3 +1,4 @@
+import exampleProjects from './exampleProjects';
 import common from './common';
 import auth from './auth';
 import layout from './layout';
@@ -24,4 +25,4 @@ import assistant from './assistant';
 import agentMode from './agentMode';
 import agentTools from './agentTools';
 import agentCommands from './agentCommands';
-export default { common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } as const;
+export default { exampleProjects, common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } as const;

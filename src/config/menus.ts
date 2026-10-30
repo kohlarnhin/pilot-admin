@@ -43,6 +43,11 @@ export const menuConfig: MenuConfig[] = [
   ] },
   { id: 'examples', route_path: '', icon: 'component', sort_no: 3, children: [
     { id: 'components', route_path: '/examples/components', icon: 'component', sort_no: 1 },
+    { id: 'crud-example', route_path: '/examples/crud', icon: 'package', sort_no: 2, buttons: [
+      { id: 'example-create', permission: 'example:create' },
+      { id: 'example-update', permission: 'example:update' },
+      { id: 'example-delete', permission: 'example:delete' },
+    ] },
   ] },
 ];
 

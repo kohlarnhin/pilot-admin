@@ -1,4 +1,7 @@
 export default {
+  "exampleCreate": "新增项目",
+  "exampleUpdate": "编辑项目",
+  "exampleDelete": "删除项目",
   "auditLogExport": "导出日志",
   "userCreate": "新增用户",
   "userUpdate": "编辑用户",

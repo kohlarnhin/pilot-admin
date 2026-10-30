@@ -1,4 +1,14 @@
 export default {
+  "example": {
+    "invalidName": "请输入不超过 60 字的项目名称",
+    "invalidCode": "编码须为 2–20 位大写字母、数字或连字符，并以字母开头",
+    "invalidOwner": "请输入不超过 40 字的负责人",
+    "invalidStatus": "请选择有效的项目状态",
+    "invalidDescription": "描述不能超过 200 字",
+    "codeExists": "该项目编码已存在",
+    "notFound": "项目不存在或已被删除",
+    "batchLimit": "每次请选择 1–100 个项目"
+  },
   "audit": { "invalidParams": "审计参数不符合动作定义" },
   "auth": {
     "invalidCredentials": "账号或密码错误，请检查后重试",

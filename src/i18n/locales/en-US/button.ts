@@ -2,6 +2,9 @@ import type source from '../zh-CN/button';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "exampleCreate": "Create project",
+  "exampleUpdate": "Edit project",
+  "exampleDelete": "Delete project",
   "auditLogExport": "Export logs",
   "userCreate": "Create user",
   "userUpdate": "Edit user",

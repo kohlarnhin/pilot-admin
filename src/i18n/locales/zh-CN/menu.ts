@@ -1,4 +1,5 @@
 export default {
+  "crudExample": "标准列表页",
   "auditLogs": "操作日志",
   "assistant": "助手设置",
   "dashboard": "概览",

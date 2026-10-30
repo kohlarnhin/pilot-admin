@@ -30,7 +30,7 @@ export default {
     "confirmContent": "Users, roles, menu names, settings, preferences, audit logs and example projects will be reset, including all demo passwords. Continue?",
     "warning": "This overwrites all demo data stored in this browser and cannot be undone.",
     "initialData": "Initial data",
-    "summary": "Users: 150 · Roles: 3 · Pages: 8",
+    "summary": "Users: 150 · Roles: 3 · Pages: 9",
     "description": "Includes administrator, operator and viewer accounts, default menus, security policies and notification preferences."
   },
   "description": "Configure site details, security and notifications",

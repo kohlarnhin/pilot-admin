@@ -5,8 +5,8 @@ import type { AuditAction, AuditLog, AuditModule, ExampleProject, Role, User } f
 /** 固定锚点之前 30 天，每六小时一条；只存代码和种子实体的显示名。 */
 export function seedAuditLogs(users: User[], roles: Role[], projects: ExampleProject[]): AuditLog[] {
   const text = getSeedText();
-  // 个人资料与项目动作先保留目录，等对应里程碑再产生记录。
-  const actions = (Object.keys(AUDIT_PARAMS) as AuditAction[]).filter((action) => !action.startsWith('profile.') && !action.startsWith('example.'));
+  // 个人资料动作等对应里程碑再加入历史记录。
+  const actions = (Object.keys(AUDIT_PARAMS) as AuditAction[]).filter((action) => !action.startsWith('profile.'));
   const anchor = Date.parse('2026-10-28T09:00:00+08:00');
   return Array.from({ length: 120 }, (_, index) => {
     const action = actions[index % actions.length];
@@ -66,7 +66,7 @@ export function seedAuditLogs(users: User[], roles: Role[], projects: ExamplePro
       actor_name: actor.user_name,
       module,
       action,
-      ...targets[module],
+      ...(action === 'example.batch_delete' ? {} : targets[module]),
       ...(Object.keys(params).length ? { params } : {}),
       result: failure ? 'failure' : 'success',
       ...(failure ? { reason: action === 'auth.login_failed' ? 'invalid_credentials' as const : 'forbidden' as const } : {}),
