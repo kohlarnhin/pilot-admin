@@ -1,5 +1,5 @@
 import { t, useT } from '@/i18n';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { searchService } from '@/api/services/searchService';
 import { useAuthStore } from '@/store/authStore';
@@ -33,7 +33,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
   });
   const menus = useAuthStore((state) => state.menus);
   const permissions = useAuthStore((state) => state.permissions);
-  const pages = useMemo(() => searchTargets(menus, permissions), [menus, permissions]);
+  const pages = searchTargets(menus, permissions);
   const canSearchUsers = pages.some((page) => page.route === '/system/users');
   const [query, setQuery] = useState('');
   const queryText = query.trim();

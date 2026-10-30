@@ -5,8 +5,7 @@ import type { AuditAction, AuditLog, AuditModule, ExampleProject, Role, User } f
 /** 固定锚点之前 30 天，每六小时一条；只存代码和种子实体的显示名。 */
 export function seedAuditLogs(users: User[], roles: Role[], projects: ExampleProject[]): AuditLog[] {
   const text = getSeedText();
-  // 个人资料动作等对应里程碑再加入历史记录。
-  const actions = (Object.keys(AUDIT_PARAMS) as AuditAction[]).filter((action) => !action.startsWith('profile.'));
+  const actions = Object.keys(AUDIT_PARAMS) as AuditAction[];
   const anchor = Date.parse('2026-10-28T09:00:00+08:00');
   return Array.from({ length: 120 }, (_, index) => {
     const action = actions[index % actions.length];
@@ -45,7 +44,11 @@ export function seedAuditLogs(users: User[], roles: Role[], projects: ExamplePro
         target_type: 'agent_profile',
         target_name: text.agentProfile.name,
       },
-      profile: userTarget,
+      profile: {
+        target_type: 'user',
+        target_id: actor.id,
+        target_name: actor.user_name,
+      },
       example: {
         target_type: 'example',
         target_id: project.id,
@@ -58,6 +61,7 @@ export function seedAuditLogs(users: User[], roles: Role[], projects: ExamplePro
       button_count: 2,
       section: (['basic', 'security', 'notifications'] as const)[index % 3],
       count: 3,
+      fields: ['user_name', 'email'],
     });
     const failure = index % 7 === 6 || action === 'auth.login_failed';
     return {

@@ -1,4 +1,7 @@
 import { lazy, type ComponentType } from 'react';
+import type { MessageKey, MessageParams } from '@/i18n/types';
+
+type PageTitleKey = { [K in MessageKey]: [MessageParams<K>] extends [never] ? K : never }[MessageKey];
 
 let pendingRouteLoads = 0;
 
@@ -32,6 +35,8 @@ interface PageDefinition {
   load: () => Promise<{ default: ComponentType }>;
   requires?: string[];
   access?: 'menu' | 'authenticated';
+  titleKey?: PageTitleKey;
+  searchable?: boolean;
 }
 
 /** 仅在模块作用域注册：lazy 与预取始终共用同一个缓存 loader。 */
@@ -41,6 +46,7 @@ export function definePage({ load, access = 'menu', requires = [], ...definition
 }
 
 export const adminPages = [
+  definePage({ path: '/profile', access: 'authenticated', titleKey: 'profile.title', searchable: true, load: () => import('../pages/profile').then((module) => ({ default: module.ProfilePage })) }),
   definePage({ path: '/dashboard', load: () => import('../pages/dashboard').then((module) => ({ default: module.DashboardPage })) }),
   definePage({ path: '/system/users', load: () => import('../pages/users').then((module) => ({ default: module.UsersPage })) }),
   definePage({ path: '/system/roles', load: () => import('../pages/roles').then((module) => ({ default: module.RolesPage })) }),

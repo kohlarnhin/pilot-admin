@@ -521,7 +521,7 @@ function FormItem({
 
   const isRequired = required ?? Boolean(rules?.some((rule) => typeof rule !== "function" && rule.required));
   const errors = state.errors;
-  const controlId = key ? `form_item_${key}` : htmlFor;
+  const controlId = htmlFor || (key ? `form_item_${key}` : undefined);
   const hintId = controlId && (errors?.length || help) ? `${controlId}_help` : undefined;
 
   let control = children;

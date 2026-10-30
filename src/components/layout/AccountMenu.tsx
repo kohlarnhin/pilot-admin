@@ -3,10 +3,10 @@ import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal } from 'lucide-react';
+import { BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal, User } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { appConfig } from '@/config/app';
-import { Dropdown } from '@/ui/dropdown';
+import { Dropdown, DropdownItem, menuItemClass } from '@/ui/dropdown';
 import { message } from '@/ui/message';
 import { Tooltip } from '@/ui/tooltip';
 import { Avatar, AvatarFallback } from '@/ui/avatar';
@@ -93,6 +93,9 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
               <div className="truncate text-13 font-medium text-slate-900">{displayName}</div>
               {user?.email && <div className="truncate text-xs text-slate-400">{user.email}</div>}
             </div>
+            <DropdownItem className={menuItemClass} onSelect={() => { setOpen(false); navigate('/profile'); }}>
+              <User /><span className="min-w-0 flex-1 truncate">{t('profile.title')}</span>
+            </DropdownItem>
             <LocaleSubmenu />
             {menu}
           </>

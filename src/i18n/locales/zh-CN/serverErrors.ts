@@ -1,4 +1,5 @@
 export default {
+  profile: { invalidName: '请输入不超过 40 字的显示姓名' },
   "example": {
     "invalidName": "请输入不超过 60 字的项目名称",
     "invalidCode": "编码须为 2–20 位大写字母、数字或连字符，并以字母开头",

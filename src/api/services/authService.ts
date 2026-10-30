@@ -9,6 +9,9 @@ import { createTraceId, delay, validatePassword } from '@/mock/helpers';
 
 export { DEFAULT_USER_PREFERENCES } from '@/mock/seed';
 
+export const PASSWORD_CURRENT_MISMATCH = 40001;
+export const PASSWORD_CONFIRM_MISMATCH = 40002;
+
 export const authService = {
   login: async (loginName: string, password: string): Promise<AuthTokens> => {
     await delay();
@@ -64,10 +67,10 @@ export const authService = {
       await delay();
       const user = currentUser();
       if (user.password !== data.oldPassword) {
-        throw new ApiRequestError(t('serverErrors.password.currentMismatch'), 400);
+        throw new ApiRequestError(t('serverErrors.password.currentMismatch'), 400, PASSWORD_CURRENT_MISMATCH);
       }
       if (data.newPassword !== data.confirmPassword) {
-        throw new ApiRequestError(t('serverErrors.password.confirmMismatch'), 400);
+        throw new ApiRequestError(t('serverErrors.password.confirmMismatch'), 400, PASSWORD_CONFIRM_MISMATCH);
       }
 
       validatePassword(data.newPassword);

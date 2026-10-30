@@ -2,6 +2,7 @@ import type source from '../zh-CN/serverErrors';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  profile: { invalidName: 'Enter a display name of up to 40 characters' },
   "example": {
     "invalidName": "Enter a project name of up to 60 characters",
     "invalidCode": "Use 2–20 uppercase letters, numbers or hyphens, starting with a letter",

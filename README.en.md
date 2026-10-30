@@ -63,7 +63,7 @@ Adding a page takes three steps:
 2. Add one `definePage({ path, load })` entry to `adminPages` in `src/routes/routeModules.ts`. Routes and cached hover/focus preloading derive from it.
 3. Add one menu entry with a stable ID, matching route and an icon name from `src/components/icon/registry.ts` to `src/config/menus.ts`. No route or icon-path mapping is needed elsewhere.
 
-The default `access: 'menu'` checks an enabled, visible granted menu. Add `requires: ['feature:manage']` for extra permissions, or use `access: 'authenticated'` for a signed-in page without a menu. Guards, navigation, search and landing routes share `src/routes/access.ts`. Use `usePermission`, `useCan` or `<Access>` for buttons, and `useDataChanged` to refresh after assistant writes. Services must still check access.
+The default `access: 'menu'` checks an enabled, visible granted menu. Add `requires: ['feature:manage']` for extra permissions, or use `access: 'authenticated'` for a signed-in page without a menu, such as `/profile`. Add `titleKey: 'profile.title', searchable: true` to make it searchable by its localized title; title keys must have no placeholders. Guards, navigation, search and landing routes share `src/routes/access.ts`. Use `usePermission`, `useCan` or `<Access>` for buttons, and `useDataChanged` to refresh after assistant writes. Services must still check access.
 
 Mock catalog sync is recursive, monotonic and add-only. Only the seeded admin role has the internal `auto_grant` flag; newly created roles do not. New permissions are granted on DB load/storage reload without resetting demo data or changing role seeds. Revoked old permissions stay revoked. All roles gain missing route-less ancestors of their existing menus; routed ancestors are never granted implicitly. Removed definitions remain inert and counts reflect current definitions. Other roles need explicit grants; real backends decide and enforce grants server-side. Custom menu names override defaults. [Full guide](README.md#添加页面与权限).
 
@@ -126,6 +126,14 @@ Follow the ordered [copy checklist](README.md#从模板开始一个新模块): c
 
 Rename consistently: `ExampleProject` → your entity, `exampleProjects` → your collection/namespace, `exampleProjectService` → your service, `ProjectInput`/`ProjectFilters` and `PROJECT_CODE_EXISTS` → your equivalents, `example:*` → your permissions, `example.*` → your audit codes, and `/examples/crud` → your route. Rename menu/button IDs, dictionary keys, page/form exports and the English source import too. The numeric duplicate-code error is the field-mapping contract; never compare localized error messages.
 
+## Profile
+
+Every signed-in user, including viewers, can open `/profile` from the first account-menu item or global search without a menu grant. The Agent top-bar entry opens the same admin-shell page. Basic details supports a display name (required, up to 40 characters) and optional email; the login name is read-only. Unsaved details survive language and section changes. `profileService.updateProfile` updates only the current user and ignores extra fields; `refreshMe()` updates the sidebar and account menu.
+
+Security shares `PasswordChangeForm` with the quick-action modal, including inline errors and sign-out after success. Preferences uses the existing language switch and shared Agent-entry logic; Agent options require `agent:use`. My permissions shows active roles, accessible pages and localized action names/codes, including permission-only assistant groups; viewers see an empty action state.
+
+Profile changes and audit share one draft. `profile.update` records only changed field names (`user_name`/`email`), never values; a no-op save writes nothing and creates no audit entry. The existing DB v5 schema is unchanged. [Details](README.md#个人中心).
+
 ## Commands and verification
 
 | Command | Purpose |
@@ -145,7 +153,7 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 
 ## Roadmap
 
-zh-CN / en-US localization, audit logs and the standard CRUD template are available. Next comes a profile page, followed by UX/performance improvements and documentation updates.
+zh-CN / en-US localization, audit logs, the standard CRUD template and the profile page are available. Next come UX/performance improvements and documentation updates.
 
 ## Contributing and security
 

@@ -84,7 +84,7 @@ skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现�
 
 注册表在模块作用域创建 lazy 组件；路由、已知页面判断与 hover/focus 预取共用缓存 loader。无路由分组不预取，实际重定向沿用统一的可访问首页选择。
 
-默认 `access: 'menu'` 要求已授权、可见且启用的菜单。额外条件写为 `requires: ['project:manage']`，所有权限都满足才可进入；路由守卫、侧栏、搜索、首页和登录落点使用 `src/routes/access.ts` 的同一个规则。`access: 'authenticated'` 用于不需要菜单的登录后页面，可通过链接进入。页面用 `usePermission('project:create')`、`useCan()` 或 `<Access permission={...} fallback={...}>` 控制按钮，service 仍须重新校验权限。`useCan()` / `Access` 支持数组和 `mode="all" | "any"`（默认 all）。`useDataChanged(handler)` 订阅助手写入后的数据变更信号。
+默认 `access: 'menu'` 要求已授权、可见且启用的菜单。额外条件写为 `requires: ['project:manage']`，所有权限都满足才可进入；路由守卫、侧栏、搜索、首页和登录落点使用 `src/routes/access.ts` 的同一个规则。`access: 'authenticated'` 用于不需要菜单的登录后页面，可通过链接进入；例如个人中心 `/profile`。注册项增加 `titleKey: 'profile.title', searchable: true`，即可按本地化标题出现在全局搜索（`titleKey` 只接受无占位符的字典键），无需菜单声明。页面用 `usePermission('project:create')`、`useCan()` 或 `<Access permission={...} fallback={...}>` 控制按钮，service 仍须重新校验权限。`useCan()` / `Access` 支持数组和 `mode="all" | "any"`（默认 all）。`useDataChanged(handler)` 订阅助手写入后的数据变更信号。
 
 Mock DB 的权限目录递归覆盖所有层级。种子只有管理员角色设有内部 `auto_grant: true`；新增角色默认为 false。DB 加载及跨标签页存储重载时，auto_grant 角色只获得目录中新出现的菜单/按钮，已手动撤回的旧权限不会恢复；所有角色都会补齐已授权菜单缺失的无路由祖先，不会自动授予有路由的祖先。历史目录只增不减，删除的声明和残留授权不生效，角色计数只统计当前声明。因此新增页面通常无需改角色种子或重置数据；其他角色仍在角色管理中按需授权，角色种子只用于可选的默认授权。真实后端自行决定并校验授权，不依赖这套 Mock 同步。
 
@@ -283,6 +283,17 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 7. **注册与授权**：在 `src/routes/routeModules.ts` 增加一个 `definePage`（新的路径、文件与导出名）；在 `src/config/menus.ts` 增加一个菜单项及 create/update/delete 按钮。图标从现有 registry 选择。Mock 的 `auto_grant` 角色会自动取得新权限；如需其他默认角色，在 `src/mock/seed.ts` 配置其菜单/按钮 ID，并重置演示数据验证。真实后端决定实际授权。
 8. **验证**：运行 `pnpm lint`、`pnpm typecheck`、`pnpm build`、`pnpm i18n:check`。用三角色与双语检查 1280×720 / 1440×900，覆盖重复编码、批量失败、分页、选择与语言切换、导出和审计；确认新集合刷新后仍存在。
 
+## 个人中心
+
+所有已登录账号（包括访客）都可从账号菜单第一项或全局搜索进入 `/profile`，无需分配菜单权限。Agent 顶栏的入口也会进入管理后台的个人中心。
+
+- **基本资料**：维护显示姓名（必填，最多 40 字）和可选邮箱，登录账号只读。`profileService.updateProfile` 只更新当前用户，忽略额外字段；成功后 `refreshMe()` 更新侧栏与账号菜单。语言和分类切换保留未保存输入。
+- **安全**：与快捷修改密码弹窗共用 `PasswordChangeForm`，字段错误内联显示；修改成功后退出登录，使用新密码重新登录。
+- **偏好**：语言与账号菜单使用相同的即时切换机制；有 `agent:use` 时可设置 Agent 入口，与偏好弹窗共用提交逻辑。
+- **我的权限**：只读展示当前有效角色、可访问页面树和按模块分组的操作名称/代码，包含不在侧栏显示的助手权限。访客显示无操作权限状态。
+
+资料保存与 `profile.update` 审计在同一 draft 中提交，`params.fields` 只记录实际改变的 `user_name` / `email` 字段名；无变化时不写 DB、不记审计。沿用 DB v5，无需重置演示数据。
+
 ## 脚本与验证
 
 | 命令 | 用途 |
@@ -299,10 +310,10 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 ## 路线图
 
 - 国际化：已覆盖 zh-CN / en-US 管理页面、助手和工具交互。
-- 通用功能：操作日志与标准 CRUD 模板已提供，接下来完善个人中心。
+- 通用功能：操作日志、标准 CRUD 模板与个人中心已提供。
 - 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
 
-接下来先完善个人中心，再进行体验、性能与文档优化。
+接下来进行体验、性能与文档优化。
 
 ## 参与贡献
 
