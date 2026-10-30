@@ -78,5 +78,37 @@ export const seedText = {
     "permissions": "调整了运营人员的菜单权限",
     "role": "创建了访客角色",
     "ready": "演示数据已准备就绪"
+  },
+  "agentProfile": {
+    "name": "领航助手",
+    "greeting": "你好，我是你的工作助手。可以帮你查看概况、查找用户、维护账号和执行巡检。",
+    "suggestions": [
+      {
+        "label": "概况统计",
+        "prompt": "概况统计"
+      },
+      {
+        "label": "查找用户",
+        "prompt": "查找用户 陈"
+      },
+      {
+        "label": "新增用户",
+        "prompt": "新增用户 林沐晨"
+      },
+      {
+        "label": "账号巡检",
+        "prompt": "账号巡检"
+      }
+    ]
+  },
+  "agentSessions": {
+    "checkPrompt": "第 {count} 次账号检查",
+    "checkReply": "检查已完成，账号状态正常。\n\n- 保持最小权限\n- 定期核对账号状态",
+    "demoName": "演示新用户",
+    "createPrompt": "新增用户 {name}",
+    "chooseRole": "为 **{name}** 选择一个角色，确认后再创建账号。",
+    "longTitle": "账号检查记录 · 长会话示例",
+    "createTitle": "新增用户 · 选择角色示例",
+    "workTitle": "工作记录 {index}"
   }
 } satisfies SeedText;

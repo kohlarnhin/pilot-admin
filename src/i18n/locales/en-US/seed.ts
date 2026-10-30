@@ -78,5 +78,37 @@ export const seedText = {
     "permissions": "Updated the operator’s menu permissions",
     "role": "Created the viewer role",
     "ready": "Demo data is ready"
+  },
+  "agentProfile": {
+    "name": "Pilot assistant",
+    "greeting": "Hello, I’m your work assistant. I can help you view statistics, find users, manage accounts and run audits.",
+    "suggestions": [
+      {
+        "label": "Overview stats",
+        "prompt": "Overview stats"
+      },
+      {
+        "label": "Find users",
+        "prompt": "Find users Chen"
+      },
+      {
+        "label": "Create user",
+        "prompt": "Create user Alice Morgan"
+      },
+      {
+        "label": "Account audit",
+        "prompt": "Account audit"
+      }
+    ]
+  },
+  "agentSessions": {
+    "checkPrompt": "Account check {count}",
+    "checkReply": "Check complete. Account status is normal.\n\n- Grant only required permissions\n- Review account status regularly",
+    "demoName": "Demo User",
+    "createPrompt": "Create user {name}",
+    "chooseRole": "Choose a role for **{name}**, then confirm to create the account.",
+    "longTitle": "Account checks · Long conversation example",
+    "createTitle": "Create user · Role choice example",
+    "workTitle": "Work log {index}"
   }
 } satisfies SeedText;

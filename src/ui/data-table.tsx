@@ -404,7 +404,7 @@ export function DataTable<T extends object>({
             indeterminate={selectedCount > 0 && !allSelected}
             disabled={selectableRows.length === 0}
             onChange={(event) => toggleAll(event.target.checked)}
-            aria-label={t('ui.selectAll')}
+            aria-label={t('common.actions.selectAll')}
           />
         </div>
       )}

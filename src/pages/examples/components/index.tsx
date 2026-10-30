@@ -38,7 +38,7 @@ function Example({ id, title, description, children, wide = false }: { id: strin
 }
 
 const DEMO_ROWS = [
-  { id: 'DEMO-001', name: 'gallery.demoRows.projectName', owner: 'gallery.demoRows.projectOwner', status: 'completed', statusLabel: 'gallery.demoRows.completed' },
+  { id: 'DEMO-001', name: 'gallery.demoRows.projectName', owner: 'gallery.demoRows.projectOwner', status: 'completed', statusLabel: 'common.status.completed' },
   { id: 'DEMO-002', name: 'gallery.demoRows.reviewName', owner: 'gallery.demoRows.reviewOwner', status: 'active', statusLabel: 'gallery.demoRows.inProgress' },
   { id: 'DEMO-003', name: 'gallery.demoRows.releaseName', owner: 'gallery.demoRows.releaseOwner', status: 'pending', statusLabel: 'gallery.demoRows.notStarted' },
 ] as const;
@@ -124,7 +124,7 @@ export const ComponentsPage: React.FC = () => {
         </Example>
         <Example id="gallery-files" title={t('gallery.files.title')} description={t('gallery.files.description')}>
           <FileDropZone accept=".json,.txt" onFiles={setFiles} hint={t('gallery.files.hint')} />
-          {files.length > 0 && <p role="status" className="text-xs text-slate-600">{t('gallery.files.selectedLabel')}{files.map((file) => file.name).join(t('gallery.files.separator'))}</p>}
+          {files.length > 0 && <p role="status" className="text-xs text-slate-600">{t('gallery.files.selectedLabel')}{files.map((file) => file.name).join(t('common.format.listSeparator'))}</p>}
           <FileDropZone disabled onFiles={() => undefined} title={t('gallery.files.disabled')} className="py-3" />
         </Example>
         <Example id="gallery-loading" title={t('gallery.loading.title')} description={t('gallery.loading.description')}>

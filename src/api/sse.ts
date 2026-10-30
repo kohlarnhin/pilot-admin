@@ -124,7 +124,7 @@ export async function runSseStream<T>(url: string, payload: Record<string, unkno
     onResult?.(finalResult!);
     return finalResult!;
   } catch (error) {
-    if (signal?.aborted) throw signal.reason || new DOMException(t('client.cancelled'), 'AbortError');
+    if (signal?.aborted) throw signal.reason || new DOMException(t('common.status.cancelled'), 'AbortError');
     if (timeout.signal.aborted) throw new ApiRequestError(t('client.assistantTimeout'));
     if (error instanceof ApiRequestError) throw error;
     throw new ApiRequestError(error instanceof SyntaxError ? t('client.invalidStream') : t('client.assistantConnection'));

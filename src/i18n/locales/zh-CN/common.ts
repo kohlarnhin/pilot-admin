@@ -13,7 +13,12 @@ export default {
   "status": {
     "enabled": "已启用",
     "disabled": "已停用",
-    "loading": "加载中"
+    "loading": "加载中",
+    "completed": "已完成",
+    "cancelled": "已取消",
+    "failed": "失败",
+    "stopped": "已停止",
+    "running": "进行中"
   },
   "columns": {
     "updated": "最后更新",
@@ -36,7 +41,8 @@ export default {
     "confirmReset": "确认重置",
     "confirm": "确定",
     "cancel": "取消",
-    "gotIt": "知道了"
+    "gotIt": "知道了",
+    "selectAll": "全选"
   },
   "fields": {
     "account": "账号",
@@ -62,5 +68,8 @@ export default {
   },
   "errors": {
     "loadData": "数据加载失败"
+  },
+  "format": {
+    "listSeparator": "、"
   }
 } as const;

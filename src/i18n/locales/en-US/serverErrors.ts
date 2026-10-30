@@ -53,5 +53,28 @@ export default {
   "access": {
     "forbiddenAction": "You do not have permission for this action",
     "forbiddenPage": "You do not have permission to access this page"
+  },
+  "agent": {
+    "noModel": "No enabled model configuration",
+    "sessionNotFound": "Conversation not found",
+    "interactionExpired": "This interaction has expired. Start the action again.",
+    "choiceUnsupported": "This tool does not support choice replies",
+    "selectionUnsupported": "This tool does not support selection replies",
+    "toolUnavailable": "No tool is available",
+    "interactionSubmitted": "This interaction was submitted or has expired. Use the latest reply.",
+    "invalidChoice": "Invalid choice",
+    "invalidSelection": "Select valid options",
+    "planNotFound": "Plan not found",
+    "planExecuted": "The plan has already started",
+    "planChanged": "The plan execution state has changed",
+    "planUnsupported": "This tool does not support execution plans",
+    "actionNotFound": "Action not found",
+    "resultSaved": "The result has already been saved",
+    "nameExpired": "The action has expired. Provide the name again.",
+    "roleUnavailable": "The role is unavailable",
+    "roleRequired": "Select a role first",
+    "usersExpired": "The action has expired. Select the users again.",
+    "auditStepNotFound": "Audit step not found",
+    "simulated": "The simulated service is unavailable. Choose Retry."
   }
 } satisfies LocalizedDictionary<typeof source>;

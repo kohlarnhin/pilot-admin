@@ -51,7 +51,8 @@ function isMockDb(value: unknown): value is MockDb {
     return false;
   }
 
-  if (!isRecord(value.agentProfile)
+  if ((value.agentProfileCustomized !== undefined && typeof value.agentProfileCustomized !== 'boolean')
+    || !isRecord(value.agentProfile)
     || typeof value.agentProfile.name !== 'string' || typeof value.agentProfile.greeting !== 'string'
     || !Array.isArray(value.agentProfile.suggestions) || !value.agentProfile.suggestions.every((item) => isRecord(item)
       && typeof item.label === 'string' && typeof item.prompt === 'string')) {

@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { localizeCommandPrompt } from '@/agent/commands';
 import { ApiRequestError } from '@/api/http';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,7 +18,7 @@ import {
 import {
   createMessage,
   createMessageId,
-  INITIAL_GREETING,
+  isLegacyGreeting,
   MAX_INPUT_LENGTH,
   readableError,
   toAssistantMessage,
@@ -37,8 +39,9 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
   const storageKey = conversationStorageKey(userId);
   const [initial] = useState(() => readConversationState(storageKey));
   const [messages, setMessages] = useState<AssistantMessage[]>(() =>
-    initial.messages.filter((message, index) => !(index === 0
-      && message.role === 'assistant' && message.content === INITIAL_GREETING)));
+    initial.messages.filter((message, index) => !(index === 0 && initial.sessionId === null
+      && message.sequenceNo === undefined && message.kind === 'message'
+      && message.role === 'assistant' && isLegacyGreeting(message.content))));
   const [draft, setDraft] = useState(() => initial.draft.slice(0, MAX_INPUT_LENGTH));
   const [activeSessionId, setActiveSessionId] = useState(initial.sessionId);
   const [hasConfig, setHasConfig] = useState<boolean | null>(null);
@@ -162,7 +165,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       setHasMoreBefore(detail.has_more_before);
       return true;
     } catch {
-      toast.error('加载历史消息失败');
+      toast.error(t('assistant.errors.loadOlder'));
       return false;
     } finally {
       loadingOlderRef.current = false;
@@ -186,7 +189,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       setSessionPage(page);
     } catch {
       if (request !== sessionRequestRef.current) return;
-      setSessionError('获取会话列表失败，请重试');
+      setSessionError(t('assistant.errors.loadHistory'));
     } finally {
       if (request === sessionRequestRef.current) {
         loadingSessionsRef.current = false;
@@ -231,7 +234,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       setHasMoreBefore(detail.has_more_before);
     } catch (error) {
       if (request !== detailRequestRef.current) return;
-      toast.error('加载会话详情失败');
+      toast.error(t('assistant.errors.loadConversation'));
       const missing = error instanceof ApiRequestError && error.status === 404;
       selectSession(missing ? null : previousSessionId);
       updateMessages(() => missing ? [] : previousMessages);
@@ -281,7 +284,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
     setRequestProgress(null);
     planRunRef.current = null;
     setPlanBusyMessageId(null);
-    toast.success('已开启新对话');
+    toast.success(t('assistant.toast.newConversation'));
   }, [selectSession, updateMessages]);
 
   const sendContent = useCallback(async (rawContent: string, selection?: ChoiceSelection,
@@ -334,12 +337,13 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
         : message)
       : currentMessages;
     updateMessages(() => [...preparedMessages, userMessage]);
-    setDraft('');
+    // 卡片提交不消费输入框中另写的草稿。
+    if (!selection && !selectionSubmission) setDraft('');
     setIsSending(true);
     latestProgressSequenceRef.current = null;
     setRequestProgress({
       stage: 'preparing',
-      message: selectionSubmission ? '正在提交选择…' : selection ? '正在执行已确认的操作…' : '正在准备处理…',
+      message: selectionSubmission ? t('assistant.progress.selection') : selection ? t('assistant.progress.confirmed') : t('assistant.progress.preparing'),
       elapsedSeconds: 0,
     });
 
@@ -487,7 +491,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
     activeRequestRef.current = null;
     if (controller && streamingMessageId) updateMessages(current => current.some(message => message.id === streamingMessageId)
       ? current.map(message => message.id === streamingMessageId ? { ...message, stopped: true } : message)
-      : [...current, { ...createMessage('assistant', '本次回复已停止。'), id: streamingMessageId, stopped: true }]);
+      : [...current, { ...createMessage('assistant', t('assistant.messages.stopReply')), id: streamingMessageId, stopped: true }]);
     setStreamingMessageId(null);
     setRequestProgress(null);
     latestProgressSequenceRef.current = null;
@@ -508,7 +512,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
     command: { action: 'confirm' | 'resume' | 'stop' | 'complete' | 'fail'; executionId?: string;
       stepIndex?: number; errorCode?: string }) => {
     const sessionId = activeSessionIdRef.current;
-    if (!sessionId) throw new Error('会话不存在');
+    if (!sessionId) throw new Error(t('serverErrors.agent.sessionNotFound'));
     const plan = await agentService.updatePlan(sessionId, messageId, command);
     applyPlan(messageId, plan);
     return plan;
@@ -522,7 +526,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
     const controller = new AbortController();
     activeRequestRef.current = controller;
     setIsSending(true);
-    setRequestProgress({ stage: 'planning', message: '正在执行计划的下一步…', elapsedSeconds: 0 });
+    setRequestProgress({ stage: 'planning', message: t('assistant.progress.nextStep'), elapsedSeconds: 0 });
     const assistantMessageId = createMessageId();
     setStreamingMessageId(assistantMessageId);
     let streamedText = '';
@@ -601,7 +605,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       const step = plan.steps[index];
       if (step.status === 'failed' || step.status === 'stopped') return;
       if (run.turns >= MAX_PLAN_TURNS) {
-        toast.error('计划续跑次数已达上限，请调整计划');
+        toast.error(t('assistant.errors.planLimit'));
         await patchPlan(run.messageId, { action: 'fail', executionId: run.executionId,
           stepIndex: index, errorCode: 'interrupted' }).catch(() => {});
         return;
@@ -625,7 +629,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       suspended: boolean; turns: number } | null = null;
     try {
       const plan = await patchPlan(messageId, { action });
-      if (!plan.executionId) throw new Error('计划执行状态无效');
+      if (!plan.executionId) throw new Error(t('assistant.errors.planState'));
       run = { id: ++planRunIdRef.current, messageId, executionId: plan.executionId,
         stopped: false, suspended: false, turns: 0 };
       planRunRef.current = run;
@@ -666,14 +670,17 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
   stopPlanForInputRef.current = stopPlanForInput;
 
   const handleChoice = useCallback((messageId: string, choice: AgentChoice) => {
-    void sendContent(choice.label, { messageId, choiceId: choice.id });
+    const content = choice.id.startsWith('prompt:') ? localizeCommandPrompt(choice.id.slice(7)) : choice.label;
+    void sendContent(content, { messageId, choiceId: choice.id });
   }, [sendContent]);
 
   const handleSelection = useCallback((messageId: string, selectedIds: string[]) => {
     const message = messagesRef.current.find(item => item.id === messageId);
     if (message?.interaction?.type !== 'selection') return;
     const selected = new Set(selectedIds);
-    const content = '选择用户：' + message.interaction.options.filter(option => selected.has(option.id)).map(option => option.label).join('、');
+    const names = message.interaction.options.filter(option => selected.has(option.id)).map(option => option.label)
+      .join(t('common.format.listSeparator'));
+    const content = t('assistant.messages.selectedUsers', { names });
     void sendContent(content, undefined, { messageId, selectedIds });
   }, [sendContent]);
 

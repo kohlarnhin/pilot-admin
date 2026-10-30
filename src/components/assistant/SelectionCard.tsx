@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Rocket } from 'lucide-react';
 import type { AgentSelection } from '@/types';
@@ -12,6 +13,7 @@ interface SelectionCardProps {
 }
 
 export function SelectionCard({ form, active, submittedIds, onSubmit }: SelectionCardProps) {
+  useT();
   const [selectedIds, setSelectedIds] = useState(form.defaultSelectedIds);
   const submittingRef = useRef(false);
   const selected = new Set(submittedIds ?? selectedIds);
@@ -23,20 +25,20 @@ export function SelectionCard({ form, active, submittedIds, onSubmit }: Selectio
   const selectableIds = form.options.filter(option => !option.disabled).map(option => option.id);
 
   return (
-    <section className="mt-3 min-w-0 overflow-hidden rounded-xl border border-line bg-white" aria-label="用户选择">
+    <section className="mt-3 min-w-0 overflow-hidden rounded-xl border border-line bg-white" aria-label={t('assistant.selection.region')}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-slate-50 px-3 py-2.5">
         <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-slate-700">
           {submitted ? <Check className="size-3.5 shrink-0 text-emerald-600" /> : <Rocket className="size-3.5 shrink-0 text-slate-400" />}
-          {submitted ? '已提交选择' : form.title}
+          {submitted ? t('assistant.selection.submitted') : form.title}
         </span>
-        <span className="text-[11px] tabular-nums text-slate-400">已选 {selected.size} / {form.maxSelected}</span>
+        <span className="text-[11px] tabular-nums text-slate-400">{t('assistant.selection.count', { count: selected.size, max: form.maxSelected })}</span>
       </div>
       <div className="max-h-[min(320px,42dvh)] min-w-0 divide-y divide-line-row overflow-x-hidden overflow-y-auto overscroll-contain">
         {form.options.map(option => (
           <div key={option.id} className="flex min-w-0 items-start gap-2.5 px-3 py-3">
             <Checkbox
               className="mt-0.5 shrink-0"
-              aria-label={`选择 ${option.label}`}
+              aria-label={t('assistant.selection.optionLabel', { label: option.label })}
               checked={selected.has(option.id)}
               disabled={!editable || option.disabled || (!selected.has(option.id) && selected.size >= form.maxSelected)}
               onChange={event => setSelectedIds(current => event.target.checked
@@ -55,16 +57,16 @@ export function SelectionCard({ form, active, submittedIds, onSubmit }: Selectio
         {editable ? (
           <>
             <div className="flex items-center gap-1">
-              <Button size="xs" variant="ghost" disabled={selectableIds.length === 0} onClick={() => setSelectedIds(selectableIds.slice(0, form.maxSelected))}>全选</Button>
-              <Button size="xs" variant="ghost" disabled={selected.size < form.minSelected} onClick={() => setSelectedIds([])}>清空</Button>
+              <Button size="xs" variant="ghost" disabled={selectableIds.length === 0} onClick={() => setSelectedIds(selectableIds.slice(0, form.maxSelected))}>{t('common.actions.selectAll')}</Button>
+              <Button size="xs" variant="ghost" disabled={selected.size < form.minSelected} onClick={() => setSelectedIds([])}>{t('common.actions.clear')}</Button>
             </div>
             <Button variant="primary" size="xs" disabled={selected.size < form.minSelected} onClick={() => {
               if (submittingRef.current || selectedIds.length < form.minSelected) return;
               submittingRef.current = true;
               onSubmit(selectedIds);
-            }}>确认选择（{selected.size}）</Button>
+            }}>{t('assistant.selection.confirm', { count: selected.size })}</Button>
           </>
-        ) : <p className="text-[11px] leading-5 text-slate-400">{submitted ? '此表单已提交，请查看下方确认。' : '此表单当前不可提交，请在最新回复中操作。'}</p>}
+        ) : <p className="text-[11px] leading-5 text-slate-400">{submitted ? t('assistant.selection.submittedHint') : t('assistant.selection.inactiveHint')}</p>}
       </div>
     </section>
   );

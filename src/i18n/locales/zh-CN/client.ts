@@ -9,7 +9,6 @@ export default {
   "resultIncomplete": "结果响应不完整",
   "assistantFailed": "AI 助手处理异常",
   "streamInterrupted": "流式响应中断，请重试",
-  "cancelled": "已取消",
   "assistantTimeout": "AI 助手响应超时，请重试",
   "invalidStream": "流式响应格式无效",
   "assistantConnection": "网络连接异常，无法连接到 AI 助手",

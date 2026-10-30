@@ -72,18 +72,18 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
   return (
     <section id="ai-assistant-history" aria-labelledby="ai-assistant-history-title" aria-hidden={!open || undefined} inert={!open || undefined} data-state={open ? 'open' : 'closed'} className={inline ? 'flex h-full min-h-0 flex-col bg-white' : 'ai-assistant-history absolute inset-0 z-20 flex min-h-0 flex-col bg-white'}>
       <div className="flex shrink-0 items-center gap-2 border-b border-line-soft px-4 py-3">
-        {!inline ? <Button ref={backRef} variant="ghost" size="icon-xs" aria-label="返回当前对话" onClick={onClose} className="-ml-1"><ArrowLeft className="size-4" /></Button> : null}
-        <h3 id="ai-assistant-history-title" className="flex-1 text-13 font-medium text-slate-900">历史会话</h3>
-        {!inline ? <span className="text-[11px] text-slate-400">Esc 返回对话</span> : null}
+        {!inline ? <Button ref={backRef} variant="ghost" size="icon-xs" aria-label={t('assistant.history.back')} onClick={onClose} className="-ml-1"><ArrowLeft className="size-4" /></Button> : null}
+        <h3 id="ai-assistant-history-title" className="flex-1 text-13 font-medium text-slate-900">{t('assistant.header.history')}</h3>
+        {!inline ? <span className="text-[11px] text-slate-400">{t('assistant.history.escape')}</span> : null}
       </div>
       <div ref={scrollRef} className="ai-assistant-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-3" aria-busy={loading}>
         {loading && sessions.length === 0 ? (
-          <div className="space-y-4 p-2" role="status" aria-label="正在加载历史会话">
+          <div className="space-y-4 p-2" role="status" aria-label={t('assistant.history.loading')}>
             <Skeleton className="h-3 w-12 bg-slate-100" />
             {Array.from({ length: 5 }, (_, index) => <div key={index} className="space-y-3 rounded-xl border border-line-soft p-3"><Skeleton className="h-4 w-3/4 bg-slate-100" /><Skeleton className="h-3 w-1/2 bg-slate-100" /></div>)}
           </div>
-        ) : error && sessions.length === 0 ? (<div role="alert" className="p-3 text-xs text-red-600">{error}<Button size="xs" className="ml-2" onClick={onRetry}>重试</Button></div>) : sessions.length === 0 ? (
-          <EmptyState icon="history" title="还没有历史会话" description="开始一段对话，之后可以随时在这里继续。" className="[&>div:last-child]:text-slate-500" />
+        ) : error && sessions.length === 0 ? (<div role="alert" className="p-3 text-xs text-red-600">{error}<Button size="xs" className="ml-2" onClick={onRetry}>{t('common.actions.retry')}</Button></div>) : sessions.length === 0 ? (
+          <EmptyState icon="history" title={t('assistant.history.emptyTitle')} description={t('assistant.history.emptyHint')} className="[&>div:last-child]:text-slate-500" />
         ) : (
           <>
             {GROUPS.map(group => {
@@ -106,13 +106,13 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
                         >
                           <MessageSquare className={cn('mt-0.5 size-3.5 shrink-0 text-slate-400', active && 'text-brand-600')} />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-13 font-medium text-slate-700" title={session.title || '新对话'}>{session.title || '新对话'}</span>
+                            <span className="block truncate text-13 font-medium text-slate-700" title={session.title || t('assistant.header.newConversation')}>{session.title || t('assistant.header.newConversation')}</span>
                             <span className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
-                              <span>{session.message_count} 条记录</span><span aria-hidden="true">·</span>
+                              <span>{t('assistant.history.count', { count: session.message_count })}</span><span aria-hidden="true">·</span>
                               <time dateTime={session.last_message_date}>{dayjs(session.last_message_date).format(group === 'today' ? 'HH:mm' : 'MM-DD HH:mm')}</time>
                             </span>
                           </span>
-                          {active ? <Badge variant="outline" className="h-5 gap-1 border-line bg-white px-1.5 text-[11px] text-slate-700"><Check className="size-2.5" />当前</Badge> : null}
+                          {active ? <Badge variant="outline" className="h-5 gap-1 border-line bg-white px-1.5 text-[11px] text-slate-700"><Check className="size-2.5" />{t('assistant.history.current')}</Badge> : null}
                         </button>
                       );
                     })}
@@ -120,9 +120,9 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
                 </div>
               );
             })}
-            {error ? <div role="alert" className="p-3 text-xs text-red-600">{error}<Button size="xs" className="ml-2" onClick={onRetry}>重试</Button></div> : null}
+            {error ? <div role="alert" className="p-3 text-xs text-red-600">{error}<Button size="xs" className="ml-2" onClick={onRetry}>{t('common.actions.retry')}</Button></div> : null}
             <div ref={sentinelRef} aria-hidden="true" className="h-px" />
-            {loadingMore ? <div role="status" className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400"><Spinner size={14} className="text-slate-400" />正在加载更多会话…</div> : null}
+            {loadingMore ? <div role="status" className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400"><Spinner size={14} className="text-slate-400" />{t('assistant.history.loadingMore')}</div> : null}
           </>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
@@ -10,6 +11,7 @@ import { parseAttachment, attachmentMetadata, clearAttachments, type AssistantAt
 import { useAssistantStore } from '@/store/assistantStore';
 
 function useRuntime(userId: string) {
+  const { locale } = useT();
   const location = useLocation();
   const navigate = useNavigate();
   const fullScreen = location.pathname.replace(/\/+$/, '') === '/agent';
@@ -55,11 +57,11 @@ function useRuntime(userId: string) {
     if (!isOpen) return;
     let cancelled = false;
     void agentProfileService.getProfile().then(value => { if (!cancelled) setProfile(value); })
-      .catch(() => { if (!cancelled) setProfile(DEFAULT_AGENT_PROFILE); });
+      .catch(() => { if (!cancelled) setProfile(DEFAULT_AGENT_PROFILE()); });
     const reload = () => { void agentProfileService.getProfile().then(value => { if (!cancelled) setProfile(value); }).catch(() => {}); };
     window.addEventListener(AGENT_CONFIG_CHANGED_EVENT, reload);
     return () => { cancelled = true; window.removeEventListener(AGENT_CONFIG_CHANGED_EVENT, reload); };
-  }, [isOpen]);
+  }, [isOpen, locale]);
 
   const handleAttach = async (file: File) => {
     const generation = ++attachmentGeneration.current;
@@ -73,7 +75,7 @@ function useRuntime(userId: string) {
   const sendDraft = () => {
     if (chat.isSending || chat.isLoadingSession || parsingAttachment || attachment?.error) return;
     const metadata = attachment && !attachment.error ? [attachmentMetadata(attachment)] : undefined;
-    void chat.sendContent(chat.draft.trim() || (metadata ? '请查看这个附件的元数据。' : ''), undefined, undefined, metadata);
+    void chat.sendContent(chat.draft.trim() || (metadata ? t('assistant.composer.attachmentPrompt') : ''), undefined, undefined, metadata);
     setAttachment(null);
   };
   const startNewConversation = () => {

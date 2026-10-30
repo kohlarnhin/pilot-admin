@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useEffect, useRef, useState } from 'react';
 import type { AgentChatResult } from '@/types';
 
@@ -5,6 +6,7 @@ const supported = () => typeof window !== 'undefined' && 'Notification' in windo
 
 /** 只接受实时完成事件；历史加载和局部流式文本不会进入这里。 */
 export function useAssistantNotifications(userId: string, isOpen: boolean, onOpenSession: (id: string | number) => void) {
+  useT();
   const key = `pilot-admin:assistant:notifications:${userId}`;
   const [enabled, setEnabled] = useState(() => {
     try { return supported() && Notification.permission === 'granted' && localStorage.getItem(key) === 'true'; }
@@ -43,8 +45,10 @@ export function useAssistantNotifications(userId: string, isOpen: boolean, onOpe
     if (!latest.current.enabled || !supported() || Notification.permission !== 'granted'
       || (!document.hidden && latest.current.isOpen)) return;
     try {
-      const notification = new Notification('AI 助手', {
-        body: `${confirmation ? '需要你确认' : '已完成'}：${Array.from(text.replace(/\s+/g, ' ').trim()).slice(0, 60).join('')}`,
+      const notification = new Notification(t('layout.assistant'), {
+        body: t(confirmation ? 'assistant.notifications.confirm' : 'assistant.notifications.completed', {
+          text: Array.from(text.replace(/\s+/g, ' ').trim()).slice(0, 60).join(''),
+        }),
         tag: `pilot-admin:assistant:${userId}:${sessionId}`,
       });
       notifications.current.add(notification);
@@ -69,8 +73,8 @@ export function useAssistantNotifications(userId: string, isOpen: boolean, onOpe
     notify(result.sessionId, result.message, Boolean(confirmation));
   };
 
-  const tooltip = permission === 'unsupported' ? '当前浏览器不支持通知'
-    : permission === 'denied' ? '浏览器已禁止通知，请在浏览器的网站权限中开启'
-    : enabled ? '已开启完成通知 · 关闭助手或离开标签页时提醒' : '开启助手完成通知';
+  const tooltip = permission === 'unsupported' ? t('assistant.notifications.unsupported')
+    : permission === 'denied' ? t('assistant.notifications.denied')
+    : enabled ? t('assistant.notifications.enabled') : t('assistant.notifications.disabled');
   return { enabled, requesting, tooltip, toggle, onResult };
 }

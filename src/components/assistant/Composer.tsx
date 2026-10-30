@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { type KeyboardEvent, type RefObject, useLayoutEffect, useRef } from 'react';
 import { ArrowUp, Square } from 'lucide-react';
 import { Button } from '@/ui/button';
@@ -23,6 +24,7 @@ interface ComposerProps {
 }
 
 export function Composer({ attachment, parsingAttachment, onAttach, onRemoveAttachment, inputRef, draft, disabled, sending, awaitingChoice, onChange, onSend, onStop }: ComposerProps) {
+  useT();
   const composingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blocked = disabled || parsingAttachment || Boolean(attachment?.error);
@@ -63,10 +65,13 @@ export function Composer({ attachment, parsingAttachment, onAttach, onRemoveAtta
         onSubmit={event => { event.preventDefault(); if (!sending && !blocked) onSend(); }}
         className={cn('rounded-xl border border-line bg-slate-50/60 p-2 shadow-2xs transition-colors focus-within:border-slate-400 focus-within:bg-white focus-within:ring-[3px] focus-within:ring-slate-900/10', disabled && 'opacity-60')}
       >
-        <input ref={fileInputRef} type="file"  className="hidden" aria-label="附加文件" disabled={disabled || sending || parsingAttachment} onChange={event => { const file = event.target.files?.[0]; if (file) onAttach(file); event.target.value = ''; }} />
+        <input ref={fileInputRef} type="file"  className="hidden" aria-label={t('assistant.composer.attach')} disabled={disabled || sending || parsingAttachment} onChange={event => { const file = event.target.files?.[0]; if (file) onAttach(file); event.target.value = ''; }} />
         {attachment || parsingAttachment ? <div role="status" className={cn('mb-1 flex items-center gap-2 rounded-lg border border-line bg-white px-2 py-1.5 text-xs text-slate-600', attachment?.error && 'border-red-200 text-red-600')}>
-          <Icon icon="file-code" size={14} className="shrink-0" /><div className="min-w-0 flex-1"><p className="truncate">{attachment?.file.name || '正在读取附件…'}</p><p className="mt-0.5 text-[11px]">{parsingAttachment ? '正在解析…' : attachment?.error || `${attachment?.metadata.size ?? 0} 字节${attachment?.metadata.lineCount === undefined ? '' : ` · ${attachment.metadata.lineCount} 行`} · 仅元数据`}</p></div>
-          <Button type="button" variant="ghost" size="icon-xs" aria-label="移除附件" disabled={sending || parsingAttachment} onClick={onRemoveAttachment}><Icon icon="x" size={12} /></Button>
+          <Icon icon="file-code" size={14} className="shrink-0" /><div className="min-w-0 flex-1"><p className="truncate">{attachment?.file.name || t('assistant.composer.reading')}</p><p className="mt-0.5 text-[11px]">{parsingAttachment ? t('assistant.composer.parsing') : attachment?.error || t('assistant.composer.metadata', {
+            size: attachment?.metadata.size ?? 0,
+            lines: attachment?.metadata.lineCount === undefined ? '' : t('assistant.composer.lineCount', { count: attachment.metadata.lineCount }),
+          })}</p></div>
+          <Button type="button" variant="ghost" size="icon-xs" aria-label={t('assistant.composer.removeAttachment')} disabled={sending || parsingAttachment} onClick={onRemoveAttachment}><Icon icon="x" size={12} /></Button>
         </div> : null}
         <textarea
           ref={inputRef}
@@ -78,25 +83,25 @@ export function Composer({ attachment, parsingAttachment, onAttach, onRemoveAtta
           onKeyDown={handleKeyDown}
           onCompositionStart={() => { composingRef.current = true; }}
           onCompositionEnd={() => { composingRef.current = false; }}
-          placeholder={disabled ? '助手暂不可用' : awaitingChoice ? '请输入你的决定…' : '描述你的问题或需求…'}
-          aria-label="发送给 AI 助手的消息"
+          placeholder={disabled ? t('assistant.composer.unavailable') : awaitingChoice ? t('assistant.composer.decision') : t('assistant.composer.placeholder')}
+          aria-label={t('assistant.composer.messageLabel')}
           className="ai-assistant-scroll block min-h-12 w-full resize-none overflow-y-auto bg-transparent px-1.5 py-2 text-13 leading-5 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
         />
         <div className="mt-1 flex items-center justify-between gap-2 pl-1.5">
-          <Tooltip title="附加文件，最大 5 MB；仅保留名称、大小、类型和文本行数">
-            <Button type="button" variant="ghost" size="icon-xs" aria-label="附加文件" disabled={disabled || sending || parsingAttachment} onClick={() => fileInputRef.current?.click()}><Icon icon="paperclip" size={14} /></Button>
+          <Tooltip title={t('assistant.composer.attachHint')}>
+            <Button type="button" variant="ghost" size="icon-xs" aria-label={t('assistant.composer.attach')} disabled={disabled || sending || parsingAttachment} onClick={() => fileInputRef.current?.click()}><Icon icon="paperclip" size={14} /></Button>
           </Tooltip>
-          <span className="hidden flex-1 text-[11px] text-slate-400 sm:block">{sending ? '可随时停止' : 'Enter 发送'}</span>
+          <span className="hidden flex-1 text-[11px] text-slate-400 sm:block">{sending ? t('assistant.composer.stopHint') : t('assistant.composer.sendHint')}</span>
           <div className="flex shrink-0 items-center gap-2">
             {draft.length >= MAX_INPUT_LENGTH * 0.8 ? <span className={cn('text-[11px] tabular-nums text-slate-400', draft.length === MAX_INPUT_LENGTH && 'text-amber-600')} aria-live="polite">{draft.length}/{MAX_INPUT_LENGTH}</span> : null}
-            <Tooltip title={sending ? '停止生成' : '发送消息'}>
+            <Tooltip title={sending ? t('assistant.composer.stop') : t('assistant.composer.send')}>
               <Button
                 type={sending ? 'button' : 'submit'}
                 variant={sending ? 'secondary' : 'primary'}
                 size="icon-sm"
                 disabled={!sending && (blocked || (!draft.trim() && !attachment))}
                 onClick={sending ? onStop : undefined}
-                aria-label={sending ? '停止生成' : '发送消息'}
+                aria-label={sending ? t('assistant.composer.stop') : t('assistant.composer.send')}
                 className="size-8 rounded-lg shadow-none"
               >
                 {sending ? <Square className="size-3 fill-current" /> : <ArrowUp className="size-4" />}

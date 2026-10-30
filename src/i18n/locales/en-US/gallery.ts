@@ -5,7 +5,6 @@ export default {
   "demoRows": {
     "projectName": "Project notes",
     "projectOwner": "Alex Morgan",
-    "completed": "Completed",
     "reviewName": "UI review",
     "reviewOwner": "Jordan Chen",
     "inProgress": "In progress",
@@ -157,8 +156,7 @@ export default {
     "description": "Drop or choose files; read only in this browser",
     "hint": "JSON and TXT files supported",
     "selectedLabel": "Selected:",
-    "disabled": "Disabled file picker",
-    "separator": ", "
+    "disabled": "Disabled file picker"
   },
   "loading": {
     "title": "Skeletons, loading and empty states",

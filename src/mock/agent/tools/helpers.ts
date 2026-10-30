@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { commandPrompt } from '@/agent/commands';
 import type { AgentInteraction, User } from '@/types';
 import { userService } from '@/api/services/userService';
 import { meResponse } from '@/mock/access';
@@ -37,7 +39,7 @@ export function toolInputInteraction(ctx: ToolContext): AgentInteraction | undef
 export const permitted = (ctx: ToolContext, permission: string) => ctx.permissions.includes(permission);
 
 export const denied = (operation: string): ToolReply => ({
-  message: `当前账号没有${operation}的权限。你可以联系管理员调整角色权限，或试试「帮助」查看可用能力。`,
+  message: t('agentTools.denied', { operation, help: commandPrompt('help') }),
 });
 
 export const markdownCell = (value: string) => value.replace(/\|/g, '\\|').replace(/[\r\n]/g, ' ');
@@ -60,20 +62,20 @@ export async function findUsers(keyword = '', signal?: AbortSignal): Promise<Use
   return records;
 }
 
-export const confirmation = (message: string, task: Record<string, unknown>, label = '确认创建'): ToolReply => ({
+export const confirmation = (message: string, task: Record<string, unknown>, label = t('agentTools.choices.confirmCreate')): ToolReply => ({
   message,
   task,
   choices: [
     { id: 'confirm', label },
-    { id: 'cancel', label: '取消' },
+    { id: 'cancel', label: t('common.actions.cancel') },
   ],
 });
 
 export const exampleChoices = () => [
-  { id: 'prompt:概况统计', label: '概况统计' },
-  { id: 'prompt:查找用户 陈', label: '查找用户 陈' },
-  { id: 'prompt:账号巡检', label: '账号巡检' },
-];
+  commandPrompt('overview'),
+  commandPrompt('findUsers', t('agentTools.examples.findKeyword')),
+  commandPrompt('accountAudit'),
+].map((prompt) => ({ id: `prompt:${prompt}`, label: prompt }));
 
 export function wait(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -81,7 +83,7 @@ export function wait(ms: number, signal?: AbortSignal): Promise<void> {
 
     const abort = () => {
       clearTimeout(timer);
-      reject(new DOMException('已停止', 'AbortError'));
+      reject(new DOMException(t('common.status.stopped'), 'AbortError'));
     };
     const timer = window.setTimeout(() => {
       signal?.removeEventListener('abort', abort);

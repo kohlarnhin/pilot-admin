@@ -6,7 +6,6 @@ export default {
   "increase": "Increase",
   "decrease": "Decrease",
   "selectRow": "Select row",
-  "selectAll": "Select all",
   "loadingMore": "Loading more",
   "dropFile": "Click or drop a file here",
   "fieldRequired": "This field is required",

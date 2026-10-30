@@ -34,6 +34,7 @@ export interface MockAgentSession extends AgentSession {
 export interface MockDb {
   agentSessions: MockAgentSession[];
   agentProfile: AgentProfile;
+  agentProfileCustomized?: boolean;
   agentConfigs: (AgentConfig & { apiKey: string })[];
   version: 4;
   permissionCatalog: PermissionCatalog;
@@ -152,16 +153,7 @@ export function createSeed(): MockDb {
 
   return {
     agentSessions: seedAgentSessions(roles),
-    agentProfile: {
-      name: '领航助手',
-      greeting: '你好，我是你的工作助手。可以帮你查看概况、查找用户、维护账号和执行巡检。',
-      suggestions: [
-        { label: '概况统计', prompt: '概况统计' },
-        { label: '查找用户', prompt: '查找用户 陈' },
-        { label: '新增用户', prompt: '新增用户 林沐晨' },
-        { label: '账号巡检', prompt: '账号巡检' },
-      ],
-    },
+    agentProfile: structuredClone(text.agentProfile),
     agentConfigs: [
       {
         id: 'model-demo',
@@ -240,6 +232,7 @@ export function createSeed(): MockDb {
 
 // 固定历史便于验证会话分页；长会话保留 60 条消息。
 function seedAgentSessions(roles: MockRole[]): MockAgentSession[] {
+  const text = getSeedText().agentSessions;
   return Array.from({ length: 25 }, (_, index) => {
     const date = new Date(Date.UTC(2026, 9, 29 - index, 8)).toISOString();
     const count = index === 0 ? 60 : 2;
@@ -248,24 +241,24 @@ function seedAgentSessions(roles: MockRole[]): MockAgentSession[] {
       sequence_no: item + 1,
       role: item % 2 === 0 ? 'user' : 'assistant',
       content: item % 2 === 0
-        ? `第 ${Math.floor(item / 2) + 1} 次账号检查`
-        : `检查已完成，账号状态正常。\n\n- 保持最小权限\n- 定期核对账号状态`,
+        ? text.checkPrompt.replace('{count}', String(Math.floor(item / 2) + 1))
+        : text.checkReply,
       data_changed: false,
       create_date: date,
     }));
 
     if (index === 1) {
-      messages[0].content = '新增用户 演示新用户';
+      messages[0].content = text.createPrompt.replace('{name}', text.demoName);
       messages[1] = {
         ...messages[1],
-        content: '为 **演示新用户** 选择一个角色，确认后再创建账号。',
+        content: text.chooseRole.replace('{name}', text.demoName),
         choices: roles.filter((item) => item.status === 1).map((item) => ({
           id: `role:${item.id}`,
           label: item.role_name,
         })),
         task_context: {
           tool: 'create-user',
-          data: { name: '演示新用户' },
+          data: { name: text.demoName },
         },
       };
     }
@@ -273,8 +266,8 @@ function seedAgentSessions(roles: MockRole[]): MockAgentSession[] {
     return {
       id: `demo-session-${index + 1}`,
       userId: 'u-0001',
-      title: index === 0 ? '账号检查记录 · 长会话示例'
-        : index === 1 ? '新增用户 · 选择角色示例' : `工作记录 ${String(index + 1).padStart(2, '0')}`,
+      title: index === 0 ? text.longTitle
+        : index === 1 ? text.createTitle : text.workTitle.replace('{index}', String(index + 1).padStart(2, '0')),
       message_count: messages.length,
       context_character_count: messages.reduce((sum, message) => sum + message.content.length, 0),
       create_date: date,

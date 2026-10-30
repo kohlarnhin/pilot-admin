@@ -1,6 +1,7 @@
 import { getLocale } from './store';
 import { seedText as chinese } from './locales/zh-CN/seed';
 import { seedText as english } from './locales/en-US/seed';
+import type { AgentProfile } from '@/types';
 
 /** 种子数据允许数组，不进入 t() 的系统消息树。 */
 export interface SeedText {
@@ -13,6 +14,17 @@ export interface SeedText {
   settingsDescription: string;
   model: { provider: string; name: string };
   activities: { system: string; settings: string; user: string; permissions: string; role: string; ready: string };
+  agentProfile: AgentProfile;
+  agentSessions: {
+    checkPrompt: string;
+    checkReply: string;
+    demoName: string;
+    createPrompt: string;
+    chooseRole: string;
+    longTitle: string;
+    createTitle: string;
+    workTitle: string;
+  };
 }
 
 export const getSeedText = (): SeedText => getLocale() === 'en-US' ? english : chinese;

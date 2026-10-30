@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { Check } from 'lucide-react';
 import { Spinner } from '@/ui/spinner';
 import { cn } from '@/utils';
@@ -20,8 +21,9 @@ export function ProgressIndicator({ message, active, elapsedSeconds = 0, classNa
 }
 
 export function TypingIndicator() {
+  useT();
   return (
-    <span className="ai-assistant-thinking inline-flex h-5 items-center gap-1" role="status" aria-label="助手正在生成回复">
+    <span className="ai-assistant-thinking inline-flex h-5 items-center gap-1" role="status" aria-label={t('assistant.messages.typing')}>
       <i /><i /><i />
     </span>
   );

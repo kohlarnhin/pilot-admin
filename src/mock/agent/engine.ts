@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { localizeCommandPrompt } from '@/agent/commands';
 import type {
   AgentChatProgress,
   AgentChatResult,
@@ -49,7 +51,7 @@ interface RoutedReply extends ToolReply {
 const authorize = () => {
   const user = requirePermission('agent:use');
   if (!getMockDb().agentConfigs.some((config) => config.status === 1)) {
-    throw new ApiRequestError('尚未配置可用模型', 400, 1501);
+    throw new ApiRequestError(t('serverErrors.agent.noModel'), 400, 1501);
   }
   return user;
 };
@@ -59,7 +61,7 @@ function sessionOf(id: string | number, finishingAction = false): MockAgentSessi
   const user = finishingAction ? currentUser() : requirePermission('agent:use');
   const session = getMockDb().agentSessions.find((item) => String(item.id) === String(id) && item.userId === user.id);
   if (!session) {
-    throw new ApiRequestError('会话不存在', 404);
+    throw new ApiRequestError(t('serverErrors.agent.sessionNotFound'), 404);
   }
   return session;
 }
@@ -125,7 +127,7 @@ function toolOf(message: AgentMessage) {
   const task = message.task_context;
   const tool = agentTools.find((item) => item.id === task?.tool);
   if (!tool || !task) {
-    throw new ApiRequestError('此交互已失效，请重新发起操作', 400);
+    throw new ApiRequestError(t('serverErrors.agent.interactionExpired'), 400);
   }
   return { tool, task };
 }
@@ -137,26 +139,26 @@ async function routeReply(
   selection?: ChatSelection,
 ): Promise<RoutedReply> {
   if (choice?.choiceId.startsWith('prompt:')) {
-    ctx = { ...ctx, text: choice.choiceId.slice(7) };
+    ctx = { ...ctx, text: localizeCommandPrompt(choice.choiceId.slice(7)) };
   } else if (choice?.choiceId === 'cancel') {
-    return { message: '已取消，未做任何修改。' };
+    return { message: t('agentTools.engine.cancelled') };
   } else if (choice && target) {
     const { tool, task } = toolOf(target);
     if (!tool.onChoice) {
-      throw new ApiRequestError('此工具不支持选项回复', 400);
+      throw new ApiRequestError(t('serverErrors.agent.choiceUnsupported'), 400);
     }
     return withTool(tool, await tool.onChoice(ctx, choice.choiceId, task));
   } else if (selection && target) {
     const { tool, task } = toolOf(target);
     if (!tool.onSelection) {
-      throw new ApiRequestError('此工具不支持选择回复', 400);
+      throw new ApiRequestError(t('serverErrors.agent.selectionUnsupported'), 400);
     }
     return withTool(tool, await tool.onSelection(ctx, selection.selectedIds, task));
   }
 
   const tool = agentTools.find((item) => item.match(ctx.text, ctx));
   if (!tool) {
-    throw new ApiRequestError('没有可用的处理工具', 400);
+    throw new ApiRequestError(t('serverErrors.agent.toolUnavailable'), 400);
   }
   return withTool(tool, await tool.handle(ctx));
 }
@@ -188,7 +190,7 @@ async function streamReply(
     return resultOf(id, message);
   } catch (error) {
     if (signal?.aborted && partial && currentUser().id === sessionOf(id).userId) {
-      append(id, 'assistant', `${partial}\n\n（已停止生成）`);
+      append(id, 'assistant', t('agentTools.engine.stoppedSuffix', { partial }));
     }
     throw error;
   }
@@ -254,10 +256,10 @@ export const mockAgentEngine = {
       : undefined;
 
     if (targetId && (!target || target.selected_choice_id || target !== sessionOf(id).messages.at(-1))) {
-      throw new ApiRequestError('此交互已提交或已失效，请使用最新回复', 400);
+      throw new ApiRequestError(t('serverErrors.agent.interactionSubmitted'), 400);
     }
     if (choice && !target?.choices?.some((item) => item.id === choice.choiceId)) {
-      throw new ApiRequestError('无效的选项', 400);
+      throw new ApiRequestError(t('serverErrors.agent.invalidChoice'), 400);
     }
     if (selection) {
       const form = target?.interaction;
@@ -266,7 +268,7 @@ export const mockAgentEngine = {
         || selection.selectedIds.length > form.maxSelected
         || new Set(selection.selectedIds).size !== selection.selectedIds.length
         || selection.selectedIds.some((selectedId) => !form.options.some((option) => option.id === selectedId && !option.disabled))) {
-        throw new ApiRequestError('请选择有效选项', 400);
+        throw new ApiRequestError(t('serverErrors.agent.invalidSelection'), 400);
       }
     }
 
@@ -288,7 +290,7 @@ export const mockAgentEngine = {
     callbacks.onStart?.(id, userMessage.id);
     callbacks.onProgress?.({
       stage: 'thinking',
-      message: '正在理解你的需求…',
+      message: t('agentTools.engine.thinking'),
       elapsedSeconds: 0,
     });
 
@@ -298,7 +300,7 @@ export const mockAgentEngine = {
       callbacks.signal?.throwIfAborted();
       callbacks.onProgress?.({
         stage: 'responding',
-        message: '正在整理结果…',
+        message: t('agentTools.engine.responding'),
         elapsedSeconds: 1,
       });
       return await streamReply(sessionId, reply, callbacks);
@@ -307,9 +309,9 @@ export const mockAgentEngine = {
         throw error;
       }
       if (error instanceof ApiRequestError && error.status === 403) {
-        return streamReply(sessionId, denied('执行此操作'), callbacks);
+        return streamReply(sessionId, denied(t('agentTools.operations.perform')), callbacks);
       }
-      append(sessionId, 'assistant', error instanceof Error ? error.message : '处理失败，请重试', { kind: 'error' });
+      append(sessionId, 'assistant', error instanceof Error ? error.message : t('agentTools.engine.failed'), { kind: 'error' });
       throw error;
     }
   },
@@ -317,7 +319,7 @@ export const mockAgentEngine = {
   async getPlan(id: string | number, messageId: string | number): Promise<AgentExecutionPlan> {
     const plan = sessionOf(id).messages.find((message) => String(message.id) === String(messageId))?.interaction;
     if (plan?.type !== 'execution_plan') {
-      throw new ApiRequestError('计划不存在', 404);
+      throw new ApiRequestError(t('serverErrors.agent.planNotFound'), 404);
     }
     return structuredClone(plan);
   },
@@ -332,7 +334,7 @@ export const mockAgentEngine = {
 
     if (command.action === 'stop') {
       plan.status = 'stopped';
-      plan.reason = '已停止后续步骤，当前步骤完成后结束。';
+      plan.reason = t('agentTools.engine.planStopped');
       plan.steps.forEach((step) => {
         if (step.status === 'pending') {
           step.status = 'stopped';
@@ -340,7 +342,7 @@ export const mockAgentEngine = {
       });
     } else if (command.action === 'confirm' || command.action === 'resume') {
       if (plan.status === 'completed' || plan.status === 'running') {
-        throw new ApiRequestError('计划已执行', 409);
+        throw new ApiRequestError(t('serverErrors.agent.planExecuted'), 409);
       }
       plan.status = 'running';
       plan.reason = undefined;
@@ -352,7 +354,7 @@ export const mockAgentEngine = {
       });
     } else if (command.action === 'fail') {
       plan.status = 'failed';
-      plan.reason = '执行中断，请重试剩余步骤。';
+      plan.reason = t('agentTools.engine.planInterrupted');
     }
 
     amendSession(id, (session) => {
@@ -372,27 +374,27 @@ export const mockAgentEngine = {
     let plan = await this.getPlan(id, messageId);
     if (plan.executionId !== executionId || plan.status !== 'running'
       || plan.steps.findIndex((step) => step.status !== 'completed') !== index) {
-      throw new ApiRequestError('计划执行状态已变更', 409);
+      throw new ApiRequestError(t('serverErrors.agent.planChanged'), 409);
     }
 
     const target = sessionOf(id).messages.find((message) => String(message.id) === String(messageId))!;
     const { tool, task } = toolOf(target);
     if (!tool.plan) {
-      throw new ApiRequestError('此工具不支持执行计划', 400);
+      throw new ApiRequestError(t('serverErrors.agent.planUnsupported'), 400);
     }
 
     plan.steps[index].status = 'running';
     amendSession(id, (session) => {
       session.messages.find((message) => String(message.id) === String(messageId))!.interaction = plan;
     });
-    const userMessage = append(id, 'user', `执行：${plan.steps[index].title}`, {
+    const userMessage = append(id, 'user', t('agentTools.engine.executeStep', { title: plan.steps[index].title }), {
       source_message_id: messageId,
       selected_choice_id: 'plan_step',
     });
     callbacks.onStart?.(id, userMessage.id);
     callbacks.onProgress?.({
       stage: 'checking',
-      message: `正在${plan.steps[index].title}…`,
+      message: t('agentTools.engine.checking', { title: plan.steps[index].title }),
       elapsedSeconds: 0,
     });
 
@@ -422,7 +424,7 @@ export const mockAgentEngine = {
       if (plan.executionId === executionId) {
         plan.status = 'failed';
         plan.steps[index].status = 'failed';
-        plan.reason = '当前步骤中断，可继续执行剩余步骤。';
+        plan.reason = t('agentTools.engine.stepInterrupted');
         amendSession(id, (session) => {
           session.messages.find((message) => String(message.id) === String(messageId))!.interaction = plan;
         });
@@ -438,7 +440,7 @@ export const mockAgentEngine = {
   ): Promise<AgentChatResult> {
     const message = sessionOf(id, true).messages.find((item) => String(item.id) === messageId);
     if (message?.interaction?.type !== 'page_action' || message.interaction.action !== 'modal') {
-      throw new ApiRequestError('操作不存在', 404);
+      throw new ApiRequestError(t('serverErrors.agent.actionNotFound'), 404);
     }
 
     const previousResult = () => {
@@ -449,7 +451,7 @@ export const mockAgentEngine = {
       }
       const existing = messages.find((item) => String(item.source_message_id) === messageId && item.role === 'assistant');
       if (!existing) {
-        throw new ApiRequestError('结果已保存', 409);
+        throw new ApiRequestError(t('serverErrors.agent.resultSaved'), 409);
       }
       return resultOf(id, existing);
     };
@@ -462,7 +464,7 @@ export const mockAgentEngine = {
     const saved = { ...outcome, finishedAt: new Date().toISOString() };
     const reply = tool.onActionOutcome
       ? await tool.onActionOutcome(createToolContext(''), saved, task)
-      : { message: outcome.status === 'cancelled' ? '已取消操作。' : outcome.summary };
+      : { message: outcome.status === 'cancelled' ? t('agentTools.engine.actionCancelled') : outcome.summary };
 
     // 工具 hook 可能异步；再次检查，避免并发提交重复追加结果。
     const concurrentResult = previousResult();

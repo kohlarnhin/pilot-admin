@@ -2,7 +2,6 @@ export default {
   "demoRows": {
     "projectName": "项目说明",
     "projectOwner": "林知行",
-    "completed": "已完成",
     "reviewName": "界面验收",
     "reviewOwner": "陈思远",
     "inProgress": "进行中",
@@ -154,8 +153,7 @@ export default {
     "description": "拖拽或点击选择，仅在浏览器内读取",
     "hint": "支持 JSON、TXT 文件",
     "selectedLabel": "已选择：",
-    "disabled": "禁用的文件选择区域",
-    "separator": "、"
+    "disabled": "禁用的文件选择区域"
   },
   "loading": {
     "title": "骨架、加载与空状态",

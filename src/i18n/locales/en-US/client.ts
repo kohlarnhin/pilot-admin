@@ -12,7 +12,6 @@ export default {
   "resultIncomplete": "The result response is incomplete",
   "assistantFailed": "The AI assistant encountered an error",
   "streamInterrupted": "The response stream was interrupted. Please try again.",
-  "cancelled": "Cancelled",
   "assistantTimeout": "The AI assistant timed out. Please try again.",
   "invalidStream": "Invalid response stream format",
   "assistantConnection": "Could not connect to the AI assistant",

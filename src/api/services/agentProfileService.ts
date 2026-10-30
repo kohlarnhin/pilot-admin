@@ -1,4 +1,7 @@
 import { t } from '@/i18n';
+import { getSeedText } from '@/i18n/seed';
+import { seedText as chinese } from '@/i18n/locales/zh-CN/seed';
+import { seedText as english } from '@/i18n/locales/en-US/seed';
 import type { AgentProfile } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
@@ -9,34 +12,38 @@ export type { AgentProfile } from '@/types';
 
 export const AGENT_CONFIG_CHANGED_EVENT = 'pilot-admin:agent:config-changed';
 
-export const DEFAULT_AGENT_PROFILE: AgentProfile = {
-  name: '领航助手',
-  greeting: '你好，我是你的工作助手。可以帮你查看概况、查找用户、维护账号和执行巡检。',
-  suggestions: [
-    { label: '概况统计', prompt: '概况统计' },
-    { label: '查找用户', prompt: '查找用户 陈' },
-    { label: '新增用户', prompt: '新增用户 林沐晨' },
-    { label: '账号巡检', prompt: '账号巡检' },
-  ],
-};
+export const DEFAULT_AGENT_PROFILE = (): AgentProfile => structuredClone(getSeedText().agentProfile);
+
+function readProfile(): AgentProfile {
+  const db = getMockDb();
+  const stored = db.agentProfile;
+  // 兼容没有标记的 v4 数据：只有精确匹配已知种子的资料才视为默认值。
+  const isDefault = [chinese.agentProfile, english.agentProfile].some((profile) => (
+    stored.name === profile.name && stored.greeting === profile.greeting
+    && stored.suggestions.length === profile.suggestions.length
+    && stored.suggestions.every((item, index) => item.label === profile.suggestions[index].label
+      && item.prompt === profile.suggestions[index].prompt)
+  ));
+  return db.agentProfileCustomized || !isDefault ? structuredClone(stored) : DEFAULT_AGENT_PROFILE();
+}
 
 export const agentProfileService = {
   async getProfile(): Promise<AgentProfile> {
     await delay();
     requirePermission('agent:use');
-    return structuredClone(getMockDb().agentProfile);
+    return readProfile();
   },
 
   async getSettings(): Promise<AgentProfile> {
     await delay();
     requirePermission('agent-config:view');
-    return structuredClone(getMockDb().agentProfile);
+    return readProfile();
   },
 
   async save(input: Partial<AgentProfile>): Promise<void> {
     await delay();
     requirePermission('agent-config:update');
-    const next = { ...getMockDb().agentProfile, ...input };
+    const next = { ...readProfile(), ...input };
     if (!next.name.trim() || !next.greeting.trim()) {
       throw new ApiRequestError(t('serverErrors.agentProfile.incomplete'), 400);
     }
@@ -46,6 +53,7 @@ export const agentProfileService = {
 
     updateMockDb((db) => {
       db.agentProfile = structuredClone(next);
+      db.agentProfileCustomized = true;
     });
     window.dispatchEvent(new Event(AGENT_CONFIG_CHANGED_EVENT));
   },

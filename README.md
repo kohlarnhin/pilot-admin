@@ -144,25 +144,31 @@ data: {"code":0,"message":"success","data":{"sessionId":"s1","messageId":"m2","m
 
 每个工具是 `src/mock/agent/tools/` 中的独立模块，实现 `types.ts` 的 `AgentTool`，在 `index.ts` 的有序 `agentTools` 注册表中加入；fallback 始终最后。新增多轮工具无需修改 `engine.ts`。以 `createUser.ts` 为完整参考：
 
-1. `match(text, ctx)` 匹配入口，`handle(ctx)` 校验权限并返回角色 choices，同时用 `task: { name }` 保存下一轮所需状态。
+1. 在两种语言的 `agentCommands.ts` 增加同名命令及 `primary` / `alternate` 触发短语；`src/agent/commands.ts` 自动纳入联合目录。`match` 和参数截取都使用 `parseCommand(text, commandId)`。`handle(ctx)` 校验权限并返回角色 choices，同时用 `task: { name }` 保存下一轮所需状态。
 2. 引擎将工具 ID 和状态保存在消息的 `task_context: { tool, data }` 中。点击选项时，自动调用该工具的 `onChoice(ctx, choiceId, task)`，不再按输入文字猜测工具。
 3. `onChoice` 处理角色选择，返回确认 choices 和新的 `task: { name, roleId }`；确认后通过 `userService` 创建账号并返回 Markdown。每轮继续校验权限，修改成功后调用 `triggerDataChangeSideEffects()`，让已打开页面刷新。
 
 ```ts
+import { parseCommand } from '@/agent/commands';
+import { t } from '@/i18n';
+
+// 新命令须先在两种语言的 agentCommands / agentTools 字典中注册。
 export const myTool: AgentTool = {
   id: 'my-tool',
-  match: text => text.includes('我的任务'),
-  handle: async () => ({
-    message: '是否继续？',
-    choices: [{ id: 'next', label: '继续' }],
-    task: { stage: 'ready' },
+  match: text => parseCommand(text, 'myTask').matched,
+  handle: async ctx => ({
+    message: t('agentTools.myTask.confirm'),
+    choices: [{ id: 'next', label: t('common.actions.confirm') }],
+    task: { argument: parseCommand(ctx.text, 'myTask').argument },
   }),
   onChoice: async (ctx, choiceId, task) => {
     ctx.signal?.throwIfAborted();
-    return { message: `收到 ${choiceId}，上一步状态为 ${task.data.stage}。` };
+    return { message: t('agentTools.myTask.result', { choice: choiceId, argument: String(task.data.argument) }) };
   },
 };
 ```
+
+解析器接受两种语言全部短语，不受当前语言影响；Latin 命令忽略大小写，兼容首尾及词间空白。前缀命令只在开头匹配，边界为文本结束、空白、冒号，或中文短语后直接跟 CJK 参数；`create username` 不会误命中 `create user`。帮助、统计、巡检等原有非前缀入口也通过同一目录匹配。命令短语是解析数据，与展示标签分开维护；`commandPrompt` 生成当前语言命令，`prompt:*` 提交会本地化命令但保留原 choice ID 和参数。打开页面支持当前自定义菜单名、两种默认名称与路由路径。
 
 `ctx` 含当前用户 ID、菜单、权限、AbortSignal 和附件元数据。可选 hooks 还包括 `onSelection(ctx, selectedIds, task)`（参考 `disableUsers.ts`）与 `onActionOutcome(ctx, outcome, task)`（参考 `assignRoles.ts`）。通用 `prompt:*` choices 会重新匹配注册表，`cancel` 由引擎取消；其他 choice ID 交给工具。只接受最新且未提交的交互，选择数量与选项 ID 由引擎校验，具体操作仍由 service 重新校验。
 
@@ -221,11 +227,12 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 - 不引入复数引擎。英文优先使用不依赖单复数的表达，如 `Users: {count}`，避免在数量可能为 1 时固定使用复数名词。
 - 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<camelCaseId>` / `button.<camelCaseId>` 本地化（如 `user-reset-password` 对应 `button.userResetPassword`，权限 ID 不变），重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
 - 切换会更新 html lang / dayjs、清查询缓存、刷新已登录账号的 me，并通过 `useDataChanged` 发出 `locale` 原因。无限列表将 locale 纳入作用域，丢弃旧语言响应，刷新已加载范围并尽量保留滚动位置。路由、助手面板、草稿和已存会话不变；已打开的命令式弹窗 / toast 保留打开时语言。
-- 外壳、管理页面、非 Agent 服务消息及非 Agent 演示种子已支持双语。服务错误在返回时使用当前语言，活动句子在写入时使用当前语言；用户输入、已存用户/角色名称及已有活动不随切换重译。
-- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和活动；ID、登录名、邮箱及确定性顺序保持一致，仍为 DB v4。助手资料与历史会话的种子文案将在 M5c 迁移。
+- 外壳、管理页面、助手 / Agent 界面、全部 Mock 工具及演示种子已支持双语。服务错误在返回时使用当前语言，活动句子在写入时使用当前语言；用户输入、已存用户/角色名称及已有活动不随切换重译。
+- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和活动；ID、登录名、邮箱及确定性顺序保持一致，仍为 DB v4。助手资料及 25 个历史会话也按种子创建时的语言生成，长会话仍有 60 条消息。
+- 工具回复、choices、计划与操作卡在回复生成时采用当前语言并存入消息；切换不会重译旧消息、旧卡片标签或计划标题，choice ID、task context、executionId 和状态始终是代码。默认助手资料在读取时随当前语言变化；显式保存后通过 Mock 内部的可选 `agentProfileCustomized` 标记保留为数据（含保存后与默认文字相同的资料），旧 v4 资料仅在精确匹配已知种子时视为未自定义；DB 版本及初始种子形状不变。
 - 在角色权限弹窗切换语言时，重新读取菜单/按钮名称并保留当前勾选；菜单重命名保留输入中的名称，系统设置保留未保存字段。已经持久化的自定义名称在两种语言下都优先于默认名称。
 
-运行 `pnpm i18n:check` 检查 key 每段的 camelCase 命名与 24 字符上限、两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 现在只保留 M5c 助手/Agent 待迁移内容（包括种子和默认资料文件中的 Agent 部分）。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
+运行 `pnpm i18n:check` 检查 key 每段的 camelCase 命名与 24 字符上限、两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 已清空为 `[]`，保留机制供分阶段迁移使用。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
 
 ## 脚本与验证
 
@@ -242,7 +249,7 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 
 ## 路线图
 
-- 国际化：逐步提供 zh-CN / en-US，覆盖管理页面、助手和工具交互。
+- 国际化：已覆盖 zh-CN / en-US 管理页面、助手和工具交互。
 - 通用功能：操作日志、标准 CRUD 模板与个人中心。
 - 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
 

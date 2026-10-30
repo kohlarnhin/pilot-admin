@@ -16,7 +16,12 @@ export default {
   "status": {
     "enabled": "Enabled",
     "disabled": "Disabled",
-    "loading": "Loading"
+    "loading": "Loading",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "failed": "Failed",
+    "stopped": "Stopped",
+    "running": "Running"
   },
   "columns": {
     "updated": "Updated",
@@ -39,7 +44,8 @@ export default {
     "confirmReset": "Confirm reset",
     "confirm": "OK",
     "cancel": "Cancel",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "selectAll": "Select all"
   },
   "fields": {
     "account": "Account",
@@ -65,5 +71,8 @@ export default {
   },
   "errors": {
     "loadData": "Could not load data"
+  },
+  "format": {
+    "listSeparator": ", "
   }
 } satisfies LocalizedDictionary<typeof source>;

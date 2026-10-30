@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import type { AgentPageAction, AgentPageActionOutcome } from '@/types';
@@ -11,6 +12,7 @@ import { getAssistantAction } from './actions/registry';
 import './actions/AssignRoleAction';
 
 export function PageActionCard({ action, sessionId, messageId }: { action: AgentPageAction; sessionId: string; messageId: string }) {
+  useT();
   const { chat } = useAssistantRuntime();
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,18 +36,18 @@ export function PageActionCard({ action, sessionId, messageId }: { action: Agent
       pendingOutcome.current = null;
       setError('');
     } catch (cause) {
-      setError((cause as Error).message || '结果保存失败，可重试');
+      setError((cause as Error).message || t('assistant.pageAction.saveFailed'));
       throw cause;
     } finally { saving.current = false; }
   };
   return <section aria-label={action.title} className="mt-3 rounded-xl border border-line bg-slate-50/60 p-3.5">
     <div className="flex items-start gap-2.5"><Icon icon={action.action === 'navigate' ? 'arrow-up-right' : 'users'} size={18} className="mt-0.5 shrink-0 text-slate-500" /><div className="min-w-0"><h4 className="text-xs font-medium text-slate-700">{action.title}</h4><p className="mt-1 text-xs leading-5 text-slate-500">{action.description}</p></div></div>
-    {action.outcome ? <p role="status" className="mt-3 text-xs text-slate-500">{action.outcome.status === 'cancelled' ? '已取消' : '操作已完成'}</p>
+    {action.outcome ? <p role="status" className="mt-3 text-xs text-slate-500">{action.outcome.status === 'cancelled' ? t('common.status.cancelled') : t('assistant.pageAction.completed')}</p>
       : <Button variant="outline" size="xs" className="mt-3" disabled={busy || (action.action === 'navigate' ? !granted : !Component)} onClick={() => {
         if (action.action === 'navigate' && granted) navigate(action.route!, { state: location.pathname === '/agent' ? { agentReturnTo: `/agent?session=${encodeURIComponent(sessionId)}` } : undefined });
         else setOpen(true);
-      }}>{action.action === 'navigate' ? '打开页面' : '打开操作面板'}</Button>}
-    {error ? <div role="alert" className="mt-2 text-xs text-red-600">{error}{pendingOutcome.current ? <Button size="xs" className="ml-2" onClick={() => { void complete(pendingOutcome.current!).catch(() => {}); }}>重试保存结果</Button> : null}</div> : null}
-    {open && Component ? <Component onComplete={complete} onCancel={() => complete({ status: 'cancelled', summary: '已取消' })} /> : null}
+      }}>{action.action === 'navigate' ? t('assistant.pageAction.openPage') : t('assistant.pageAction.openPanel')}</Button>}
+    {error ? <div role="alert" className="mt-2 text-xs text-red-600">{error}{pendingOutcome.current ? <Button size="xs" className="ml-2" onClick={() => { void complete(pendingOutcome.current!).catch(() => {}); }}>{t('assistant.pageAction.retrySave')}</Button> : null}</div> : null}
+    {open && Component ? <Component onComplete={complete} onCancel={() => complete({ status: 'cancelled', summary: t('common.status.cancelled') })} /> : null}
   </section>;
 }

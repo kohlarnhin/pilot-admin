@@ -1,25 +1,35 @@
+import { t } from '@/i18n';
+import chinese from '@/i18n/locales/zh-CN/menu';
+import english from '@/i18n/locales/en-US/menu';
+import { parseCommand } from '@/agent/commands';
 import { flattenMenuTree } from '@/api/services/menuService';
+import { canAccessPage } from '@/routes/access';
 import type { AgentTool } from './types';
 
 export const openPage: AgentTool = {
   id: 'open-page',
-  match: (text) => /^打开/.test(text),
+  match: (text) => parseCommand(text, 'openPage').matched,
   handle: async (ctx) => {
-    const name = ctx.text.replace(/^打开\s*/, '').trim();
-    const page = name && flattenMenuTree(ctx.menus).find((menu) => menu.route_path && menu.menu_name.includes(name));
+    const name = parseCommand(ctx.text, 'openPage').argument.toLowerCase();
+    const page = name && flattenMenuTree(ctx.menus).find((menu) => {
+      if (!menu.route_path || !canAccessPage(menu.route_path, ctx)) return false;
+      const key = menu.id.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase()) as keyof typeof chinese;
+      return [menu.menu_name, menu.route_path, chinese[key], english[key]]
+        .some((candidate) => candidate?.toLowerCase().includes(name));
+    });
     if (!page) {
-      return { message: '当前账号没有可打开的匹配页面。请确认页面名称与访问权限。' };
+      return { message: t('agentTools.openPage.empty') };
     }
 
     return {
-      message: `可以打开「${page.menu_name}」。`,
+      message: t('agentTools.openPage.reply', { name: page.menu_name }),
       interaction: {
         type: 'page_action',
         version: 1,
         action: 'navigate',
-        title: `打开${page.menu_name}`,
+        title: t('agentTools.openPage.title', { name: page.menu_name }),
         autoOpen: true,
-        description: '打开页面后，可随时返回当前对话。',
+        description: t('agentTools.openPage.description'),
         route: page.route_path,
       },
     };

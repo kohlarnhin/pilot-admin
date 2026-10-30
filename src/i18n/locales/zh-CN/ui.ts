@@ -3,7 +3,6 @@ export default {
   "increase": "增加",
   "decrease": "减少",
   "selectRow": "选择此行",
-  "selectAll": "全选",
   "loadingMore": "正在加载更多",
   "dropFile": "点击或拖拽文件到此处",
   "fieldRequired": "此项为必填项",

@@ -1,3 +1,6 @@
+import { t } from '@/i18n';
+import chinese from '@/i18n/locales/zh-CN/assistant';
+import english from '@/i18n/locales/en-US/assistant';
 import type { AgentChoice, AgentMessage } from '@/types';
 import type { AssistantMessage } from './conversationStorage';
 import { normalizeAgentInteraction } from '@/api/services/agentInteraction';
@@ -11,7 +14,8 @@ export const getAssistantShortcut = () => {
   };
 };
 
-export const INITIAL_GREETING = '你好！我是领航助手，可以协助你查看概况、查找用户和维护账号。';
+// 仅识别旧版客户端插入的首条问候语；有服务端标识的消息始终保留。
+export const isLegacyGreeting = (text: string): boolean => [chinese.legacyGreeting, english.legacyGreeting].some((value) => value === text);
 
 export const createMessageId = (): string =>
   globalThis.crypto?.randomUUID?.() ??
@@ -46,8 +50,8 @@ export const toAssistantMessage = (message: AgentMessage): AssistantMessage => (
 
 export const readableError = (error: unknown): string => {
   if (error && typeof error === 'object' && 'errorCode' in error && error.errorCode === 1501) {
-    return '尚未配置可用模型';
+    return t('serverErrors.agent.noModel');
   }
   if (error instanceof Error && error.message.trim()) return error.message;
-  return 'AI 助手暂时不可用，请稍后再试。';
+  return t('assistant.errors.unavailable');
 };

@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { Check, ShieldCheck, MessageCircle } from 'lucide-react';
 import type { AgentChoice } from '@/types';
 import { Button } from '@/ui/button';
@@ -12,6 +13,7 @@ interface ConfirmationActionsProps {
 }
 
 export function ConfirmationActions({ messageId, choices, selectedChoiceId, active, onChoice }: ConfirmationActionsProps) {
+  useT();
   const selectedChoice = choices.find(choice => choice.id === selectedChoiceId);
 
   const prompts = choices.every(choice => choice.id.startsWith('prompt:'));
@@ -22,13 +24,13 @@ export function ConfirmationActions({ messageId, choices, selectedChoiceId, acti
       <div className="flex items-start gap-2">
         {selectedChoice ? <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" /> : prompts ? <MessageCircle className="mt-0.5 size-4 shrink-0 text-slate-400" /> : <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" />}
         <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-800">{selectedChoice ? `已选择：${selectedChoice.label}` : prompts ? '试试这些提问' : selectingRole ? '选择角色' : '等待你的确认'}</p>
+          <p className="text-xs font-medium text-slate-800">{selectedChoice ? t('assistant.confirmation.selected', { label: selectedChoice.label }) : prompts ? t('assistant.confirmation.prompts') : selectingRole ? t('assistant.confirmation.role') : t('assistant.confirmation.waiting')}</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            {selectedChoice ? '助手已按照你的选择继续处理。' : active ? prompts ? '选择一个提问继续对话。' : selectingRole ? '选择后还需确认创建。' : '确认后，助手将继续执行这一步。' : '该确认已进入后续对话，不能重复操作。'}
+            {selectedChoice ? t('assistant.confirmation.selectedHint') : active ? prompts ? t('assistant.confirmation.promptHint') : selectingRole ? t('assistant.confirmation.roleHint') : t('assistant.confirmation.activeHint') : t('assistant.confirmation.expiredHint')}
           </p>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="请选择下一步">
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('assistant.confirmation.groupLabel')}>
         {choices.map(choice => {
           const selected = selectedChoiceId === choice.id;
           return (

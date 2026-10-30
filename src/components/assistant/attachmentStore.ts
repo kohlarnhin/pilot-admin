@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { AgentAttachmentMetadata } from '@/types';
 export interface AssistantAttachment {
   id: string;
@@ -10,7 +11,7 @@ export async function parseAttachment(file: File): Promise<AssistantAttachment> 
   const id = crypto.randomUUID();
   const metadata: AgentAttachmentMetadata = { attachmentId: id, fileName: file.name, size: file.size, mimeType: file.type };
   const attachment: AssistantAttachment = { id, file: { name: file.name }, metadata };
-  if (file.size > 5 * 1024 * 1024) return { ...attachment, error: '文件不能超过 5 MB' };
+  if (file.size > 5 * 1024 * 1024) return { ...attachment, error: t('assistant.errors.attachmentSize') };
   try {
     await new Promise<void>((resolve) => window.setTimeout(resolve, 200));
     if (/\.(txt|csv|json)$/i.test(file.name)) {
@@ -19,7 +20,7 @@ export async function parseAttachment(file: File): Promise<AssistantAttachment> 
     }
     return attachment;
   } catch {
-    return { ...attachment, error: '无法读取文件元数据，请重新选择' };
+    return { ...attachment, error: t('assistant.errors.attachmentRead') };
   }
 }
 export const attachmentMetadata = (attachment: AssistantAttachment): AgentAttachmentMetadata => ({ ...attachment.metadata });

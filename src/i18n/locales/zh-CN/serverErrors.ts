@@ -50,5 +50,28 @@ export default {
   "access": {
     "forbiddenAction": "没有执行此操作的权限",
     "forbiddenPage": "没有访问此页面的权限"
+  },
+  "agent": {
+    "noModel": "尚未配置可用模型",
+    "sessionNotFound": "会话不存在",
+    "interactionExpired": "此交互已失效，请重新发起操作",
+    "choiceUnsupported": "此工具不支持选项回复",
+    "selectionUnsupported": "此工具不支持选择回复",
+    "toolUnavailable": "没有可用的处理工具",
+    "interactionSubmitted": "此交互已提交或已失效，请使用最新回复",
+    "invalidChoice": "无效的选项",
+    "invalidSelection": "请选择有效选项",
+    "planNotFound": "计划不存在",
+    "planExecuted": "计划已执行",
+    "planChanged": "计划执行状态已变更",
+    "planUnsupported": "此工具不支持执行计划",
+    "actionNotFound": "操作不存在",
+    "resultSaved": "结果已保存",
+    "nameExpired": "操作信息已失效，请重新提供姓名",
+    "roleUnavailable": "角色不可用",
+    "roleRequired": "请先选择角色",
+    "usersExpired": "操作信息已失效，请重新选择用户",
+    "auditStepNotFound": "巡检步骤不存在",
+    "simulated": "模拟服务暂时不可用，请点击重新尝试。"
   }
 } as const;

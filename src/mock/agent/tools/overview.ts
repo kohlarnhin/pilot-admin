@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { parseCommand } from '@/agent/commands';
 import { roleService } from '@/api/services/roleService';
 import { flattenMenuTree } from '@/api/services/menuService';
 import { denied, findUsers, markdownCell } from './helpers';
@@ -5,10 +7,10 @@ import type { AgentTool } from './types';
 
 export const overview: AgentTool = {
   id: 'overview',
-  match: (text) => /概况统计|概览统计/.test(text),
+  match: (text) => parseCommand(text, 'overview').matched,
   handle: async (ctx) => {
     if (!flattenMenuTree(ctx.menus).some((menu) => menu.route_path === '/system/users')) {
-      return denied('查看用户统计');
+      return denied(t('agentTools.operations.overview'));
     }
 
     const [users, roles] = await Promise.all([findUsers('', ctx.signal), roleService.getAllRoles()]);
@@ -20,7 +22,11 @@ export const overview: AgentTool = {
     });
 
     return {
-      message: `## 概况统计\n\n共 **${users.length}** 位用户，按角色统计如下（多角色账号可重复计入）。\n\n| 角色 | 用户数 | 已启用 | 已停用 |\n| --- | ---: | ---: | ---: |\n${lines.join('\n')}\n\n无角色账号：${users.filter((user) => !user.role_ids.length).length} 位。`,
+      message: t('agentTools.overview.reply', {
+        count: users.length,
+        rows: lines.join('\n'),
+        noRole: users.filter((user) => !user.role_ids.length).length,
+      }),
     };
   },
 };

@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { isValidElement, memo, useMemo, type ReactNode } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -19,18 +20,28 @@ function textContent(node: ReactNode): string {
 }
 
 function CodeBlock({ children }: { children?: ReactNode }) {
+  useT();
   const code = isValidElement<{ className?: string }>(children) ? children : null;
-  const language = code?.props.className?.replace('language-', '') || '代码';
+  const language = code?.props.className?.replace('language-', '') || t('assistant.markdown.code');
 
   return (
     <div className="my-3 min-w-0 overflow-hidden rounded-lg border border-line bg-slate-50/70">
       <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-1.5 text-[11px] text-slate-500">
         <span className="truncate font-mono">{language}</span>
-        <CopyButton text={textContent(children).replace(/\n$/, '')} tip="复制代码" secret className="size-6" />
+        <CopyButton text={textContent(children).replace(/\n$/, '')} tip={t('assistant.markdown.copyCode')} secret className="size-6" />
       </div>
-      <pre className="ai-assistant-scroll max-w-full overflow-x-auto p-3 font-mono text-xs leading-6 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300" tabIndex={0} aria-label={`${language}代码块，可横向滚动`}>
+      <pre className="ai-assistant-scroll max-w-full overflow-x-auto p-3 font-mono text-xs leading-6 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300" tabIndex={0} aria-label={t('assistant.markdown.codeRegion', { language })}>
         {children}
       </pre>
+    </div>
+  );
+}
+
+function MarkdownTable({ children }: { children?: ReactNode }) {
+  useT();
+  return (
+    <div className="ai-assistant-scroll my-3 max-w-full overflow-x-auto rounded-lg border border-line outline-none focus-visible:ring-2 focus-visible:ring-slate-300" role="region" aria-label={t('assistant.markdown.tableRegion')} tabIndex={0}>
+      <table className="w-full border-collapse whitespace-nowrap text-left text-xs leading-5">{children}</table>
     </div>
   );
 }
@@ -38,11 +49,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
 const components: Components = {
   pre: CodeBlock,
   a: ({ node: _node, children, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>,
-  table: ({ children }) => (
-    <div className="ai-assistant-scroll my-3 max-w-full overflow-x-auto rounded-lg border border-line outline-none focus-visible:ring-2 focus-visible:ring-slate-300" role="region" aria-label="表格，可横向滚动" tabIndex={0}>
-      <table className="w-full border-collapse whitespace-nowrap text-left text-xs leading-5">{children}</table>
-    </div>
-  ),
+  table: MarkdownTable,
 };
 const remarkPlugins = [remarkGfm, remarkBreaks];
 

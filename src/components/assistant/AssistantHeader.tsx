@@ -1,3 +1,4 @@
+import { t, useT } from '@/i18n';
 import { useState } from 'react';
 import { History, Maximize2, Minimize2, SquarePen, SquareTerminal, X } from 'lucide-react';
 import { Icon } from '@/components/icon';
@@ -24,6 +25,7 @@ interface AssistantHeaderProps {
 export function AssistantHeader({
   name, notifications, expanded, historyOpen, busy, onNewChat, onHistory, onExpand, onAgent, onClose,
 }: AssistantHeaderProps) {
+  useT();
   const [shortcut] = useState(getAssistantShortcut);
 
   return (
@@ -35,41 +37,40 @@ export function AssistantHeader({
             {name}
           </h2>
           <p id="ai-assistant-description" className="truncate text-[11px] leading-4 text-slate-400">
-            你的工作搭档
-          </p>
+            {t('assistant.header.subtitle')}</p>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
         <Tooltip title={notifications.tooltip}>
-          <Button variant="ghost" size="icon-xs" aria-label="助手完成通知" aria-pressed={notifications.enabled} disabled={notifications.requesting} onClick={() => void notifications.toggle()}>
+          <Button variant="ghost" size="icon-xs" aria-label={t('assistant.header.notifications')} aria-pressed={notifications.enabled} disabled={notifications.requesting} onClick={() => void notifications.toggle()}>
             <Icon icon={notifications.enabled ? 'bell-ring' : 'bell-off'} size={14} />
           </Button>
         </Tooltip>
-        <Popconfirm title="开启新对话？" okText="开启" cancelText="取消" onConfirm={onNewChat} disabled={busy}>
-          <Tooltip title="新对话">
-            <Button variant="ghost" size="icon-xs" aria-label="开启新对话" disabled={busy}>
+        <Popconfirm title={t('assistant.header.newConfirm')} okText={t('assistant.header.start')} cancelText={t('common.actions.cancel')} onConfirm={onNewChat} disabled={busy}>
+          <Tooltip title={t('assistant.header.newConversation')}>
+            <Button variant="ghost" size="icon-xs" aria-label={t('assistant.header.startConversation')} disabled={busy}>
               <SquarePen className="size-3.5" />
             </Button>
           </Tooltip>
         </Popconfirm>
-        <Tooltip title="历史会话">
-          <Button variant="ghost" size="icon-xs" aria-label="历史会话" aria-expanded={historyOpen} aria-controls="ai-assistant-history" pressed={historyOpen} onClick={onHistory}>
+        <Tooltip title={t('assistant.header.history')}>
+          <Button variant="ghost" size="icon-xs" aria-label={t('assistant.header.history')} aria-expanded={historyOpen} aria-controls="ai-assistant-history" pressed={historyOpen} onClick={onHistory}>
             <History className="size-3.5" />
           </Button>
         </Tooltip>
-        <Tooltip title="进入 Agent 模式"><Button variant="ghost" size="icon-xs" aria-label="进入 Agent 模式" onClick={onAgent}><SquareTerminal className="size-3.5" /></Button></Tooltip>
-        <Tooltip title={expanded ? '收起面板' : '展开面板'}>
-          <Button variant="ghost" size="icon-xs" aria-label={expanded ? '收起面板' : '展开面板'} aria-pressed={expanded} onClick={onExpand}>
+        <Tooltip title={t('agentEntry.agent')}><Button variant="ghost" size="icon-xs" aria-label={t('agentEntry.agent')} onClick={onAgent}><SquareTerminal className="size-3.5" /></Button></Tooltip>
+        <Tooltip title={expanded ? t('assistant.header.collapse') : t('assistant.header.expand')}>
+          <Button variant="ghost" size="icon-xs" aria-label={expanded ? t('assistant.header.collapse') : t('assistant.header.expand')} aria-pressed={expanded} onClick={onExpand}>
             {expanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
           </Button>
         </Tooltip>
         <Tooltip title={
           <div className="space-y-1">
-            <span className="flex items-center justify-between gap-3">关闭<Kbd>Esc</Kbd></span>
-            <span className="flex items-center gap-2 text-slate-300"><Kbd>{shortcut.label}</Kbd>打开/关闭</span>
+            <span className="flex items-center justify-between gap-3">{t('common.actions.close')}<Kbd>Esc</Kbd></span>
+            <span className="flex items-center gap-2 text-slate-300"><Kbd>{shortcut.label}</Kbd>{t('assistant.header.toggle')}</span>
           </div>
         }>
-          <Button variant="ghost" size="icon-xs" aria-label="关闭 AI 助手" onClick={onClose}>
+          <Button variant="ghost" size="icon-xs" aria-label={t('assistant.header.close')} onClick={onClose}>
             <X className="size-4" />
           </Button>
         </Tooltip>

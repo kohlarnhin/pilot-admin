@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { parseCommand } from '@/agent/commands';
 import { ApiRequestError } from '@/api/http';
 import { userService } from '@/api/services/userService';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
@@ -6,36 +8,36 @@ import type { AgentTool } from './types';
 
 export const disableUsers: AgentTool = {
   id: 'disable-users',
-  match: (text) => /^停用用户/.test(text),
+  match: (text) => parseCommand(text, 'disableUsers').matched,
   handle: async (ctx) => {
     if (!permitted(ctx, 'user:update')) {
-      return denied('停用用户');
+      return denied(t('agentTools.operations.disableUsers'));
     }
 
-    const keyword = ctx.text.replace(/^停用用户\s*/, '').trim();
+    const keyword = parseCommand(ctx.text, 'disableUsers').argument;
     if (!keyword) {
-      return { message: '请提供姓名、账号或邮箱关键词，例如「停用用户 王」。' };
+      return { message: t('agentTools.disableUsers.keywordRequired') };
     }
 
     const users = (await findUsers(keyword, ctx.signal)).filter((user) => user.status === 1 && user.id !== ctx.userId);
     if (!users.length) {
-      return { message: '没有可停用的匹配用户（当前账号不会被停用）。' };
+      return { message: t('agentTools.disableUsers.empty') };
     }
 
     if (users.length === 1) {
       return confirmation(
-        `确认停用 **${markdownCell(users[0].user_name)}**（${users[0].login_name}）？`,
+        t('agentTools.disableUsers.confirmUser', { name: markdownCell(users[0].user_name), account: users[0].login_name }),
         { userIds: [users[0].id] },
-        '确认停用',
+        t('agentTools.choices.confirmDisable'),
       );
     }
 
     return {
-      message: `找到 **${users.length}** 位可停用用户，请选择要操作的账号。下一步仍需确认。`,
+      message: t('agentTools.disableUsers.select', { count: users.length }),
       interaction: {
         type: 'selection',
         version: 1,
-        title: '选择要停用的用户',
+        title: t('agentTools.disableUsers.title'),
         defaultSelectedIds: [],
         minSelected: 1,
         maxSelected: users.length,
@@ -50,24 +52,24 @@ export const disableUsers: AgentTool = {
 
   onSelection: async (ctx, selectedIds) => {
     if (!permitted(ctx, 'user:update')) {
-      return denied('停用用户');
+      return denied(t('agentTools.operations.disableUsers'));
     }
 
     return confirmation(
-      `确认停用选中的 **${selectedIds.length}** 位用户？`,
+      t('agentTools.disableUsers.confirmSelection', { count: selectedIds.length }),
       { userIds: selectedIds },
-      '确认停用',
+      t('agentTools.choices.confirmDisable'),
     );
   },
 
   onChoice: async (ctx, choiceId, task) => {
     if (!permitted(ctx, 'user:update')) {
-      return denied('停用用户');
+      return denied(t('agentTools.operations.disableUsers'));
     }
 
     const { userIds } = task.data;
     if (choiceId !== 'confirm' || !Array.isArray(userIds) || !userIds.every((id) => typeof id === 'string')) {
-      throw new ApiRequestError('操作信息已失效，请重新选择用户', 400);
+      throw new ApiRequestError(t('serverErrors.agent.usersExpired'), 400);
     }
 
     let completed = 0;
@@ -84,7 +86,7 @@ export const disableUsers: AgentTool = {
     }
 
     return {
-      message: `已停用 **${completed}** 位用户。用户列表和概览已同步更新。`,
+      message: t('agentTools.disableUsers.completed', { count: completed }),
       data_changed: completed > 0,
     };
   },

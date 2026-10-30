@@ -32,6 +32,7 @@ UI 工作必须先读 `skills/pilot-ui-spec/SKILL.md`、`references/visual-syste
 - `src/api/services`：唯一数据接缝。当前调用 `src/mock`，接真后端时只替换 service 函数体。
 - `src/mock`：类型化种子、延迟、分页与持久化；形状升级时 bump 版本并保留损坏数据回退。
 - `src/components/assistant` 和 `src/agent`：两个宿主共用路由上层的一个运行时。
+- `src/agent/commands.ts`：共享命令目录、跨语言匹配与取参；工具不自行编写触发正则。
 - `src/mock/agent/tools/`：工具模块与有序注册表；首轮、选择、确认、弹窗结果和计划步骤由工具拥有，通过现有 service 并接受 RBAC。引擎只管理通用生命周期。
 - `src/components/assistant/actions/registry.ts`：客户端弹窗操作注册表。
 - `src/api/http.ts`、`sse.ts`：真实后端接缝，默认不发送请求。
