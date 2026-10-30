@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { t, useT } from '@/i18n';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { exampleProjectService, PROJECT_CODE_EXISTS, type ProjectInput } from '@/api/services/exampleProjectService';
 import type { ExampleProject } from '@/types';
 import { Form } from '@/ui/form';

@@ -5,7 +5,7 @@ import type { ApiResponse, Menu } from '@/types';
 import { mockMenus, requireMenu, requirePermission } from '@/mock/access';
 import { updateMockDb } from '@/mock/db';
 import { createTraceId, delay, response } from '@/mock/helpers';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 
 export const menuService = {
   getMenuTree: async (): Promise<ApiResponse<Menu[]>> => {

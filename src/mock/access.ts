@@ -1,5 +1,5 @@
 import { isMessageKey, t } from '@/i18n';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { getStoredTokens } from '@/api/tokenStorage';
 import { DEFAULT_MENUS } from '@/config/menus';
 import type { AuthMeResponse, Menu, User } from '@/types';

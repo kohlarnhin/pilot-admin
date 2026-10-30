@@ -5,7 +5,7 @@ import type { ApiResponse, SystemSettings } from '@/types';
 import { getMockDb, resetMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';
 import { createTraceId, delay, response } from '@/mock/helpers';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 
 export { MOCK_DB_RESET_EVENT as DEMO_DATA_RESET_EVENT } from '@/mock/db';
 

@@ -1,22 +1,23 @@
-import { useNavigate } from 'react-router';
+import { t, useT } from '@/i18n';
 import { useEffect, useState } from 'react';
-import { AssistantHeader } from './AssistantHeader';
-import { AssistantPanel } from './AssistantPanel';
-import { SessionHistory } from './SessionHistory';
-import { AssistantConversation } from './AssistantConversation';
+import { X } from 'lucide-react';
+import { Button } from '@/ui/button';
+import { useLazyResource } from '@/hooks/useLazyResource';
 import { useAssistantRuntime } from './AssistantRuntime';
 import { useAssistantStore } from '@/store/assistantStore';
+import { assistantUI } from './assistantResources';
+import { AssistantLoadState } from './AssistantLoadState';
+import { assistantPanelClassName } from './panelStyles';
 
 export function AIAssistant() {
-  const navigate = useNavigate();
-  const runtime = useAssistantRuntime();
-  const { chat, notifications, busy } = runtime;
+  useT();
+  const { chat } = useAssistantRuntime();
   const isOpen = useAssistantStore((state) => state.panelOpen);
   const closePanel = useAssistantStore((state) => state.closePanel);
   const togglePanel = useAssistantStore((state) => state.togglePanel);
   const setStreaming = useAssistantStore((state) => state.setStreaming);
   const [expanded, setExpanded] = useState(false);
-
+  const { value, error, retry } = useLazyResource(assistantUI, isOpen);
   useEffect(() => {
     setStreaming(chat.isSending);
   }, [chat.isSending, setStreaming]);
@@ -43,19 +44,10 @@ export function AIAssistant() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, chat.showHistory, chat.setShowHistory, closePanel, togglePanel]);
 
-  return (
-    <AssistantPanel open={isOpen} expanded={expanded}>
-      <AssistantHeader name={runtime.profile.name} notifications={notifications} expanded={expanded} historyOpen={chat.showHistory} busy={busy}
-        onNewChat={runtime.startNewConversation} onHistory={() => chat.showHistory ? chat.setShowHistory(false) : chat.openHistory()}
-        onAgent={() => { useAssistantStore.setState({ panelOpen: false }); navigate('/agent'); }}
-        onExpand={() => setExpanded(current => !current)} onClose={closePanel} />
-      <div data-slot="assistant-body" className="relative min-h-0 flex-1 overflow-hidden">
-        <AssistantConversation />
-        <SessionHistory open={chat.showHistory} sessions={chat.sessions} activeSessionId={chat.activeSessionId}
-          loading={chat.isLoadingSessions} hasNext={chat.sessionHasNext && !chat.sessionError} error={chat.sessionError} onRetry={chat.retrySessions} busy={busy}
-          onClose={() => chat.setShowHistory(false)} onSelect={id => { void chat.loadSessionDetail(id); }}
-          onLoadMore={() => { void chat.loadSessions(chat.sessionPage + 1, true); }} />
-      </div>
-    </AssistantPanel>
-  );
+  if (value) return <value.AssistantPanelUI expanded={expanded} setExpanded={setExpanded} />;
+  if (!isOpen) return null;
+  return <section id="ai-assistant-panel" role="dialog" aria-modal="false" aria-label={t('layout.assistant')} className={assistantPanelClassName(expanded)}>
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-line-soft px-4"><h2 className="text-13 font-semibold text-slate-900">{t('layout.assistant')}</h2><Button variant="ghost" size="icon-xs" aria-label={t('assistant.header.close')} onClick={closePanel}><X className="size-4" /></Button></header>
+    <AssistantLoadState error={error} retry={retry} />
+  </section>;
 }

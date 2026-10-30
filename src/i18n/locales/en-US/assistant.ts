@@ -129,6 +129,7 @@ export default {
     "loadingMore": "Loading more conversations…"
   },
   "errors": {
+    "loadInterface": "Could not load the assistant. Try again.",
     "unavailable": "AI assistant is unavailable. Try again later.",
     "attachmentSize": "Files must not exceed 5 MB",
     "attachmentRead": "Could not read file metadata. Select the file again.",

@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { t, useT } from '@/i18n';
 import { authService, PASSWORD_CONFIRM_MISMATCH, PASSWORD_CURRENT_MISMATCH } from '@/api/services/authService';
-import { ApiRequestError, isUnauthorizedError } from '@/api/http';
+import { ApiRequestError, isUnauthorizedError } from '@/api/errors';
 import { useAuthStore } from '@/store/authStore';
 import { Form, type FormInstance } from '@/ui/form';
 import { Input } from '@/ui/input';

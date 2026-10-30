@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import type { AuditReason } from '@/types';
 import { currentUser } from './access';
 import { recordAudit, type AuditEntry } from './audit';

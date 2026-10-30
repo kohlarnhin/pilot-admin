@@ -7,7 +7,7 @@ import { flattenMenuTree } from './menuService';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { currentUser, mockMenus, requireMenu, requirePermission } from '@/mock/access';
 import { createTraceId, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 import { cachedQuery } from '../queryCache';
 import type { MockRole } from '@/mock/seed';
 import { addRouteLessAncestors, collectMenuCatalog, getDeclaredPermissionCounts, getDeclaredRoleGrants } from '@/mock/permissionCatalog';

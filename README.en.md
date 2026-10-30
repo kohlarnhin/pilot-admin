@@ -12,6 +12,43 @@ A fork-ready React admin starter with a compact design system, mock authenticati
 - One assistant runtime shared by the panel and Agent mode, with account-isolated drafts and sessions, confirmations, plans and metadata-only attachments.
 - Replaceable services, HTTP / SSE integration seams, persistent local demo data, ESLint and build CI.
 
+## Screenshots
+
+1440×900 with seeded demo data. Expand to see all screens.
+
+<details>
+<summary>Screenshots</summary>
+
+**Overview**
+
+![Overview](docs/images/en-US-dashboard.png)
+
+**Users**
+
+![Users](docs/images/en-US-users.png)
+
+**Standard List**
+
+![Standard List](docs/images/en-US-crud.png)
+
+**Audit Logs**
+
+![Audit Logs](docs/images/en-US-audit-logs.png)
+
+**Profile**
+
+![Profile](docs/images/en-US-profile.png)
+
+**Assistant panel**
+
+![Assistant panel](docs/images/en-US-assistant.png)
+
+**Agent mode**
+
+![Agent mode](docs/images/en-US-agent.png)
+
+</details>
+
 ## Quick start
 
 Use Node 22+ and pnpm 10. The repository pins pnpm 10.8.0 through `packageManager`; `.nvmrc` selects Node 22.
@@ -72,6 +109,8 @@ Mock catalog sync is recursive, monotonic and add-only. Only the seeded admin ro
 ### Add a service or connect a backend
 
 Pages call `src/api/services`; they never access the mock DB directly. Define entity types and deterministic seeds, validate stored shapes, and bump the DB version for incompatible changes. Use the existing paged response and infinite-list helpers. To connect a backend, replace service function bodies with `http` calls and use `runSseStream` for assistant streaming. Authentication and RBAC must be enforced on the server. [Services and mocks](README.md#添加-service-与-mock), [backend integration](README.md#接真实后端).
+
+Mock services and pages import errors from lightweight `src/api/errors.ts`; importing `src/api/http.ts` in a real service loads Axios and still supports the original error imports.
 
 ### Add an assistant tool
 
@@ -157,7 +196,8 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 
 ## Roadmap
 
-zh-CN / en-US localization, audit logs, the standard CRUD template and the profile page are available. Next come UX/performance improvements and documentation updates.
+- More reusable page patterns and extension examples.
+- Continued accessibility, performance and developer-documentation improvements.
 
 ## Contributing and security
 

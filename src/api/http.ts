@@ -2,6 +2,8 @@ import { t, getLocale } from '@/i18n';
 import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse, AuthTokens } from '../types';
+import { ApiRequestError, isUnauthorizedError, notifyUnauthorized } from './errors';
+export { ApiRequestError, isUnauthorizedError, setUnauthorizedHandler } from './errors';
 import {
   clearStoredTokens,
   replaceStoredTokens,
@@ -20,23 +22,7 @@ interface RefreshTokenData {
 
 const PUBLIC_AUTH_ENDPOINTS = new Set(['/auth/login', '/auth/login/resolve', '/auth/refresh']);
 const REFRESH_LOCK_NAME = 'pilot-admin:auth:refresh:v2';
-let unauthorizedHandler: (() => void) | null = null;
 let refreshPromise: Promise<string> | null = null;
-
-export class ApiRequestError extends Error {
-  constructor(
-    message: string,
-    readonly status?: number,
-    readonly code?: number
-  ) {
-    super(message);
-    this.name = 'ApiRequestError';
-  }
-}
-
-export function isUnauthorizedError(error: unknown): boolean {
-  return error instanceof ApiRequestError && (error.status === 401 || error.code === 1002);
-}
 
 // --- 命名转换（后端 camelCase ↔ 前端 snake_case，仅转换 key 不转换值） ---
 
@@ -90,11 +76,6 @@ const refreshClient = axios.create({
   timeout: 15000,
 });
 
-/** 由认证状态层接管 Token 最终失效后的本地用户状态清理。 */
-export function setUnauthorizedHandler(handler: () => void): void {
-  unauthorizedHandler = handler;
-}
-
 // 请求：注入 Bearer AT，body 统一 snake_case → camelCase。
 refreshClient.interceptors.request.use((config) => {
   config.headers.set('Accept-Language', getLocale());
@@ -146,14 +127,14 @@ http.interceptors.response.use(
         } catch (refreshError) {
           if (isUnauthorizedError(refreshError)) {
             const cleared = clearStoredTokens(config._sentAccessToken);
-            if (cleared) unauthorizedHandler?.();
+            if (cleared) notifyUnauthorized();
           }
           return Promise.reject(refreshError);
         }
       }
 
       const cleared = clearStoredTokens(config._sentAccessToken);
-      if (cleared) unauthorizedHandler?.();
+      if (cleared) notifyUnauthorized();
     }
 
     return Promise.reject(

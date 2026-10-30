@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { t, useT } from '@/i18n';
 import { profileService, type ProfilePermissionGroup } from '@/api/services/profileService';
-import { isUnauthorizedError } from '@/api/http';
+import { isUnauthorizedError } from '@/api/errors';
 import { useAuthStore } from '@/store/authStore';
 import { useDataChanged } from '@/hooks/useDataChanged';
 import { canAccessPage } from '@/routes/access';

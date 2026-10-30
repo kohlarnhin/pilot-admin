@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 import { parseCommand } from '@/agent/commands';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { userService } from '@/api/services/userService';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 import { confirmation, denied, findUsers, markdownCell, permitted } from './helpers';

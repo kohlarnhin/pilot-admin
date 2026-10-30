@@ -2,6 +2,7 @@ import { t, useT } from '@/i18n';
 import React, { Suspense, useEffect } from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router';
 import { agentReturnPath } from '@/agent/access';
+import { preloadAssistantUI } from '@/components/assistant/assistantResources';
 import { AIAssistant } from '@/components/assistant/AIAssistant';
 import { Spin } from '@/ui/spinner';
 import { useAuthStore } from '@/store/authStore';
@@ -37,6 +38,16 @@ export const AppLayout: React.FC = () => {
   useEffect(() => {
     if (isInitializing || (isAuthenticated && !forbidden)) void preloadRoute(pathname);
   }, [isInitializing, isAuthenticated, forbidden, pathname]);
+
+  useEffect(() => {
+    if (!isAuthenticated || isInitializing || !canUseAgent) return;
+    if (typeof window.requestIdleCallback === 'function') {
+      const idle = window.requestIdleCallback(preloadAssistantUI, { timeout: 2000 });
+      return () => window.cancelIdleCallback(idle);
+    }
+    const timer = window.setTimeout(preloadAssistantUI, 1000);
+    return () => window.clearTimeout(timer);
+  }, [isAuthenticated, isInitializing, canUseAgent]);
 
   if (isInitializing) return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-3 bg-white">

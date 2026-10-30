@@ -1,13 +1,12 @@
 import { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { AssistantRuntimeLayout } from '@/components/assistant/AssistantRuntime';
-import { AppLayout } from '@/components/layout/AppLayout';
 import { Spin } from '@/ui/spinner';
 import { Page403, Page404 } from '@/pages/error';
 import { RouteErrorPage } from '@/pages/error/RouteErrorPage';
 import { getFirstAccessiblePage } from './access';
 import { useAuthStore } from '@/store/authStore';
-import { adminPages, LoginPage, AgentPage } from './routeModules';
+import { adminPages, LoginPage, AgentPage, AppLayout } from './routeModules';
 
 const IndexRedirect = () => {
   const menus = useAuthStore((state) => state.menus);
@@ -22,7 +21,7 @@ export const router = createBrowserRouter([{ element: <AssistantRuntimeLayout />
   },
   { path: '/agent', element: <Suspense fallback={<div className="flex h-dvh items-center justify-center"><Spin size="large" /></div>}><AgentPage /></Suspense> },
   {
-    path: '/', element: <AppLayout />, errorElement: <RouteErrorPage fullScreen />,
+    path: '/', element: <Suspense fallback={<div className="flex h-dvh items-center justify-center bg-white"><Spin size="large" /></div>}><AppLayout /></Suspense>, errorElement: <RouteErrorPage fullScreen />,
     children: [{ errorElement: <RouteErrorPage />, children: [
       { index: true, element: <IndexRedirect /> },
       { path: 'system', element: <IndexRedirect /> },

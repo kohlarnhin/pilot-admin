@@ -11,7 +11,7 @@ import type {
   AgentTaskContext,
   PageResult,
 } from '@/types';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { currentUser, requirePermission } from '../access';
 import { getMockDb, updateMockDb } from '../db';
 import { delay, pageResult } from '../helpers';

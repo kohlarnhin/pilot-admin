@@ -1,7 +1,7 @@
 import { recordAuditFailure } from '@/mock/auditFailure';
 import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 import type { AuditProfileField, AuthMeResponse, AuthTokens, User, UserPreferences } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { currentUser, meResponse } from '@/mock/access';

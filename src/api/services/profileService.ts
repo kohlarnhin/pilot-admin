@@ -1,5 +1,5 @@
 import { t } from '@/i18n';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { getStoredTokens } from '@/api/tokenStorage';
 import type { ApiResponse, AuditProfileField, User } from '@/types';
 import { currentUser, meResponse, mockMenus, publicUser } from '@/mock/access';

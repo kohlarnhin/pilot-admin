@@ -4,7 +4,7 @@ import type { AuthMeResponse, User, Menu, UserPreferences } from '../types';
 import { authService, DEFAULT_USER_PREFERENCES } from '../api/services/authService';
 import { clearQueryCache } from '../api/queryCache';
 import { getLocale, registerLocaleRefresh } from '@/i18n/store';
-import { isUnauthorizedError, setUnauthorizedHandler } from '../api/http';
+import { isUnauthorizedError, setUnauthorizedHandler } from '../api/errors';
 import {
   clearStoredTokens,
   getAccessTokenSessionKey,

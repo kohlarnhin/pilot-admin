@@ -1,5 +1,5 @@
 import { t } from '@/i18n';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import type { ApiResponse, PageResult } from '@/types';
 import type { PageQuery } from '@/api/services/pagination';
 import { getMockDb } from './db';

@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 import { parseCommand } from '@/agent/commands';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { dashboardService } from '@/api/services/dashboardService';
 import { flattenMenuTree } from '@/api/services/menuService';
 import { settingsService } from '@/api/services/settingsService';

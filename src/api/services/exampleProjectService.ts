@@ -1,5 +1,5 @@
 import { t } from '@/i18n';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import type { ApiResponse, ExampleProject, ExampleProjectStatus, PageResult } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';

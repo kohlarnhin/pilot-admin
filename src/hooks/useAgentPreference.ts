@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
-import { isUnauthorizedError } from '@/api/http';
+import { isUnauthorizedError } from '@/api/errors';
 import { useAuthStore } from '@/store/authStore';
 import { message } from '@/ui/message';
 

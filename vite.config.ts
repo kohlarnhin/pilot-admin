@@ -15,9 +15,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      assetsInlineLimit: (filePath) => /\.woff2?$/i.test(filePath) ? false : undefined,
       chunkSizeWarningLimit: 1500,
       rollupOptions: {
         output: {
+          experimentalMinChunkSize: 5_000,
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router'],
             'vendor-ui': [

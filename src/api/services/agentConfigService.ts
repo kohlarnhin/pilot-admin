@@ -5,7 +5,7 @@ import type { AgentConfig } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
 import { createTraceId, delay } from '@/mock/helpers';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 import { AGENT_CONFIG_CHANGED_EVENT } from './agentProfileService';
 import { createId } from '@/utils/id';
 

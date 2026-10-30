@@ -126,6 +126,7 @@ export default {
     "loadingMore": "正在加载更多会话…"
   },
   "errors": {
+    "loadInterface": "助手界面加载失败，请重试",
     "unavailable": "AI 助手暂时不可用，请稍后再试。",
     "attachmentSize": "文件不能超过 5 MB",
     "attachmentRead": "无法读取文件元数据，请重新选择",

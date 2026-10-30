@@ -63,6 +63,8 @@ UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280�
 
 本项目没有额外测试框架。请提供与改动对应的可复现步骤和实际检查结果；未执行的检查须明确说明。CI 会执行安装、lint、i18n:check、类型检查和构建，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 私密报告。
 
+生成 ID 用 `createId()`；局域网 http 不是安全上下文，`crypto.randomUUID` / `navigator.clipboard` 不可用。
+
 ## 国际化约定与术语
 
 可见系统文案放在 `src/i18n/locales`，中文 literal 是类型来源，英文保持 key 与 `{placeholder}` 集合完整一致。功能拥有自己的 namespace，新增时在两种语言根字典注册。React 使用 `useT()` 订阅；事件、service、store 使用实时读取语言的 `t()`。静态元数据只存 key，翻译后的 memo / 格式化器依赖 locale。不要把翻译文本作为状态、分组或错误类型的判别依据，应使用稳定代码或 HTTP 状态。

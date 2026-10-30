@@ -36,4 +36,15 @@ export default [
     },
   },
   { files: ['*.{js,ts}'], languageOptions: { globals: globals.node } },
+  {
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
+    ignores: ['src/utils/id.ts'],
+    rules: {
+      'no-restricted-properties': ['error', {
+        // 同时覆盖 window.crypto / globalThis.crypto 的限定访问。
+        property: 'randomUUID',
+        message: 'Use createId() from src/utils/id.ts for LAN HTTP support.',
+      }],
+    },
+  },
 ];

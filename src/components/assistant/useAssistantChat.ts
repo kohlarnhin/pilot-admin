@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 import { localizeCommandPrompt } from '@/agent/commands';
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { agentService } from '@/api/services/agentService';

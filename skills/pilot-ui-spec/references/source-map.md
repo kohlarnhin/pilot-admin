@@ -17,7 +17,7 @@ The package separates observable design intent, current implementation variants,
 | Tables, virtualization, fixed columns | `src/ui/table.tsx`, `src/ui/data-table.tsx`, `src/components/common/FixedTable.tsx`, `src/hooks/useFixedRowVirtualizer.ts` |
 | Infinite loading, query state, prefetch | `src/hooks/useInfinitePage.ts`, `src/hooks/useInfiniteScrollLoader.ts` |
 | Dialogs, drawers, toasts, file drop zone | `src/ui/modal.tsx`, `src/ui/message.tsx`, `src/ui/file-drop-zone.tsx` |
-| Assistant panel, runtime, session history, Agent page | `src/components/assistant/`, `src/agent/AgentPage.tsx`, `src/store/assistantStore.ts` |
+| Assistant panel, runtime, session history, Agent page | `src/components/assistant/AssistantRuntime.tsx`, `useAssistantChat.ts`, `AssistantUI.tsx`, `MarkdownRenderer.tsx`, `src/agent/AgentPage.tsx`, `src/agent/AgentWorkspace.tsx`, `src/store/assistantStore.ts` |
 | Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/examples/crud/`, `src/pages/audit-logs/index.tsx`, `src/pages/profile/`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
 | Global search | `src/components/search/GlobalSearch.tsx`, `src/components/search/GlobalSearchPalette.tsx` |
 | Permissions and menus | `src/config/menus.ts`, `src/routes/routeModules.ts`, `src/routes/access.ts`, `src/mock/permissionCatalog.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
@@ -76,6 +76,7 @@ The package separates observable design intent, current implementation variants,
 | `src/components/assistant/MessageList.tsx` | 640px panel messages, 760px Agent messages, Markdown spacing |
 | `src/agent/AgentPage.tsx` | 56px top bar, 260px history rail, 48px toolbar, 792px conversation wrapper, 403 guard |
 | `src/api/services/agentService.ts`, `src/api/sse.ts` | Streaming seam, abort support, real-backend adapter |
+| `src/api/errors.ts`, `src/api/http.ts` | Shared error identity and unauthorized callback without Axios; importing the HTTP adapter for real services loads Axios and preserves the original error exports |
 | `src/mock/agent/` | Mock intent matching, plans, tool registry, RBAC checks |
 | `src/config/menus.ts`, `src/mock/access.ts` | Stable menu and button permissions, independent assistant permission group |
 | `src/routes/routeModules.ts`, `src/routes/access.ts` | Module-scope page registry, cached lazy/preload loaders, shared page access and landing rules |
@@ -112,3 +113,7 @@ The package separates observable design intent, current implementation variants,
 This specification supplies exact values where the code makes them observable and explicit decisions where evidence conflicts. It does not promise automatic pixel identity across browsers, operating systems, fonts, or component libraries. For pixel-level acceptance, compare the running page at a matched viewport using the same font and icon resources and inspect computed styles.
 
 The reusable identity is the shared geometry, density, colors, component states, and scroll behavior. Business labels, routes, records, and backend integrations remain properties of the target project.
+
+## Assistant loading boundaries
+
+`AppLayout` is a cached route-level split so login does not load the console shell. `AssistantRuntimeLayout` and `useAssistantChat` stay eager above the router outlets; neither lazy host creates a provider. `AIAssistant.tsx` keeps panel keyboard control and loading/error feedback eager. `assistantResources.ts` caches the `AssistantUI.tsx` import shared by the panel and `AgentWorkspace`; the admin shell prefetches it on idle and the footer entry on hover/focus. `Markdown.tsx` shows plain text while loading `MarkdownRenderer.tsx` and its parser dependencies. `agentService.ts` imports the mock engine on demand and checks abort signals after loading, before execution. `src/utils/lazyResource.ts` releases failed imports for inline/service retry without the route chunk auto-reload path.

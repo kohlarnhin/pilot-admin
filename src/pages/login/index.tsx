@@ -1,4 +1,4 @@
-import { ApiRequestError } from '@/api/http';
+import { ApiRequestError } from '@/api/errors';
 import { LocaleSwitcher } from '@/components/common/LocaleSwitcher';
 import { t, useT } from '@/i18n';
 import commonSource from '@/i18n/locales/zh-CN/common';

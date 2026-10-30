@@ -8,7 +8,7 @@ import type { AgentProfile } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
 import { createTraceId, delay } from '@/mock/helpers';
-import { ApiRequestError } from '../http';
+import { ApiRequestError } from '../errors';
 
 export type { AgentProfile } from '@/types';
 

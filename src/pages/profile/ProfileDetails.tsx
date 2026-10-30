@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { t, useT } from '@/i18n';
-import { ApiRequestError, isUnauthorizedError } from '@/api/http';
+import { ApiRequestError, isUnauthorizedError } from '@/api/errors';
 import { profileService, PROFILE_EMAIL_INVALID, PROFILE_NAME_INVALID, type ProfileInput } from '@/api/services/profileService';
 import { useAuthStore } from '@/store/authStore';
 import { Avatar, AvatarFallback } from '@/ui/avatar';

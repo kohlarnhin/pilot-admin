@@ -106,13 +106,15 @@ export function SessionHistory({ error, onRetry, open, sessions, activeSessionId
                         >
                           <MessageSquare className={cn('mt-0.5 size-3.5 shrink-0 text-slate-400', active && 'text-brand-600')} />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-13 font-medium text-slate-700" title={session.title || t('assistant.header.newConversation')}>{session.title || t('assistant.header.newConversation')}</span>
-                            <span className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                            <span className="flex min-w-0 items-center gap-2">
+                              <span className="min-w-0 flex-1 truncate text-13 font-medium text-slate-700" title={session.title || t('assistant.header.newConversation')}>{session.title || t('assistant.header.newConversation')}</span>
+                              {active ? <Badge variant="outline" className="h-5 shrink-0 gap-1 border-line bg-white px-1.5 text-[11px] text-slate-700"><Check className="size-2.5" />{t('assistant.history.current')}</Badge> : null}
+                            </span>
+                            <span className="mt-1 flex items-center gap-2 whitespace-nowrap text-[11px] text-slate-400">
                               <span>{t('assistant.history.count', { count: session.message_count })}</span><span aria-hidden="true">·</span>
                               <time dateTime={session.last_message_date}>{dayjs(session.last_message_date).format(group === 'today' ? 'HH:mm' : 'MM-DD HH:mm')}</time>
                             </span>
                           </span>
-                          {active ? <Badge variant="outline" className="h-5 gap-1 border-line bg-white px-1.5 text-[11px] text-slate-700"><Check className="size-2.5" />{t('assistant.history.current')}</Badge> : null}
                         </button>
                       );
                     })}

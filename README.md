@@ -13,6 +13,43 @@
 - 可替换的 service 数据接缝、HTTP / SSE 工具、持久化演示数据及随仓库分发的 UI 规范。
 - ESLint、类型检查、构建 CI，以及贡献、安全和双语入门文档。
 
+## 界面预览
+
+1440×900，内置演示数据；更多界面展开查看。
+
+<details>
+<summary>界面预览</summary>
+
+**概览**
+
+![概览](docs/images/zh-CN-dashboard.png)
+
+**用户列表**
+
+![用户列表](docs/images/zh-CN-users.png)
+
+**标准列表页**
+
+![标准列表页](docs/images/zh-CN-crud.png)
+
+**操作日志**
+
+![操作日志](docs/images/zh-CN-audit-logs.png)
+
+**个人中心**
+
+![个人中心](docs/images/zh-CN-profile.png)
+
+**助手面板**
+
+![助手面板](docs/images/zh-CN-assistant.png)
+
+**Agent 模式**
+
+![Agent 模式](docs/images/zh-CN-agent.png)
+
+</details>
+
 ## 快速开始
 
 使用 Node 22+ 和 pnpm 10（仓库锁定 pnpm 10.8）。
@@ -114,6 +151,8 @@ return response.data;
 ```
 
 `src/api/http.ts` 默认 baseURL 为 `/api`，附加 access token；401 用 refresh token 单飞刷新，并兼顾跨标签页轮换与未授权退出。`authService` 的 login/getMe/changePassword/patchPreferences 应改为服务端接口，返回现有类型。`authStore` 继续负责 initAuth、generation 隔离、me 刷新与 logout；`tokenStorage.ts` 负责持久化及跨标签页会话变化。真实后端必须自行执行 RBAC；Mock token 只用于本地演示。
+
+Mock 与页面从轻量的 `src/api/errors.ts` 引用错误类型；真实 service 引入 `src/api/http.ts` 时才会加载 Axios，原有错误类型导入仍兼容。
 
 在 `agentService.ts` 中将 `chatStream` / `continuePlan` 改为 `runSseStream<AgentChatResult>()`，其余会话与计划方法改用 http。`sse.ts` 默认未被运行时使用，不会发起请求。
 
@@ -313,11 +352,8 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 
 ## 路线图
 
-- 国际化：已覆盖 zh-CN / en-US 管理页面、助手和工具交互。
-- 通用功能：操作日志、标准 CRUD 模板与个人中心已提供。
-- 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
-
-接下来进行体验、性能与文档优化。
+- 更多可复用页面模式与扩展示例。
+- 持续改进无障碍、性能与开发文档。
 
 ## 参与贡献
 

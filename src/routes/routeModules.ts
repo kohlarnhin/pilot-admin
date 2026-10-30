@@ -27,6 +27,8 @@ export const hasPendingRouteLoads = (): boolean => pendingRouteLoads > 0;
 // lazy() 与导航意图预取共用同一个 Promise；鼠标悬停命中后，点击不会再次等待新 Promise。
 const loadLoginPage = createCachedLoader(() => import('../pages/login').then((module) => ({ default: module.LoginPage })));
 export const LoginPage = lazy(loadLoginPage);
+const loadAppLayout = createCachedLoader(() => import('../components/layout/AppLayout').then((module) => ({ default: module.AppLayout })));
+export const AppLayout = lazy(loadAppLayout);
 const loadAgentPage = createCachedLoader(() => import('../agent/AgentPage').then((module) => ({ default: module.AgentPage })));
 export const AgentPage = lazy(loadAgentPage);
 

@@ -39,6 +39,8 @@ UI 工作必须先读 `skills/pilot-ui-spec/SKILL.md`、`references/visual-syste
 
 ## 代码与交互
 
+生成 ID 用 `createId()`；局域网 http 不是安全上下文，`crypto.randomUUID` / `navigator.clipboard` 不可用。
+
 可见文案放在 `src/i18n/locales`，zh-CN 为源、en-US 同步；静态元数据保存 MessageKey，在订阅语言的渲染处翻译。已有命名和 concise 中文注释保持一致。Mock 和 service 一行一个语句，对象多行排版。不要重构任务无关代码。
 
 列表使用分页无限追加和虚拟化，保留 ID 去重、代次保护、真实滚动容器及失败显式重试。每个可收缩中间层有 min-h-0 / min-w-0。异步提交阻止重复操作，失败保留输入；字段错误内联并关联 ARIA。
