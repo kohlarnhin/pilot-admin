@@ -11,6 +11,7 @@ import { ApiRequestError } from '../http';
 import { cachedQuery } from '../queryCache';
 import type { MockRole } from '@/mock/seed';
 import { addRouteLessAncestors, collectMenuCatalog, getDeclaredPermissionCounts, getDeclaredRoleGrants } from '@/mock/permissionCatalog';
+import { createId } from '@/utils/id';
 
 export type RoleWithPermissions = Role & {
   menuIds: string[];
@@ -94,7 +95,7 @@ export const roleService = {
       const date = new Date().toISOString();
       const role = {
         ...data,
-        id: `role-${crypto.randomUUID()}`,
+        id: `role-${createId()}`,
         role_name: data.role_name.trim(),
         status: 1 as const,
         menuIds: [],

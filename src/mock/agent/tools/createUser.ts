@@ -6,6 +6,7 @@ import { roleService } from '@/api/services/roleService';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 import { confirmation, denied, markdownCell, permitted } from './helpers';
 import type { AgentTool } from './types';
+import { createId } from '@/utils/id';
 
 export const createUser: AgentTool = {
   id: 'create-user',
@@ -61,7 +62,7 @@ export const createUser: AgentTool = {
     ctx.signal?.throwIfAborted();
     const result = await userService.createUser({
       user_name: name,
-      login_name: `member_${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`,
+      login_name: `member_${createId().replace(/-/g, '').slice(0, 10)}`,
       role_ids: [roleId],
     });
     triggerDataChangeSideEffects();

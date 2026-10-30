@@ -2,6 +2,7 @@ import { t } from '@/i18n';
 import { allowAuditParams, auditModule, AUDIT_PARAMS, AUDIT_REASONS } from '@/audit/catalog';
 import type { AuditAction, AuditLog, AuditParamsMap } from '@/types';
 import type { MockDb } from './seed';
+import { createId } from '@/utils/id';
 
 type AuditActionEntry = { [A in AuditAction]: { action: A } & (keyof AuditParamsMap[A] extends never
   ? { params?: never } : { params: AuditParamsMap[A] }) }[AuditAction];
@@ -22,7 +23,7 @@ export function recordAudit(draft: Pick<MockDb, 'auditLogs'>, entry: AuditEntry)
     throw new TypeError(t('serverErrors.audit.invalidParams'));
   }
   draft.auditLogs.unshift({
-    id: crypto.randomUUID(),
+    id: createId(),
     actor_id: entry.actor.id,
     actor_name: entry.actor.user_name,
     module: auditModule(entry.action),

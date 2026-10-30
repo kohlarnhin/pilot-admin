@@ -6,6 +6,7 @@ import { requireMenu, requirePermission } from '@/mock/access';
 import { recordAudit } from '@/mock/audit';
 import { recordAuditFailure } from '@/mock/auditFailure';
 import { createTraceId, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
+import { createId } from '@/utils/id';
 
 // 模板：业务错误码供表单定位字段，不能比较服务端文案。
 export const PROJECT_CODE_EXISTS = 40901;
@@ -75,7 +76,7 @@ export const exampleProjectService = {
       const date = new Date().toISOString();
       const project: ExampleProject = {
         ...values,
-        id: `project-${crypto.randomUUID()}`,
+        id: `project-${createId()}`,
         create_by: actor.id,
         create_date: date,
         last_update_by: actor.id,

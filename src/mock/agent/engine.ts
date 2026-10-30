@@ -19,6 +19,7 @@ import type { MockAgentSession } from '../seed';
 import { agentTools } from './tools';
 import { createToolContext, denied, toolInputInteraction, wait } from './tools/helpers';
 import type { AgentTool, ToolContext, ToolInput, ToolReply } from './tools/types';
+import { createId } from '@/utils/id';
 
 export interface StreamCallbacks {
   onStart?: (sessionId: string | number, userMessageId: string | number) => void;
@@ -93,7 +94,7 @@ function append(
 ): AgentMessage {
   const session = sessionOf(id, finishingAction);
   const message: AgentMessage = {
-    id: crypto.randomUUID(),
+    id: createId(),
     sequence_no: (session.messages.at(-1)?.sequence_no || 0) + 1,
     role,
     content: content.slice(0, 16000),
@@ -233,7 +234,7 @@ export const mockAgentEngine = {
     callbacks.signal?.throwIfAborted();
 
     if (!id) {
-      id = crypto.randomUUID();
+      id = createId();
       const date = new Date().toISOString();
       updateMockDb((db) => {
         db.agentSessions.unshift({
@@ -346,7 +347,7 @@ export const mockAgentEngine = {
       }
       plan.status = 'running';
       plan.reason = undefined;
-      plan.executionId = crypto.randomUUID();
+      plan.executionId = createId();
       plan.steps.forEach((step) => {
         if (step.status !== 'completed') {
           step.status = 'pending';

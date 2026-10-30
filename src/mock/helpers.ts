@@ -3,10 +3,11 @@ import { ApiRequestError } from '@/api/http';
 import type { ApiResponse, PageResult } from '@/types';
 import type { PageQuery } from '@/api/services/pagination';
 import { getMockDb } from './db';
+import { createId } from '@/utils/id';
 
 export const delay = () => new Promise<void>((resolve) => window.setTimeout(resolve, 150 + Math.random() * 300));
 
-export const createTraceId = () => `mock-${crypto.randomUUID()}`;
+export const createTraceId = () => `mock-${createId()}`;
 
 export const response = <T,>(data: T, traceId = createTraceId()): ApiResponse<T> => ({
   code: 0,

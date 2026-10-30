@@ -7,6 +7,7 @@ import { requirePermission } from '@/mock/access';
 import { createTraceId, delay } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 import { AGENT_CONFIG_CHANGED_EVENT } from './agentProfileService';
+import { createId } from '@/utils/id';
 
 export interface AgentConfigInput {
   provider: string;
@@ -59,7 +60,7 @@ export const agentConfigService = {
 
       const traceId = createTraceId();
       updateMockDb((db) => {
-        const id = crypto.randomUUID();
+        const id = createId();
         db.agentConfigs.push({
           ...input,
           id,

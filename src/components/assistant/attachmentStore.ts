@@ -1,5 +1,6 @@
 import { t } from '@/i18n';
 import type { AgentAttachmentMetadata } from '@/types';
+import { createId } from '@/utils/id';
 export interface AssistantAttachment {
   id: string;
   file: { name: string };
@@ -8,7 +9,7 @@ export interface AssistantAttachment {
 }
 /** 正文只用于本地行数计算；函数返回后不保留原文件或正文引用。 */
 export async function parseAttachment(file: File): Promise<AssistantAttachment> {
-  const id = crypto.randomUUID();
+  const id = createId();
   const metadata: AgentAttachmentMetadata = { attachmentId: id, fileName: file.name, size: file.size, mimeType: file.type };
   const attachment: AssistantAttachment = { id, file: { name: file.name }, metadata };
   if (file.size > 5 * 1024 * 1024) return { ...attachment, error: t('assistant.errors.attachmentSize') };

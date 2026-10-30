@@ -6,6 +6,7 @@ import type { AuditProfileField, AuthMeResponse, AuthTokens, User, UserPreferenc
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { currentUser, meResponse } from '@/mock/access';
 import { createTraceId, delay, validatePassword } from '@/mock/helpers';
+import { createId } from '@/utils/id';
 
 export { DEFAULT_USER_PREFERENCES } from '@/mock/seed';
 
@@ -41,12 +42,12 @@ export const authService = {
     // 仅供前端演示；与正式 Token 使用相同的存储、会话恢复接口。
     const payload = btoa(JSON.stringify({
       sub: user.id,
-      sid: crypto.randomUUID(),
+      sid: createId(),
     }));
     updateMockDb((db) => recordAudit(db, { actor: user, action: 'auth.login', traceId: createTraceId() }));
     return {
       accessToken: `mock.${payload}.local`,
-      refreshToken: `mock-refresh-${crypto.randomUUID()}`,
+      refreshToken: `mock-refresh-${createId()}`,
     };
   },
 

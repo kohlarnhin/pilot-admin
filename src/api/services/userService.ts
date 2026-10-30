@@ -7,6 +7,7 @@ import type { PageQuery } from './pagination';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { publicUser, requireMenu, requirePermission } from '@/mock/access';
 import { createTraceId, delay, matchesKeyword, pageResult, response, validatePassword } from '@/mock/helpers';
+import { createId } from '@/utils/id';
 
 // 至少包含字母和数字；严格长度策略仍适用。
 const randomPassword = () => {
@@ -71,7 +72,7 @@ export const userService = {
       validatePassword(password);
       const date = new Date().toISOString();
       const user = {
-        id: `u-${crypto.randomUUID()}`,
+        id: `u-${createId()}`,
         login_name: data.login_name,
         user_name: data.user_name.trim(),
         email: data.email,

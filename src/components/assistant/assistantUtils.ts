@@ -4,6 +4,7 @@ import english from '@/i18n/locales/en-US/assistant';
 import type { AgentChoice, AgentMessage } from '@/types';
 import type { AssistantMessage } from './conversationStorage';
 import { normalizeAgentInteraction } from '@/api/services/agentInteraction';
+import { createId } from '@/utils/id';
 
 export const MAX_INPUT_LENGTH = 4000;
 export const getAssistantShortcut = () => {
@@ -17,9 +18,7 @@ export const getAssistantShortcut = () => {
 // 仅识别旧版客户端插入的首条问候语；有服务端标识的消息始终保留。
 export const isLegacyGreeting = (text: string): boolean => [chinese.legacyGreeting, english.legacyGreeting].some((value) => value === text);
 
-export const createMessageId = (): string =>
-  globalThis.crypto?.randomUUID?.() ??
-  `assistant-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+export const createMessageId = (): string => createId();
 
 export const createMessage = (
   role: AssistantMessage['role'],
