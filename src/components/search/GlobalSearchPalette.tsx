@@ -104,6 +104,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     className="h-[620px] max-h-[calc(100svh-48px)]" bodyClassName="!flex min-h-0 flex-1 !flex-col !overflow-hidden !p-0">
     <div className="flex min-h-0 flex-1 flex-col" onKeyDown={(event) => {
       event.stopPropagation();
+      if (event.target !== inputRef.current || event.defaultPrevented) return;
       if (event.nativeEvent.isComposing || composing.current || event.keyCode === 229) return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault(); const direction = event.key === 'ArrowDown' ? 1 : -1;

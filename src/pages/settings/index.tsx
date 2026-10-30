@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Icon } from '@/components/icon';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/ui/card';
 import { Form } from '@/ui/form';
+import { getRovingTabProps } from '@/ui/roving-tabs';
 import { Input } from '@/ui/input';
 import { Alert, InputNumber, Switch } from '@/ui/controls';
 import { Button } from '@/ui/button';
@@ -96,6 +97,7 @@ export const SettingsPage: React.FC = () => {
         <Card className="w-64 shrink-0 xl:w-72">
           <div role="tablist" aria-label={t('settings.sectionLabel')} aria-orientation="vertical" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {SECTIONS.map((section) => <button key={section.key} type="button" role="tab" id={`settings-tab-${section.key}`} aria-selected={tab.key === section.key}
+              {...getRovingTabProps(tab.key === section.key, () => setParams({ tab: section.key }, { replace: true }), 'vertical')}
               aria-controls={`settings-panel-${section.key}`} onClick={() => setParams({ tab: section.key }, { replace: true })}
               className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400', tab.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={section.icon} size={18} /></span>
@@ -103,7 +105,7 @@ export const SettingsPage: React.FC = () => {
             </button>)}
           </div>
         </Card>
-        <Card role="tabpanel" id={`settings-panel-${tab.key}`} aria-labelledby={`settings-tab-${tab.key}`} className="min-h-0 min-w-0 flex-1">
+        <Card role="tabpanel" id={`settings-panel-${tab.key}`} aria-labelledby={`settings-tab-${tab.key}`} tabIndex={0} className="min-h-0 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300">
           <CardHeader className="shrink-0"><div><CardTitle>{t(tab.label)}</CardTitle><CardDescription>{t(tab.description)}</CardDescription></div></CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {!draft ? <div className="space-y-6"><Skeleton className="h-9 w-2/3" /><Skeleton className="h-9" /><Skeleton className="h-24" /></div> : <>

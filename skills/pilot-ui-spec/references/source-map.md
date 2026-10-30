@@ -18,7 +18,7 @@ The package separates observable design intent, current implementation variants,
 | Infinite loading, query state, prefetch | `src/hooks/useInfinitePage.ts`, `src/hooks/useInfiniteScrollLoader.ts` |
 | Dialogs, drawers, toasts, file drop zone | `src/ui/modal.tsx`, `src/ui/message.tsx`, `src/ui/file-drop-zone.tsx` |
 | Assistant panel, runtime, session history, Agent page | `src/components/assistant/`, `src/agent/AgentPage.tsx`, `src/store/assistantStore.ts` |
-| Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
+| Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/examples/crud/`, `src/pages/audit-logs/index.tsx`, `src/pages/profile/`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
 | Global search | `src/components/search/GlobalSearch.tsx`, `src/components/search/GlobalSearchPalette.tsx` |
 | Permissions and menus | `src/config/menus.ts`, `src/routes/routeModules.ts`, `src/routes/access.ts`, `src/mock/permissionCatalog.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
 
@@ -43,13 +43,13 @@ The package separates observable design intent, current implementation variants,
 | `src/ui/button.tsx` | Neutral outlined default, slate-900 primary, filled destructive, ghost/subtle/danger variants, sizes |
 | `src/ui/input.tsx` | 36/32/40px inputs, slate focus halo, clear and count affordances, search prefix |
 | `src/ui/select.tsx` | 36px combobox, bounded 256px menu, neutral selected state, forwarded ARIA attributes |
-| `src/ui/form.tsx` | Vertical form layout, required marks, `aria-invalid` / `aria-describedby` wiring, inline errors |
+| `src/ui/form.tsx` | Vertical form layout, stable label/control associations, ARIA error wiring, registered-control focus on validation failure |
 | `src/ui/controls.tsx` | Switch, checkbox, number input, alert, progress, tag geometry and states |
 | `src/ui/badge.tsx` | 22px badge and `CodeTag` with automatic title |
 | `src/ui/modal.tsx` | 16px dialog, overlay shadow, async `onOk` pending contract, focus entry, drawer variants |
 | `src/ui/table.tsx` | Native table primitives, 44px sticky header, 24px outer cell padding |
 | `src/ui/data-table.tsx` | Grid table, sticky header, measured virtualization, skeleton, empty state, infinite sentinel, fixed-column divider |
-| `src/ui/tabs.tsx` | 2px brand underline tabs and `SectionBar` |
+| `src/ui/tabs.tsx`, `src/ui/roving-tabs.ts` | 2px brand underline tabs, `SectionBar`, shared roving focus and automatic activation for horizontal tabs and vertical rails |
 | `src/ui/row-action.tsx` | 28/32px row icon buttons, tooltip labels, disabled reasons |
 | `src/ui/file-drop-zone.tsx` | Dashed neutral drop zone, keyboard activation, loading/disabled states |
 | `src/ui/message.tsx` | Top-center Sonner toaster, 3s duration, white 12px card |
@@ -58,6 +58,9 @@ The package separates observable design intent, current implementation variants,
 | `src/hooks/useFixedRowVirtualizer.ts` | Fixed-row range math, overscan 8, spacers, resize handling |
 | `src/pages/users/index.tsx` | Standard list, 350ms search, 26/22/24% columns, 144px actions, status switch, create/edit/reset dialogs |
 | `src/pages/roles/index.tsx` | Standard list, 30/22/18% columns, 920px permission matrix, `refreshMe` after writes |
+| `src/pages/examples/crud/index.tsx`, `ProjectFormModal.tsx` in the same folder | Copyable CRUD list, loaded-row checkbox selection and batch actions, permission-gated selection/action columns, localized CSV export, form validation and numeric 409 field errors |
+| `src/pages/audit-logs/index.tsx` | Dedicated export permission, combined filters, infinite audit list, independently scrolling detail drawer and trace-ID copy |
+| `src/pages/profile/`, `src/api/services/profileService.ts` | Settings workspace with authenticated access and no menu grant, persistent section drafts, shared password form and preferences, read-only access tree |
 | `src/pages/menus/index.tsx` | 288/320px tree card, metadata grid, button table, 84px action column, rename dialog |
 | `src/pages/settings/index.tsx` | 256/288px category rail, 20px gap, tab semantics, content scroll, save footer, demo reset |
 | `src/pages/settings/AgentConfigPanel.tsx` | Model table, 460px model dialog, 150-character fields, masked key |
@@ -99,7 +102,7 @@ The package separates observable design intent, current implementation variants,
 | Session history is a slide-over in the panel and inline in the Agent rail | Same data and loader, two presentations; do not build a second history service |
 | Role permission dialog is 920px, not a round 900px | The measured width wins |
 | The Agent page conversation wrapper is 792px with 760px messages | Preserve both widths; the difference is intentional padding |
-| No batch selection or editing workbench exists in list pages | Marked as future patterns; table selection primitives already support the mechanics |
+| The CRUD template implements list row selection and batch deletion; no list-plus-detail editing workbench exists | Use the CRUD template for batch actions, form/409 errors, permission-gated columns and CSV; the editing workbench remains a future pattern |
 | `FileDropZone` uses a dashed border while all surfaces are solid | The dashed border is the deliberate file-target exception |
 | Assistant settings page caps at 1440px | It is the only settings-like page with a max width; ordinary pages fill the viewport |
 | The app renders no help center, only an optional help link | Help-center page patterns are omitted rather than invented |

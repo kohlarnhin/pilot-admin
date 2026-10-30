@@ -25,9 +25,11 @@ Open http://localhost:3300. No `.env` file or backend is required.
 
 | Account | Password | Access |
 | --- | --- | --- |
-| `admin` | `admin123` | All pages, actions, assistant and model settings |
-| `operator` | `operator123` | Dashboard, user read/edit, examples and assistant; no user create/delete |
-| `viewer` | `viewer123` | Dashboard and examples; no assistant |
+| `admin` | `admin123` | All pages and actions, including audit logs, assistant and model settings |
+| `operator` | `operator123` | Overview, user read/edit, Components, Standard List create/edit/export and assistant; no project delete, user create/delete or audit logs |
+| `viewer` | `viewer123` | Overview, Components and Standard List read/export; no assistant or audit logs |
+
+Every account has a Profile page. Reset demo data to apply the Standard List's default grants to existing local data.
 
 On first login, eligible accounts can choose the admin console or Agent mode. Ctrl/⌘K opens search; Ctrl/⌘J opens the assistant. Account preferences can remember the entry mode. The demo seeds 150 users, three roles and 25 admin sessions, including a 60-message conversation. Writes persist in browser localStorage; this is not a server account system.
 
@@ -74,6 +76,8 @@ Pages call `src/api/services`; they never access the mock DB directly. Define en
 ### Add an assistant tool
 
 Add trigger phrases to both `agentCommands.ts` dictionaries and use the shared `src/agent/commands.ts` parser for matching and argument extraction. It accepts phrases from both languages, ignores Latin case and enforces command boundaries. `commandPrompt` and stored `prompt:*` choices round-trip while retaining stable choice IDs. Page opening accepts custom names, both default translations and route paths. Implement `AgentTool` under `src/mock/agent/tools/` and register it in the ordered `index.ts` registry, before fallback. The tool owns choices, confirmations, task state and plan steps; writes go through authorized services. Use the action registry for client dialogs. Preserve the shared runtime, cancellation and account isolation; send file metadata only. [Tools](README.md#新增助手能力), [client actions](README.md#添加助手弹窗操作).
+
+For a **prefix command** that takes an argument and must start the input, also add its ID to `prefixCommands` in `src/agent/commands.ts`. Non-prefix commands such as help or overview may match within a sentence and stay outside that set. For a new `createWidget` command with phrase `create widget`, `parseCommand('Create widget Alice', 'createWidget')` returns `{ matched: true, argument: 'Alice' }`; `create widgetname` fails the boundary check and `please create widget Alice` fails the prefix check.
 
 ## Environment
 

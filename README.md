@@ -26,9 +26,11 @@ pnpm dev
 
 | 账号 | 密码 | 可用范围 |
 | --- | --- | --- |
-| admin | admin123 | 全部页面、操作、助手与模型配置 |
-| operator | operator123 | 概览、用户查看/编辑、组件示例、助手；无新增/删除用户权限 |
-| viewer | viewer123 | 概览与组件示例；无助手权限 |
+| admin | admin123 | 全部页面与操作，包括操作日志、助手与模型配置 |
+| operator | operator123 | 概览、用户查看/编辑、组件示例、标准列表页新增/编辑与导出、助手；无删除项目、新增/删除用户或操作日志权限 |
+| viewer | viewer123 | 概览、组件示例、标准列表页只读与导出；无助手或操作日志权限 |
+
+所有演示账号都有个人中心；标准列表页的默认授权在重置演示数据后生效。
 
 首次登录可选择管理后台或 Agent 模式，并记住选择；在账号菜单的「Agent 模式偏好」中修改。Ctrl/⌘K 搜索页面与用户，最近访问按账号保存；Ctrl/⌘J 打开助手，Esc 先关闭历史再关闭面板。侧栏折叠状态会保留。
 
@@ -144,7 +146,7 @@ data: {"code":0,"message":"success","data":{"sessionId":"s1","messageId":"m2","m
 
 每个工具是 `src/mock/agent/tools/` 中的独立模块，实现 `types.ts` 的 `AgentTool`，在 `index.ts` 的有序 `agentTools` 注册表中加入；fallback 始终最后。新增多轮工具无需修改 `engine.ts`。以 `createUser.ts` 为完整参考：
 
-1. 在两种语言的 `agentCommands.ts` 增加同名命令及 `primary` / `alternate` 触发短语；`src/agent/commands.ts` 自动纳入联合目录。`match` 和参数截取都使用 `parseCommand(text, commandId)`。`handle(ctx)` 校验权限并返回角色 choices，同时用 `task: { name }` 保存下一轮所需状态。
+1. 在两种语言的 `agentCommands.ts` 增加同名命令及 `primary` / `alternate` 触发短语；`src/agent/commands.ts` 自动纳入联合目录。带参数且仅应在开头触发的**前缀命令**（如新增用户）还须加入该文件的 `prefixCommands`；帮助、统计等**非前缀命令**可在句中匹配，不加入此集合。`match` 和参数截取都使用 `parseCommand(text, commandId)`。`handle(ctx)` 校验权限并返回角色 choices，同时用 `task: { name }` 保存下一轮所需状态。
 2. 引擎将工具 ID 和状态保存在消息的 `task_context: { tool, data }` 中。点击选项时，自动调用该工具的 `onChoice(ctx, choiceId, task)`，不再按输入文字猜测工具。
 3. `onChoice` 处理角色选择，返回确认 choices 和新的 `task: { name, roleId }`；确认后通过 `userService` 创建账号并返回 Markdown。每轮继续校验权限，修改成功后调用 `triggerDataChangeSideEffects()`，让已打开页面刷新。
 
@@ -169,6 +171,8 @@ export const myTool: AgentTool = {
 ```
 
 解析器接受两种语言全部短语，不受当前语言影响；Latin 命令忽略大小写，兼容首尾及词间空白。前缀命令只在开头匹配，边界为文本结束、空白、冒号，或中文短语后直接跟 CJK 参数；`create username` 不会误命中 `create user`。帮助、统计、巡检等原有非前缀入口也通过同一目录匹配。命令短语是解析数据，与展示标签分开维护；`commandPrompt` 生成当前语言命令，`prompt:*` 提交会本地化命令但保留原 choice ID 和参数。打开页面支持当前自定义菜单名、两种默认名称与路由路径。
+
+例如新增 `createWidget` 命令，英文短语为 `create widget`：将 ID 加入 `prefixCommands` 后，`parseCommand('Create widget Alice', 'createWidget')` 返回 `{ matched: true, argument: 'Alice' }`；`create widgetname`（缺少边界）和 `please create widget Alice`（不在开头）均不匹配。
 
 `ctx` 含当前用户 ID、菜单、权限、AbortSignal 和附件元数据。可选 hooks 还包括 `onSelection(ctx, selectedIds, task)`（参考 `disableUsers.ts`）与 `onActionOutcome(ctx, outcome, task)`（参考 `assignRoles.ts`）。通用 `prompt:*` choices 会重新匹配注册表，`cancel` 由引擎取消；其他 choice ID 交给工具。只接受最新且未提交的交互，选择数量与选项 ID 由引擎校验，具体操作仍由 service 重新校验。
 

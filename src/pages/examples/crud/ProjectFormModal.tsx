@@ -21,9 +21,10 @@ export function ProjectFormModal({ project, onClose, onSaved }: {
   const submit = async () => {
     if (submitLock.current) return;
     submitLock.current = true;
-    setSaving(true);
     try {
+      // 模板：先校验再进入保存态，禁用的输入框无法接收校验失败的焦点。
       const values = await form.validateFields();
+      setSaving(true);
       if (project) await exampleProjectService.updateProject(project.id, values);
       else await exampleProjectService.createProject(values);
       message.success(t(project ? 'common.toast.updated' : 'common.toast.created'));

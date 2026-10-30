@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/utils";
+import { getRovingTabProps } from './roving-tabs';
 
 export interface TabItem<K extends string = string> {
   key: K;
@@ -29,6 +30,7 @@ export function Tabs<K extends string>({ items, value, onChange, className }: Ta
             type="button"
             role="tab"
             aria-selected={active}
+            {...getRovingTabProps(active, () => onChange(item.key))}
             onClick={() => onChange(item.key)}
             className={cn(
               "relative -mb-px flex h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 text-13 transition-colors duration-150 focus-visible:outline-none focus-visible:text-slate-900",

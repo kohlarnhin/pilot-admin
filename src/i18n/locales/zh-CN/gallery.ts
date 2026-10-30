@@ -54,6 +54,7 @@ export default {
     "multilineLabel": "多行文本示例"
   },
   "selection": {
+    "searchLabel": "可搜索选择器",
     "title": "选择与开关",
     "description": "单选、多选、复选框和数字输入",
     "disabledLabel": "禁用选择",

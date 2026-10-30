@@ -261,10 +261,17 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       if (request !== detailRequestRef.current) return;
       updateMessages(() => detail.messages.map(toAssistantMessage));
       setHasMoreBefore(detail.has_more_before);
-    }).catch(() => {
+    }).catch((error) => {
       if (request !== detailRequestRef.current) return;
-      selectSession(null);
-      updateMessages(() => []);
+      toast.error(t('assistant.errors.loadConversation'));
+      if (error instanceof ApiRequestError && error.status === 404) {
+        selectSession(null);
+        updateMessages(() => []);
+        setHasMoreBefore(false);
+      } else {
+        // 暂时失败保留本地会话，下次打开时重新对账。
+        reconciledHistoryRef.current = false;
+      }
     }).finally(() => {
       if (request === detailRequestRef.current) {
         loadingDetailRef.current = false;

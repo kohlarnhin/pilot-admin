@@ -38,6 +38,7 @@ export interface PopoverProps {
   onOpenChange?: (open: boolean) => void;
   /** 单位：秒 */
   mouseEnterDelay?: number;
+  contentProps?: React.ComponentPropsWithoutRef<typeof PopoverContent>;
   className?: string;
   children: React.ReactNode;
 }
@@ -51,6 +52,7 @@ export function Popover({
   open: controlledOpen,
   onOpenChange,
   mouseEnterDelay = 0.15,
+  contentProps,
   className,
   children,
 }: PopoverProps) {
@@ -84,10 +86,14 @@ export function Popover({
         {React.isValidElement(children) ? children : <span className="inline-flex">{children}</span>}
       </PopoverPrimitive.Trigger>
       <PopoverContent
+        {...contentProps}
         side={side}
         align={align}
         className={className}
-        onOpenAutoFocus={trigger === "hover" ? (event) => event.preventDefault() : undefined}
+        onOpenAutoFocus={(event) => {
+          if (trigger === 'hover') event.preventDefault();
+          contentProps?.onOpenAutoFocus?.(event);
+        }}
         {...hoverHandlers}
       >
         {title && <div className="mb-2 text-13 font-medium text-slate-900">{title}</div>}

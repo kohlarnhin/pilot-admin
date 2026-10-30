@@ -128,6 +128,9 @@ function SelectInner<V = any>(props: SelectProps<V>) {
   const multiple = mode === "multiple";
   const showSearch = showSearchProp ?? multiple;
   const invalid = status === "error" || props["aria-invalid"] === true;
+  const generatedId = React.useId();
+  const controlId = id ?? generatedId;
+  const listId = `${generatedId}-options`;
 
   const groupOf = React.useRef(new Map<SelectOption, React.ReactNode>());
   const options = React.useMemo<SelectOption[]>(() => {
@@ -222,7 +225,8 @@ function SelectInner<V = any>(props: SelectProps<V>) {
     } else {
       commit(option.value);
       setOpen(false);
-      triggerRef.current?.focus();
+      if (showSearch) inputRef.current?.focus();
+      else triggerRef.current?.focus();
     }
   };
 
@@ -291,7 +295,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
   const showClear = allowClear && hasValue && !disabled;
 
   const menu = (
-    <div ref={listRef} role="listbox" aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto overscroll-contain p-1">
+    <div ref={listRef} id={listId} role="listbox" aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto overscroll-contain p-1">
       {filtered.length === 0 ? (
         <div className="px-3 py-6 text-center text-xs text-slate-400">{loading ? t('ui.loadingOptions') : notFoundContent}</div>
       ) : (
@@ -306,6 +310,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
             )}
             <div
               role="option"
+              id={`${listId}-${index}`}
               aria-selected={selected}
               aria-disabled={option.disabled || undefined}
               data-index={index}
@@ -331,21 +336,27 @@ function SelectInner<V = any>(props: SelectProps<V>) {
     </div>
   );
 
+  const controlAria = {
+    role: 'combobox' as const,
+    'aria-label': props['aria-label'],
+    'aria-labelledby': props['aria-labelledby'],
+    'aria-expanded': open,
+    'aria-haspopup': 'listbox' as const,
+    'aria-controls': open ? listId : undefined,
+    'aria-activedescendant': open && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined,
+    'aria-invalid': invalid || undefined,
+    'aria-describedby': props['aria-describedby'],
+    'aria-required': props['aria-required'] || undefined,
+    'aria-disabled': disabled || undefined,
+  };
+
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
       <PopoverPrimitive.Anchor asChild>
         <div
           ref={triggerRef}
-          id={showSearch ? undefined : id}
-          role="combobox"
-          aria-label={props["aria-label"]}
-          aria-labelledby={props["aria-labelledby"]}
-          aria-expanded={open}
-          aria-haspopup="listbox"
-          aria-invalid={invalid || undefined}
-          aria-describedby={props["aria-describedby"]}
-          aria-required={props["aria-required"] || undefined}
-          aria-disabled={disabled || undefined}
+          id={showSearch ? undefined : controlId}
+          {...(!showSearch ? controlAria : {})}
           tabIndex={showSearch || disabled ? -1 : 0}
           style={style}
           onClick={() => {
@@ -357,7 +368,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
               setOpen(!open);
             }
           }}
-          onKeyDown={handleKeyDown}
+          onKeyDown={showSearch ? undefined : handleKeyDown}
           onBlur={onBlur}
           onFocus={onFocus}
           className={cn(
@@ -419,7 +430,8 @@ function SelectInner<V = any>(props: SelectProps<V>) {
             {showSearch && (
               <input
                 ref={inputRef}
-                id={id}
+                id={controlId}
+                {...controlAria}
                 value={search}
                 disabled={disabled}
                 autoComplete="off"

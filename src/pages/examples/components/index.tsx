@@ -83,9 +83,9 @@ export const ComponentsPage: React.FC = () => {
           <Input.TextArea rows={2} placeholder={t('gallery.inputs.multilinePlaceholder')} aria-label={t('gallery.inputs.multilineLabel')} />
         </Example>
         <Example id="gallery-selects" title={t('gallery.selection.title')} description={t('gallery.selection.description')}>
-          <div className="grid grid-cols-2 gap-3"><Select value={select} onChange={setSelect} options={options} showSearch /><Select disabled placeholder={t('gallery.selection.disabledLabel')} options={options} /></div>
-          <Select mode="multiple" value={multi} onChange={setMulti} options={options} placeholder={t('gallery.selection.multiPlaceholder')} />
-          <Select loading placeholder={t('gallery.selection.loadingPlaceholder')} options={[]} />
+          <div className="grid grid-cols-2 gap-3"><Select aria-label={t('gallery.selection.searchLabel')} value={select} onChange={setSelect} options={options} showSearch /><Select aria-label={t('gallery.selection.disabledLabel')} disabled placeholder={t('gallery.selection.disabledLabel')} options={options} /></div>
+          <Select aria-label={t('gallery.selection.multiPlaceholder')} mode="multiple" value={multi} onChange={setMulti} options={options} placeholder={t('gallery.selection.multiPlaceholder')} />
+          <Select aria-label={t('gallery.selection.loadingPlaceholder')} loading placeholder={t('gallery.selection.loadingPlaceholder')} options={[]} />
           <div className="flex flex-wrap gap-4"><Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)}>{t('gallery.selection.checkedLabel')}</Checkbox><Checkbox indeterminate checked={false}>{t('gallery.selection.partialLabel')}</Checkbox><Checkbox disabled checked>{t('gallery.selection.disabledCheckbox')}</Checkbox></div>
           <Checkbox.Group value={multi} onChange={(values) => setMulti(values.map(String))} className="flex gap-4"><Checkbox value="one">{t('gallery.selection.firstGroup')}</Checkbox><Checkbox value="two">{t('gallery.selection.secondGroup')}</Checkbox></Checkbox.Group>
           <div className="flex flex-wrap items-center gap-5"><Switch aria-label={t('gallery.selection.switchLabel')} checked={switchOn} onChange={setSwitchOn} /><Switch aria-label={t('gallery.selection.offLabel')} /><Switch aria-label={t('gallery.selection.disabledSwitch')} checked disabled /><Switch aria-label={t('gallery.selection.loadingSwitch')} checked loading /><InputNumber id="gallery-number" min={0} max={10} value={number} onChange={setNumber} className="w-28" /></div>

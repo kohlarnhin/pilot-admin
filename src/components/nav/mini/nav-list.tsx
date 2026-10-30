@@ -15,6 +15,70 @@ const checkIsActive = (pathname: string, item: NavItemDataProps): boolean => {
   return false;
 };
 
+function MiniNavGroup({ title, disabled, children, trigger }: {
+  title: string;
+  disabled?: boolean;
+  children: React.ReactNode;
+  trigger: React.ReactNode;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const keyboardOpen = React.useRef(false);
+  const links = () => Array.from(contentRef.current?.querySelectorAll<HTMLAnchorElement>('a[href]:not([aria-disabled="true"])') ?? []);
+  const focusFirst = () => links()[0]?.focus();
+
+  return <Popover
+    open={open}
+    onOpenChange={(next) => {
+      if (!next && keyboardOpen.current && contentRef.current?.contains(document.activeElement)) return;
+      if (!disabled) setOpen(next);
+    }}
+    content={<div ref={contentRef} className="flex flex-col gap-0.5">{children}</div>}
+    placement="rightTop"
+    mouseEnterDelay={0.1}
+    className="w-44 p-1.5"
+    contentProps={{
+      'aria-label': title,
+      onOpenAutoFocus: () => { if (keyboardOpen.current) focusFirst(); },
+      onCloseAutoFocus: (event) => event.preventDefault(),
+      onEscapeKeyDown: (event) => {
+        event.preventDefault();
+        keyboardOpen.current = false;
+        setOpen(false);
+        triggerRef.current?.focus();
+      },
+      onPointerDownOutside: () => { keyboardOpen.current = false; },
+      onFocusOutside: () => { keyboardOpen.current = false; },
+      onClick: (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest('a[href]')) return;
+        keyboardOpen.current = false;
+        setOpen(false);
+      },
+      onKeyDown: (event) => {
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        const items = links();
+        const current = items.indexOf(document.activeElement as HTMLAnchorElement);
+        const index = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+          : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        event.preventDefault();
+        items[index]?.focus();
+      },
+    }}
+  >
+    <button ref={triggerRef} type="button" disabled={disabled} className="w-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+      onKeyDown={(event) => {
+        if (!['Enter', ' ', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        keyboardOpen.current = true;
+        setOpen(true);
+        if (open) focusFirst();
+      }}>
+      {trigger}
+    </button>
+  </Popover>;
+}
+
 export const NavList: React.FC<NavListProps> = ({ data, depth = 1 }) => {
   const location = useLocation();
   const hasChild = Boolean(data.children && data.children.length > 0);
@@ -54,14 +118,9 @@ export const NavList: React.FC<NavListProps> = ({ data, depth = 1 }) => {
       );
 
       return (
-        <Popover
-          content={popoverContent}
-          placement="rightTop"
-          mouseEnterDelay={0.1}
-          className="w-44 p-1.5"
-        >
-          <div className="w-full">{rootItem}</div>
-        </Popover>
+        <MiniNavGroup title={data.title} disabled={data.disabled} trigger={rootItem}>
+          {popoverContent}
+        </MiniNavGroup>
       );
     }
 

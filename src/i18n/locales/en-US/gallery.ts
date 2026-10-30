@@ -57,6 +57,7 @@ export default {
     "multilineLabel": "Multiline input example"
   },
   "selection": {
+    "searchLabel": "Searchable select",
     "title": "Selection and switches",
     "description": "Single and multiple selection, checkboxes and numbers",
     "disabledLabel": "Disabled select",

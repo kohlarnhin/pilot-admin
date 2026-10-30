@@ -58,6 +58,7 @@ interface RegisteredField {
   rules: () => RuleLike[] | undefined;
   dependencies: () => string[] | undefined;
   label: () => string | undefined;
+  controlId: () => string | undefined;
 }
 
 interface Callbacks {
@@ -269,6 +270,11 @@ class FormStore {
     const errorFields = outcomes.filter((item) => item.errors.length > 0).map((item) => ({ name: [item.key], errors: item.errors }));
     const values = this.getFieldsValue();
     if (errorFields.length > 0) {
+      // 整表校验（提交路径）失败时聚焦首个错误控件；局部校验不移动焦点。
+      if (!names) {
+        const controlId = this.fields.get(errorFields[0].name[0])?.controlId();
+        if (controlId) document.getElementById(controlId)?.focus();
+      }
       const error: ValidateErrorEntity = { values, errorFields };
       return Promise.reject(error);
     }
@@ -282,8 +288,6 @@ class FormStore {
     } catch (error) {
       if (error && typeof error === "object" && "errorFields" in error) {
         this.callbacks.onFinishFailed?.(error as ValidateErrorEntity);
-        const first = (error as ValidateErrorEntity).errorFields[0]?.name[0];
-        if (first) document.getElementById(`form_item_${first}`)?.focus();
       } else {
         throw error;
       }
@@ -413,6 +417,7 @@ export function FieldLabel({
   required,
   tooltip,
   htmlFor,
+  id,
   extra,
   className,
 }: {
@@ -420,12 +425,13 @@ export function FieldLabel({
   required?: boolean;
   tooltip?: React.ReactNode;
   htmlFor?: string;
+  id?: string;
   /** 标签行右侧附加内容（辅助操作、提示等） */
   extra?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className={cn("mb-1.5 flex w-full items-center gap-1 text-13 font-medium text-slate-700", className)}>
+    <label id={id} htmlFor={htmlFor} className={cn("mb-1.5 flex w-full items-center gap-1 text-13 font-medium text-slate-700", className)}>
       <span className="flex min-w-0 flex-1 items-center gap-1">
         {children}
         {required && <span className="text-red-500" aria-hidden="true">*</span>}
@@ -485,6 +491,10 @@ function FormItem({
   const context = React.useContext(FormContext);
   const store = context?.store;
   const key = name;
+  const labelId = React.useId();
+  const child = React.isValidElement(children) ? children as React.ReactElement<Record<string, any>> : undefined;
+  const controlId = child?.props.id ?? htmlFor ?? (key ? `form_item_${key}` : undefined);
+  const hasLabel = label !== undefined && label !== null && label !== false && !noStyle;
   const previousLocale = React.useRef(locale);
 
   React.useEffect(() => {
@@ -499,8 +509,8 @@ function FormItem({
     if (store && key) store.ensureInitial(key, initialValue);
   });
 
-  const latest = React.useRef({ rules, dependencies, label });
-  latest.current = { rules, dependencies, label };
+  const latest = React.useRef({ rules, dependencies, label, controlId });
+  latest.current = { rules, dependencies, label, controlId };
 
   React.useEffect(() => {
     if (!store || !key) return;
@@ -508,6 +518,7 @@ function FormItem({
       rules: () => latest.current.rules,
       dependencies: () => latest.current.dependencies,
       label: () => labelText(latest.current.label),
+      controlId: () => latest.current.controlId,
     });
   }, [key, store]);
 
@@ -521,25 +532,26 @@ function FormItem({
 
   const isRequired = required ?? Boolean(rules?.some((rule) => typeof rule !== "function" && rule.required));
   const errors = state.errors;
-  const controlId = htmlFor || (key ? `form_item_${key}` : undefined);
   const hintId = controlId && (errors?.length || help) ? `${controlId}_help` : undefined;
 
   let control = children;
-  if (store && key && React.isValidElement(children)) {
-    const child = children as React.ReactElement<Record<string, any>>;
+  if (child) {
     const describedBy = [child.props["aria-describedby"], hintId].filter(Boolean).join(" ") || undefined;
     control = React.cloneElement(child, {
       id: child.props.id ?? controlId,
-      [valuePropName]: state.value,
-      disabled: child.props.disabled ?? context?.disabled,
-      "aria-invalid": errors?.length ? true : undefined,
+      "aria-labelledby": child.props["aria-labelledby"] ?? (child.props["aria-label"] === undefined && hasLabel ? labelId : undefined),
+      "aria-invalid": errors?.length ? true : child.props["aria-invalid"],
       "aria-describedby": describedBy,
-      "aria-required": isRequired || undefined,
-      onChange: (...args: any[]) => {
-        const value = getValueFromEvent ? getValueFromEvent(...args) : defaultGetValue(valuePropName, ...args);
-        store.changeByUser(key, value);
-        child.props.onChange?.(...args);
-      },
+      "aria-required": isRequired || child.props["aria-required"] || undefined,
+      ...(store && key ? {
+        [valuePropName]: state.value,
+        disabled: child.props.disabled ?? context?.disabled,
+        onChange: (...args: any[]) => {
+          const value = getValueFromEvent ? getValueFromEvent(...args) : defaultGetValue(valuePropName, ...args);
+          store.changeByUser(key, value);
+          child.props.onChange?.(...args);
+        },
+      } : {}),
     });
   }
 
@@ -547,8 +559,8 @@ function FormItem({
 
   return (
     <div className={cn("mb-4", hidden && "hidden", className)} data-slot="form-item">
-      {label !== undefined && label !== null && label !== false && (
-        <FieldLabel htmlFor={controlId} required={context?.requiredMark !== false && isRequired} tooltip={tooltip} extra={labelExtra} className={labelClassName}>
+      {hasLabel && (
+        <FieldLabel id={labelId} htmlFor={controlId} required={context?.requiredMark !== false && isRequired} tooltip={tooltip} extra={labelExtra} className={labelClassName}>
           {label}
         </FieldLabel>
       )}

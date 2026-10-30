@@ -11,6 +11,10 @@ interface ModelCodeComboboxProps {
   loading: boolean;
   disabled?: boolean;
   maxLength?: number;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  'aria-required'?: boolean;
   'aria-invalid'?: boolean;
 }
 
@@ -31,7 +35,10 @@ export function ModelCodeCombobox({ options, loading, value = '', onChange, ...p
 
   return (
     <div className="relative" onBlur={event => {
-      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      const root = event.currentTarget;
+      if (root.contains(event.relatedTarget)) return;
+      // 先完成原生焦点转移，再卸载建议项，避免弹窗焦点保护把焦点送回容器。
+      window.setTimeout(() => { if (!root.contains(document.activeElement)) setOpen(false); }, 0);
     }}>
       <Input {...props} ref={inputRef} value={value} role="combobox" aria-autocomplete="list" aria-expanded={open}
         aria-controls={listId} aria-activedescendant={open && highlighted >= 0 ? `${listId}-${highlighted}` : undefined}

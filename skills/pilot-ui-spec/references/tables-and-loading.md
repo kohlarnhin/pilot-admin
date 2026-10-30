@@ -45,7 +45,7 @@ At 1280x720 with the sidebar expanded, the card contains about **1006px** and th
 ### Three distinct selection roles
 
 1. **General management checkbox selection:** selected rows stay transparent or very light slate; checkboxes are slate-900. No orange row wash. This is the baseline whenever a list adds row selection.
-2. **Batch selection:** *no general table batch mode in Pilot Admin yet; the assistant's batch role dialog is the current bounded selection reference.* It uses a 48px fixed-row virtualized checkbox list inside a 640px modal, shows the selected count, and keeps retry/partial-success state. A future table batch mode may use a light slate row wash with neutral checkboxes. Batch toolbars must count only the selected IDs and never imply a backend-wide selection.
+2. **Batch selection:** the standard CRUD template (`src/pages/examples/crud/index.tsx`) is the table reference. Delete permission enables its neutral checkbox column; selecting rows reveals an in-card count and batch toolbar. Selection is keyed by ID, survives appended pages and locale changes, and clears on query changes or successful batch deletion. Batch toolbars count selected IDs, not every backend result. The assistant's batch role dialog remains a separate bounded picker with partial-success retry.
 3. **Editing workbench current row:** *no reference implementation in Pilot Admin yet.* White row, 4px brand-500 indicator at the far left, inset 10px from top and bottom. Unselected hover reveals a 3px indicator at 40% opacity. This is the only role that uses orange.
 
 Choose the role appropriate to the feature; do not layer all three treatments together.
@@ -221,9 +221,9 @@ Use submitted search by default. If the target chooses live search, debounce del
 
 ### Batch mode
 
-*No general reference implementation in Pilot Admin yet; the assistant's role picker is a bounded selection example, not a table batch mode.* When a target adds batch selection:
+Use `src/pages/examples/crud/index.tsx` as the reference for table selection and batch actions:
 
-- Enter batch mode explicitly, add a 48px selection column, and show the selected count and batch actions. Ordinary row actions may disappear.
+- Show the selection column only with the required batch permission, and show the count and batch actions when selection is nonempty. Keep the page header stable; the toolbar belongs inside the card.
 - Select all means **currently loaded records**, not every backend result.
 - Store selection as an ID set; unmounted rows retain selection.
 - Appended records do not automatically become selected unless a whole-result selection mode was explicitly chosen.
@@ -232,6 +232,8 @@ Use submitted search by default. If the target chooses live search, debounce del
 - Explain disabled batch actions, such as a selected record having dependent data.
 
 The current table selection primitives already behave this way: the header checkbox computes checked, unchecked, and indeterminate from the selectable loaded rows, and disabled rows are excluded from "select all".
+
+The same CRUD folder provides `ProjectFormModal.tsx` for inline validation and numeric 409-to-field errors, permission-gated action columns, and spreadsheet-safe localized CSV export through `src/utils/csv.ts`. Its export deliberately requires only page access. Use `src/pages/audit-logs/index.tsx` for a dedicated export permission and detail drawer. Use `src/pages/profile/` for an independently scrolling settings workspace with authenticated access and no menu grant. The list-plus-detail editing workbench remains a future pattern.
 
 ### Row actions
 
