@@ -13,7 +13,7 @@ export interface SeedText {
   nameSeparator: string;
   settingsDescription: string;
   model: { provider: string; name: string };
-  activities: { system: string; settings: string; user: string; permissions: string; role: string; ready: string };
+  exampleProjects: { names: string[]; description: string };
   agentProfile: AgentProfile;
   agentSessions: {
     checkPrompt: string;

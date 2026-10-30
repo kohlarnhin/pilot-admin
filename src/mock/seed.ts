@@ -1,10 +1,12 @@
+import { seedAuditLogs } from './auditSeed';
 import { getSeedText } from '@/i18n/seed';
 import defaultText from '@/i18n/locales/zh-CN/common';
 import { appConfig } from '@/config/app';
 import { DEFAULT_MENUS } from '@/config/menus';
 import { collectMenuCatalog, type PermissionCatalog } from './permissionCatalog';
 import type {
-  Activity,
+  AuditLog,
+  ExampleProject,
   AgentConfig,
   AgentMessage,
   AgentProfile,
@@ -31,19 +33,23 @@ export interface MockAgentSession extends AgentSession {
   messages: AgentMessage[];
 }
 
+export type MockAuditLog = AuditLog;
+export type MockExampleProject = ExampleProject;
+
 export interface MockDb {
   agentSessions: MockAgentSession[];
   agentProfile: AgentProfile;
   agentProfileCustomized?: boolean;
   agentConfigs: (AgentConfig & { apiKey: string })[];
-  version: 4;
+  version: 5;
   permissionCatalog: PermissionCatalog;
   users: MockUser[];
   roles: MockRole[];
   menuNames: Record<string, string>;
   buttonNames: Record<string, string>;
   settings: SystemSettings;
-  activities: Activity[];
+  auditLogs: MockAuditLog[];
+  exampleProjects: MockExampleProject[];
 }
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
@@ -151,6 +157,16 @@ export function createSeed(): MockDb {
     };
   });
 
+  const exampleProjects: MockExampleProject[] = Array.from({ length: 80 }, (_, index) => ({
+    ...audit,
+    id: `project-${String(index + 1).padStart(3, '0')}`,
+    name: `${text.exampleProjects.names[index % text.exampleProjects.names.length]} ${index + 1}`,
+    code: `PRJ-${String(index + 1).padStart(3, '0')}`,
+    owner: users[(index * 7) % users.length].user_name,
+    status: (['active', 'paused', 'archived'] as const)[index % 3],
+    description: text.exampleProjects.description,
+  }));
+
   return {
     agentSessions: seedAgentSessions(roles),
     agentProfile: structuredClone(text.agentProfile),
@@ -168,7 +184,7 @@ export function createSeed(): MockDb {
         last_update_date: audit.last_update_date,
       },
     ],
-    version: 4,
+    version: 5,
     permissionCatalog: { menuIds: [...allMenuIds], buttonIds: [...allButtonIds] },
     users,
     roles,
@@ -190,43 +206,8 @@ export function createSeed(): MockDb {
         weeklySummary: false,
       },
     },
-    activities: [
-      {
-        id: 'activity-1',
-        actor: text.accountNames[0],
-        action: text.activities.settings,
-        time: '2026-10-29T09:40:00+08:00',
-        icon: 'settings-2',
-      },
-      {
-        id: 'activity-2',
-        actor: text.accountNames[1],
-        action: text.activities.user,
-        time: '2026-10-29T09:25:00+08:00',
-        icon: 'user',
-      },
-      {
-        id: 'activity-3',
-        actor: text.accountNames[0],
-        action: text.activities.permissions,
-        time: '2026-10-28T16:10:00+08:00',
-        icon: 'shield-check',
-      },
-      {
-        id: 'activity-4',
-        actor: text.accountNames[0],
-        action: text.activities.role,
-        time: '2026-10-28T14:30:00+08:00',
-        icon: 'plus',
-      },
-      {
-        id: 'activity-5',
-        actor: text.activities.system,
-        action: text.activities.ready,
-        time: '2026-10-28T09:00:00+08:00',
-        icon: 'circle-check',
-      },
-    ],
+    auditLogs: seedAuditLogs(users, roles, exampleProjects),
+    exampleProjects,
   };
 }
 

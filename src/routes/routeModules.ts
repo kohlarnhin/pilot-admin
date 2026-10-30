@@ -45,6 +45,7 @@ export const adminPages = [
   definePage({ path: '/system/users', load: () => import('../pages/users').then((module) => ({ default: module.UsersPage })) }),
   definePage({ path: '/system/roles', load: () => import('../pages/roles').then((module) => ({ default: module.RolesPage })) }),
   definePage({ path: '/system/menus', load: () => import('../pages/menus').then((module) => ({ default: module.MenusPage })) }),
+  definePage({ path: '/system/audit-logs', load: () => import('../pages/audit-logs').then((module) => ({ default: module.AuditLogsPage })) }),
   definePage({ path: '/system/settings', load: () => import('../pages/settings').then((module) => ({ default: module.SettingsPage })) }),
   definePage({ path: '/system/assistant', requires: ['agent-config:view'], load: () => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })) }),
   definePage({ path: '/examples/components', load: () => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })) }),

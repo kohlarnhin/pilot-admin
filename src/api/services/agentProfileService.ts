@@ -1,3 +1,5 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import { getSeedText } from '@/i18n/seed';
 import { seedText as chinese } from '@/i18n/locales/zh-CN/seed';
@@ -5,7 +7,7 @@ import { seedText as english } from '@/i18n/locales/en-US/seed';
 import type { AgentProfile } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
-import { delay } from '@/mock/helpers';
+import { createTraceId, delay } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 
 export type { AgentProfile } from '@/types';
@@ -17,7 +19,7 @@ export const DEFAULT_AGENT_PROFILE = (): AgentProfile => structuredClone(getSeed
 function readProfile(): AgentProfile {
   const db = getMockDb();
   const stored = db.agentProfile;
-  // 兼容没有标记的 v4 数据：只有精确匹配已知种子的资料才视为默认值。
+  // 没有自定义标记时，只有精确匹配已知种子的资料才视为默认值。
   const isDefault = [chinese.agentProfile, english.agentProfile].some((profile) => (
     stored.name === profile.name && stored.greeting === profile.greeting
     && stored.suggestions.length === profile.suggestions.length
@@ -40,21 +42,38 @@ export const agentProfileService = {
     return readProfile();
   },
 
-  async save(input: Partial<AgentProfile>): Promise<void> {
-    await delay();
-    requirePermission('agent-config:update');
-    const next = { ...readProfile(), ...input };
-    if (!next.name.trim() || !next.greeting.trim()) {
-      throw new ApiRequestError(t('serverErrors.agentProfile.incomplete'), 400);
-    }
-    if (next.suggestions.length > 6 || next.suggestions.some((item) => !item.label.trim() || !item.prompt.trim())) {
-      throw new ApiRequestError(t('serverErrors.agentProfile.invalidShortcuts'), 400);
-    }
+  save: async (input: Partial<AgentProfile>): Promise<void> => {
+    try {
+      await delay();
+      const actor = requirePermission('agent-config:update');
+      const next = { ...readProfile(), ...input };
+      if (!next.name.trim() || !next.greeting.trim()) {
+        throw new ApiRequestError(t('serverErrors.agentProfile.incomplete'), 400);
+      }
+      if (next.suggestions.length > 6 || next.suggestions.some((item) => !item.label.trim() || !item.prompt.trim())) {
+        throw new ApiRequestError(t('serverErrors.agentProfile.invalidShortcuts'), 400);
+      }
 
-    updateMockDb((db) => {
-      db.agentProfile = structuredClone(next);
-      db.agentProfileCustomized = true;
-    });
-    window.dispatchEvent(new Event(AGENT_CONFIG_CHANGED_EVENT));
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.agentProfile = structuredClone(next);
+        db.agentProfileCustomized = true;
+        recordAudit(db, {
+          actor,
+          action: 'agent_profile.update',
+          target_type: 'agent_profile',
+          target_name: next.name,
+          traceId,
+        });
+      });
+      window.dispatchEvent(new Event(AGENT_CONFIG_CHANGED_EVENT));
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'agent_profile.update',
+        target_type: 'agent_profile',
+        target_name: input.name || getMockDb().agentProfile.name,
+      }));
+      throw error;
+    }
   },
 };

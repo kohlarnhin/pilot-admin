@@ -71,13 +71,14 @@ export const seedText = {
     "provider": "OpenAI 兼容",
     "name": "演示模型"
   },
-  "activities": {
-    "system": "系统",
-    "settings": "更新了系统基本设置",
-    "user": "完善了用户资料",
-    "permissions": "调整了运营人员的菜单权限",
-    "role": "创建了访客角色",
-    "ready": "演示数据已准备就绪"
+  "exampleProjects": {
+    "names": [
+      "示例项目",
+      "工作空间",
+      "协作计划",
+      "资源中心"
+    ],
+    "description": "用于演示标准 CRUD 功能的项目"
   },
   "agentProfile": {
     "name": "领航助手",

@@ -148,6 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // 清除本地会话与查询缓存。
   logout: () => {
+    authService.logout(get().user || undefined);
     authGeneration += 1;
     authInitPromise = null;
     clearQueryCache();

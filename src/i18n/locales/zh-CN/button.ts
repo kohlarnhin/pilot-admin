@@ -1,4 +1,5 @@
 export default {
+  "auditLogExport": "导出日志",
   "userCreate": "新增用户",
   "userUpdate": "编辑用户",
   "userDelete": "删除用户",

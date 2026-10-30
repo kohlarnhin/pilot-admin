@@ -2,6 +2,7 @@ import type source from '../zh-CN/button';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "auditLogExport": "Export logs",
   "userCreate": "Create user",
   "userUpdate": "Edit user",
   "userDelete": "Delete user",

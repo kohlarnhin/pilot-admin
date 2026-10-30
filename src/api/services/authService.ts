@@ -1,9 +1,11 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import { ApiRequestError } from '../http';
-import type { AuthMeResponse, AuthTokens, UserPreferences } from '@/types';
+import type { AuditProfileField, AuthMeResponse, AuthTokens, User, UserPreferences } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { currentUser, meResponse } from '@/mock/access';
-import { delay, validatePassword } from '@/mock/helpers';
+import { createTraceId, delay, validatePassword } from '@/mock/helpers';
 
 export { DEFAULT_USER_PREFERENCES } from '@/mock/seed';
 
@@ -12,9 +14,24 @@ export const authService = {
     await delay();
     const user = getMockDb().users.find((item) => item.login_name === loginName);
     if (!user || user.password !== password) {
+      try {
+        updateMockDb((db) => recordAudit(db, {
+          actor: {
+            id: user?.id,
+            user_name: user?.user_name || loginName.trim().slice(0, 64),
+          },
+          action: 'auth.login_failed',
+          result: 'failure',
+          reason: 'invalid_credentials',
+          traceId: createTraceId(),
+        }));
+      } catch { /* 审计不可用不能改变登录错误。 */ }
       throw new ApiRequestError(t('serverErrors.auth.invalidCredentials'), 400);
     }
     if (user.status !== 1) {
+      try {
+        updateMockDb((db) => recordAudit(db, { actor: user, action: 'auth.login_failed', result: 'failure', reason: 'account_disabled', traceId: createTraceId() }));
+      } catch { /* 审计不可用不能改变登录错误。 */ }
       throw new ApiRequestError(t('serverErrors.auth.accountDisabled'), 403);
     }
 
@@ -23,10 +40,18 @@ export const authService = {
       sub: user.id,
       sid: crypto.randomUUID(),
     }));
+    updateMockDb((db) => recordAudit(db, { actor: user, action: 'auth.login', traceId: createTraceId() }));
     return {
       accessToken: `mock.${payload}.local`,
       refreshToken: `mock-refresh-${crypto.randomUUID()}`,
     };
+  },
+
+  logout: (actor?: Pick<User, 'id' | 'user_name'>): void => {
+    try {
+      const user = actor || currentUser();
+      updateMockDb((db) => recordAudit(db, { actor: user, action: 'auth.logout', traceId: createTraceId() }));
+    } catch { /* 记录失败或账号已删除均不能阻止本地退出。 */ }
   },
 
   getMe: async (): Promise<AuthMeResponse> => {
@@ -35,29 +60,64 @@ export const authService = {
   },
 
   changePassword: async (data: Record<string, string>): Promise<void> => {
-    await delay();
-    const user = currentUser();
-    if (user.password !== data.oldPassword) {
-      throw new ApiRequestError(t('serverErrors.password.currentMismatch'), 400);
-    }
-    if (data.newPassword !== data.confirmPassword) {
-      throw new ApiRequestError(t('serverErrors.password.confirmMismatch'), 400);
-    }
+    try {
+      await delay();
+      const user = currentUser();
+      if (user.password !== data.oldPassword) {
+        throw new ApiRequestError(t('serverErrors.password.currentMismatch'), 400);
+      }
+      if (data.newPassword !== data.confirmPassword) {
+        throw new ApiRequestError(t('serverErrors.password.confirmMismatch'), 400);
+      }
 
-    validatePassword(data.newPassword);
-    updateMockDb((db) => {
-      db.users.find((item) => item.id === user.id)!.password = data.newPassword;
-    });
+      validatePassword(data.newPassword);
+      updateMockDb((db) => {
+        db.users.find((item) => item.id === user.id)!.password = data.newPassword;
+        recordAudit(db, {
+          actor: user,
+          action: 'auth.password_change',
+          target_type: 'user',
+          target_id: user.id,
+          target_name: user.user_name,
+          traceId: createTraceId(),
+        });
+      });
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'auth.password_change',
+        target_type: 'user',
+      }));
+      throw error;
+    }
   },
 
   patchPreferences: async (preferences: Partial<UserPreferences>): Promise<UserPreferences> => {
-    await delay();
-    const user = currentUser();
-    const next = { ...user.preferences, ...preferences };
+    const fields: AuditProfileField[] = 'agent_mode_entry' in preferences ? ['agent_mode_entry'] : [];
+    try {
+      await delay();
+      const user = currentUser();
+      const next = { ...user.preferences, ...preferences };
 
-    updateMockDb((db) => {
-      db.users.find((item) => item.id === user.id)!.preferences = next;
-    });
-    return next;
+      updateMockDb((db) => {
+        db.users.find((item) => item.id === user.id)!.preferences = next;
+        recordAudit(db, {
+          actor: user,
+          action: 'profile.update',
+          target_type: 'user',
+          target_id: user.id,
+          target_name: user.user_name,
+          params: { fields },
+          traceId: createTraceId(),
+        });
+      });
+      return next;
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'profile.update',
+        target_type: 'user',
+        params: { fields },
+      }));
+      throw error;
+    }
   },
 };

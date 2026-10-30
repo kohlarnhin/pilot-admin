@@ -50,7 +50,7 @@ src/
     sse.ts            真实后端流式事件解析器（默认不用）
     services/         唯一数据接缝；当前调用 mock
   mock/
-    seed.ts db.ts     确定性数据、v4 存储与重置
+    seed.ts db.ts     确定性数据、v5 存储与重置
     agent/            通用流式引擎、会话与 tools 工具注册表
   hooks/ store/       无限列表、虚拟化、认证、应用和助手状态
   pages/              登录、概览、系统页面、组件示例与错误页
@@ -191,7 +191,7 @@ export const myTool: AgentTool = {
 
 系统设置 → 演示数据 →「重置演示数据」恢复所有种子，包含 150 用户、3 角色、模型资料和 25 个管理员历史会话，清理助手草稿/对话缓存并重新载入。也可从 service 调用 `settingsService.resetDemoData()`，内部使用 `resetMockDb()`。
 
-DB key 为 `pilot-admin:mock-db:v4`；本次从 v3 升级会一次性重置演示数据，并在读取时清理旧版本 DB key。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
+DB key 为 `pilot-admin:mock-db:v5`；本次从 v4 升级会一次性重置演示数据，并在读取时只清理更低版本 DB key（不删除未来版本）。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
 
 ## 环境变量
 
@@ -213,7 +213,7 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 默认语言为 `zh-CN`，不读取浏览器语言。登录页右上角与账号菜单的「语言」入口可切换简体中文 / English，无需刷新页面；选择保存在 `pilot-admin:locale:v1`，同源标签页跟随切换。`src/config/app.ts` 配置默认语言和原生语言名称。
 
 - 字典按功能存放在 `src/i18n/locales/zh-CN/<namespace>.ts`，以中文 literal 为源，导出 `as const` 对象；`en-US` 对应文件使用 `LocalizedDictionary<typeof source>` 校验。新增 namespace 后在两种语言的 `index.ts` 注册，缺失或多余 key 会导致类型错误。
-- key 按语义命名，并按列、表单、提示或对话框等用途嵌套分组，如 `users.toast.created`、`users.deleteDialog.content`；不要从句子截取键名。每段使用 camelCase（`/^[a-z][a-zA-Z0-9]*$/`），最多 24 个字符。相同的通用文案复用 `common`（如 `common.actions.retry`、`common.toast.saveFailed`），仅在措辞确有差异时保留功能专用 key；服务错误归入 `serverErrors`，活动句子归入 `activity`。
+- key 按语义命名，并按列、表单、提示或对话框等用途嵌套分组，如 `users.toast.created`、`users.deleteDialog.content`；不要从句子截取键名。每段使用 camelCase（`/^[a-z][a-zA-Z0-9]*$/`），最多 24 个字符。相同的通用文案复用 `common`（如 `common.actions.retry`、`common.toast.saveFailed`），仅在措辞确有差异时保留功能专用 key；服务错误归入 `serverErrors`，审计动作句子归入 `audit`。
 - React 渲染使用 `const { t, locale } = useT()`；service、store 和事件处理可调用非 hook 的 `t()`，每次调用读取当前语言。静态 METRICS / SECTIONS 等只存 `MessageKey`，在订阅语言的渲染处翻译；翻译后的列定义、格式化器等 memo 必须依赖 `locale`。
 
   ```tsx
@@ -227,12 +227,46 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 - 不引入复数引擎。英文优先使用不依赖单复数的表达，如 `Users: {count}`，避免在数量可能为 1 时固定使用复数名词。
 - 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<camelCaseId>` / `button.<camelCaseId>` 本地化（如 `user-reset-password` 对应 `button.userResetPassword`，权限 ID 不变），重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
 - 切换会更新 html lang / dayjs、清查询缓存、刷新已登录账号的 me，并通过 `useDataChanged` 发出 `locale` 原因。无限列表将 locale 纳入作用域，丢弃旧语言响应，刷新已加载范围并尽量保留滚动位置。路由、助手面板、草稿和已存会话不变；已打开的命令式弹窗 / toast 保留打开时语言。
-- 外壳、管理页面、助手 / Agent 界面、全部 Mock 工具及演示种子已支持双语。服务错误在返回时使用当前语言，活动句子在写入时使用当前语言；用户输入、已存用户/角色名称及已有活动不随切换重译。
-- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和活动；ID、登录名、邮箱及确定性顺序保持一致，仍为 DB v4。助手资料及 25 个历史会话也按种子创建时的语言生成，长会话仍有 60 条消息。
-- 工具回复、choices、计划与操作卡在回复生成时采用当前语言并存入消息；切换不会重译旧消息、旧卡片标签或计划标题，choice ID、task context、executionId 和状态始终是代码。默认助手资料在读取时随当前语言变化；显式保存后通过 Mock 内部的可选 `agentProfileCustomized` 标记保留为数据（含保存后与默认文字相同的资料），旧 v4 资料仅在精确匹配已知种子时视为未自定义；DB 版本及初始种子形状不变。
+- 外壳、管理页面、助手 / Agent 界面、全部 Mock 工具及演示种子已支持双语。服务错误在返回时使用当前语言，审计动作存为稳定代码，在渲染时翻译；用户输入、已存用户/角色名称和会话不随切换重译。
+- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和示例项目；ID、登录名、邮箱及确定性顺序保持一致，当前为 DB v5。助手资料及 25 个历史会话也按种子创建时的语言生成，长会话仍有 60 条消息。
+- 工具回复、choices、计划与操作卡在回复生成时采用当前语言并存入消息；切换不会重译旧消息、旧卡片标签或计划标题，choice ID、task context、executionId 和状态始终是代码。默认助手资料在读取时随当前语言变化；显式保存后通过 Mock 内部的可选 `agentProfileCustomized` 标记保留为数据（含保存后与默认文字相同的资料），未标记的默认资料仅在精确匹配已知种子时视为未自定义。
 - 在角色权限弹窗切换语言时，重新读取菜单/按钮名称并保留当前勾选；菜单重命名保留输入中的名称，系统设置保留未保存字段。已经持久化的自定义名称在两种语言下都优先于默认名称。
 
 运行 `pnpm i18n:check` 检查 key 每段的 camelCase 命名与 24 字符上限、两种语言的 key / 占位符一致性，以及源代码中的 CJK 字符串、模板、JSX 与正则。注释不参与检查；`scripts/i18n-allowlist.json` 仅接受带原因的文件 + 原文精确例外，`scripts/i18n-pending.json` 已清空为 `[]`，保留机制供分阶段迁移使用。过时例外和已无 CJK 的 pending 条目会使检查失败，不能靠扩大豁免绕过迁移。
+
+## 操作日志
+
+`src/types/index.ts` 的 `AuditLog` 使用稳定 `module` / `action` / `result` / `reason` 代码、操作人与目标的写入时显示名以及追踪 ID。`src/audit/catalog.ts` 定义完整动作与参数白名单；不记录密码、密码 hash、Token、API Key 或原始错误。业务校验与权限拒绝由 `recordAuditFailure` 按状态码记录失败原因；不保存原始错误，审计保存失败不覆盖原业务错误。登录失败单独记录，退出记录失败不阻止本地清理；持久化失败不再尝试第二次审计写入。
+
+新增写服务时，把日志追加到业务的同一个 draft，生成一次追踪 ID，并让响应复用它：
+
+```ts
+const traceId = createTraceId();
+updateMockDb((db) => {
+  const user = db.users.find((item) => item.id === userId)!;
+  user.status = status;
+  recordAudit(db, {
+    actor,
+    action: 'user.status',
+    target_type: 'user',
+    target_id: user.id,
+    target_name: user.user_name,
+    params: { status },
+    traceId,
+  });
+});
+return response(undefined, traceId);
+```
+
+`recordAudit` 位于 `src/mock/audit.ts`，只修改传入的 draft，不另写 DB；完整服务实现可参考 `userService`。返回 `void` 或 Token 的既有接口保留签名，内部仍生成追踪 ID。个人资料和账号偏好保存记作 `profile.update`，目标为当前用户；`params.fields` 只存字段名 `user_name`、`email`、`agent_mode_entry`，按此目录顺序去重，渲染时翻译并按当前语言连接，不保存字段值。`settings.update` 的分类仅为 `basic`、`security`、`notifications`。助手工具复用写服务，不重复记日志。演示重置在同一次保存中放入新种子和 `settings.reset_demo`。
+
+扩展动作时同步更新 `AuditParamsMap`、运行时 `AUDIT_PARAMS` 白名单、两种语言 `audit.ts` 和 `src/audit/format.ts` 映射。存储代码保留 snake_case；字典段使用 camelCase，例如 `auth.login_failed` 对应 `audit.action.auth.loginFailed`。翻译在页面渲染或导出时发生，语言切换会更新已存日志的句子；显示名仍保留写入时的数据。偏好、计数和状态只保存代码，不保存翻译文案。
+
+系统管理 → 操作日志支持关键词、模块、结果组合筛选、无限追加、虚拟化、详情抽屉和追踪 ID 复制。关键词匹配操作人、目标、操作代码和追踪 ID。列表/计数要求该菜单，导出额外要求 `audit-log:export`；内置管理员具备，操作员和访客不具备。概览只拿最近 5 条成功记录的受限投影，排除 `auth.login` 和 `auth.logout` 会话事件，不包含操作人/目标 ID、追踪 ID、失败原因或任意原始参数；每行以操作句子为主行、操作人与时间为元信息，只有可访问日志页的账号看到「查看全部」。
+
+DB v5 一次性引入 `auditLogs`（最新在前，上限 1000）与 `exampleProjects`（80 条确定性种子），移除 `activities`。首次升级会重置演示数据一次；M6b/M6c 沿用 v5。初始审计记录为固定锚点前 30 天的 120 条历史示例。
+
+CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转义、CRLF 行尾。以 `=`、`+`、`-`、`@`、Tab、CR 开头（含前导空白）的单元格加 `'` 前缀，供电子表格按文本打开；该安全转换也会作用于显示名。导出当前筛选结果，服务最多返回 5000 条（当前存储上限 1000）。
 
 ## 脚本与验证
 
@@ -250,7 +284,7 @@ HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`.
 ## 路线图
 
 - 国际化：已覆盖 zh-CN / en-US 管理页面、助手和工具交互。
-- 通用功能：操作日志、标准 CRUD 模板与个人中心。
+- 通用功能：操作日志已提供，接下来完善标准 CRUD 模板与个人中心。
 - 细节与性能：真实页面体验巡检、助手与 Markdown 加载优化、完善使用文档。
 
 以上为后续里程碑，当前功能以代码和本文前述说明为准。

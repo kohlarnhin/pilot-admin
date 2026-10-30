@@ -1,3 +1,5 @@
+import { formatAuditAction } from '@/audit/format';
+import { canAccessPage } from '@/routes/access';
 import { t, useT, formatNumber } from '@/i18n';
 import { useDataChanged } from '@/hooks/useDataChanged';
 import React, { useEffect, useState } from 'react';
@@ -24,6 +26,9 @@ const METRICS = [
 
 export const DashboardPage: React.FC = () => {
   useT();
+  const menus = useAuthStore((state) => state.menus);
+  const permissions = useAuthStore((state) => state.permissions);
+  const canViewAudit = canAccessPage('/system/audit-logs', { menus, permissions });
   const userName = useAuthStore((state) => state.user?.user_name);
   const [stats, setStats] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
@@ -67,13 +72,13 @@ export const DashboardPage: React.FC = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><div><CardTitle>{t('dashboard.activitiesTitle')}</CardTitle><CardDescription>{t('dashboard.activitiesDescription')}</CardDescription></div><Icon icon="clock" size={18} className="text-slate-400" /></CardHeader>
+          <CardHeader><div><CardTitle>{t('dashboard.activitiesTitle')}</CardTitle><CardDescription>{t('dashboard.activitiesDescription')}</CardDescription></div>{canViewAudit ? <Link to="/system/audit-logs" onPointerEnter={() => void preloadRoute('/system/audit-logs')} className="shrink-0 rounded px-1 py-1 text-xs text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">{t('audit.viewAll')}<span aria-hidden="true" className="ml-1">→</span></Link> : <Icon icon="clock" size={18} className="text-slate-400" />}</CardHeader>
           <CardContent className="divide-y divide-line-soft px-6 py-1">
             {!stats ? [0, 1, 2, 3, 4].map((index) => <Skeleton key={index} className="my-5 h-12" />) : stats.activities.length ? stats.activities.map((activity) => (
               <div key={activity.id} className="flex items-start gap-3 py-4">
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400"><Icon icon={activity.icon} size={16} /></span>
-                <div className="min-w-0 flex-1"><p className="text-13 text-slate-700"><span className="font-medium text-slate-900">{activity.actor}</span> {activity.action}</p>
-                  <time className="mt-1 block font-mono text-[11px] text-slate-500" title={dayjs(activity.time).format('YYYY-MM-DD HH:mm:ss')}>{dayjs(activity.time).format('YYYY-MM-DD HH:mm')}</time>
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400"><Icon icon="history" size={16} /></span>
+                <div className="min-w-0 flex-1"><p className="text-13 text-slate-700">{formatAuditAction({ action: activity.action, target_name: activity.target_name, params: activity.display_params })}</p>
+                  <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] text-slate-500"><span className="truncate" title={activity.actor_name}>{activity.actor_name}</span><span aria-hidden="true">·</span><time className="shrink-0 font-mono" title={dayjs(activity.create_date).format('YYYY-MM-DD HH:mm:ss')}>{dayjs(activity.create_date).format('YYYY-MM-DD HH:mm')}</time></div>
                 </div>
               </div>
             )) : <EmptyState title={t('dashboard.noActivities')} minHeight={220} />}

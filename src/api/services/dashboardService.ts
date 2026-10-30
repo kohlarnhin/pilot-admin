@@ -1,3 +1,4 @@
+import { allowAuditParams } from '@/audit/catalog';
 import type { ApiResponse, DashboardData } from '@/types';
 import { getMockDb } from '@/mock/db';
 import { meResponse, mockMenus, requireMenu } from '@/mock/access';
@@ -42,7 +43,14 @@ export const dashboardService = {
           icon: 'settings-2',
         },
       ].filter((todo) => granted.has(todo.route)),
-      activities: db.activities.slice(0, 8),
+      activities: db.auditLogs.filter((entry) => entry.result === 'success' && entry.action !== 'auth.login' && entry.action !== 'auth.logout').slice(0, 5).map((entry) => ({
+        id: entry.id,
+        actor_name: entry.actor_name,
+        action: entry.action,
+        target_name: entry.target_name,
+        display_params: allowAuditParams(entry.action, entry.params),
+        create_date: entry.create_date,
+      })),
     });
   },
 };

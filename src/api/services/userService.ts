@@ -1,10 +1,12 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import { ApiRequestError } from '../http';
 import type { ApiResponse, PageResult, User } from '@/types';
 import type { PageQuery } from './pagination';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { publicUser, requireMenu, requirePermission } from '@/mock/access';
-import { addActivity, delay, matchesKeyword, pageResult, response, validatePassword } from '@/mock/helpers';
+import { createTraceId, delay, matchesKeyword, pageResult, response, validatePassword } from '@/mock/helpers';
 
 // 至少包含字母和数字；严格长度策略仍适用。
 const randomPassword = () => {
@@ -54,39 +56,56 @@ export const userService = {
     password_hash?: string;
     role_ids: string[];
   }): Promise<ApiResponse<User & { initial_password: string }>> => {
-    await delay();
-    const actor = requirePermission('user:create');
-    if (!/^[a-zA-Z0-9_]+$/.test(data.login_name) || !data.user_name.trim()) {
-      throw new ApiRequestError(t('serverErrors.user.invalidAccount'), 400);
-    }
-    if (getMockDb().users.some((user) => user.login_name === data.login_name)) {
-      throw new ApiRequestError(t('serverErrors.user.loginNameExists'), 409);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('user:create');
+      if (!/^[a-zA-Z0-9_]+$/.test(data.login_name) || !data.user_name.trim()) {
+        throw new ApiRequestError(t('serverErrors.user.invalidAccount'), 400);
+      }
+      if (getMockDb().users.some((user) => user.login_name === data.login_name)) {
+        throw new ApiRequestError(t('serverErrors.user.loginNameExists'), 409);
+      }
 
-    validateRoles(data.role_ids);
-    const password = data.password_hash || randomPassword();
-    validatePassword(password);
-    const date = new Date().toISOString();
-    const user = {
-      id: `u-${crypto.randomUUID()}`,
-      login_name: data.login_name,
-      user_name: data.user_name.trim(),
-      email: data.email,
-      role_ids: data.role_ids,
-      status: 1 as const,
-      password,
-      preferences: { agent_mode_entry: 'ask' as const },
-      create_by: actor.id,
-      create_date: date,
-      last_update_by: actor.id,
-      last_update_date: date,
-    };
+      validateRoles(data.role_ids);
+      const password = data.password_hash || randomPassword();
+      validatePassword(password);
+      const date = new Date().toISOString();
+      const user = {
+        id: `u-${crypto.randomUUID()}`,
+        login_name: data.login_name,
+        user_name: data.user_name.trim(),
+        email: data.email,
+        role_ids: data.role_ids,
+        status: 1 as const,
+        password,
+        preferences: { agent_mode_entry: 'ask' as const },
+        create_by: actor.id,
+        create_date: date,
+        last_update_by: actor.id,
+        last_update_date: date,
+      };
 
-    updateMockDb((db) => {
-      db.users.unshift(user);
-    });
-    addActivity(actor.user_name, t('activity.user.created', { name: user.user_name }), 'user-plus');
-    return response({ ...publicUser(user), initial_password: password });
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.users.unshift(user);
+        recordAudit(db, {
+          actor,
+          action: 'user.create',
+          target_type: 'user',
+          target_id: user.id,
+          target_name: user.user_name,
+          traceId,
+        });
+      });
+      return response({ ...publicUser(user), initial_password: password }, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'user.create',
+        target_type: 'user',
+        target_name: data.user_name,
+      }));
+      throw error;
+    }
   },
 
   updateUser: async (userId: string, data: {
@@ -96,90 +115,168 @@ export const userService = {
     role_ids?: string[];
     password?: string;
   }): Promise<ApiResponse<User>> => {
-    await delay();
-    const actor = requirePermission('user:update');
-    const user = getMockDb().users.find((item) => item.id === userId);
-    if (!user) {
-      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
-    }
-    if (data.role_ids) {
-      validateRoles(data.role_ids);
-    }
-    if (data.user_name !== undefined && !data.user_name.trim()) {
-      throw new ApiRequestError(t('common.validation.nameRequired'), 400);
-    }
-    if (data.password) {
-      requirePermission('user:reset-password');
-      validatePassword(data.password);
-    }
-
-    updateMockDb((db) => {
-      const target = db.users.find((item) => item.id === userId)!;
-      if (data.user_name !== undefined) {
-        target.user_name = data.user_name.trim();
+    try {
+      await delay();
+      const actor = requirePermission('user:update');
+      const user = getMockDb().users.find((item) => item.id === userId);
+      if (!user) {
+        throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
       }
-      if (data.email !== undefined) {
-        target.email = data.email;
+      if (data.role_ids) {
+        validateRoles(data.role_ids);
       }
-      if (data.role_ids !== undefined) {
-        target.role_ids = data.role_ids;
+      if (data.user_name !== undefined && !data.user_name.trim()) {
+        throw new ApiRequestError(t('common.validation.nameRequired'), 400);
       }
       if (data.password) {
-        target.password = data.password;
+        requirePermission('user:reset-password');
+        validatePassword(data.password);
       }
-      target.last_update_by = actor.id;
-      target.last_update_date = new Date().toISOString();
-    });
-    return response(publicUser(getMockDb().users.find((item) => item.id === userId)!));
+
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const target = db.users.find((item) => item.id === userId)!;
+        if (data.user_name !== undefined) {
+          target.user_name = data.user_name.trim();
+        }
+        if (data.email !== undefined) {
+          target.email = data.email;
+        }
+        if (data.role_ids !== undefined) {
+          target.role_ids = data.role_ids;
+        }
+        if (data.password) {
+          target.password = data.password;
+        }
+        target.last_update_by = actor.id;
+        target.last_update_date = new Date().toISOString();
+        recordAudit(db, {
+          actor,
+          action: data.password ? 'user.reset_password' : 'user.update',
+          target_type: 'user',
+          target_id: userId,
+          target_name: target.user_name,
+          traceId,
+        });
+      });
+      return response(publicUser(getMockDb().users.find((item) => item.id === userId)!), traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: data.password ? 'user.reset_password' : 'user.update',
+        target_type: 'user',
+        target_id: userId,
+        target_name: getMockDb().users.find((item) => item.id === userId)?.user_name,
+      }));
+      throw error;
+    }
   },
 
   updateStatus: async (userId: string, status: 0 | 1): Promise<ApiResponse<void>> => {
-    await delay();
-    const actor = requirePermission('user:update');
-    const user = getMockDb().users.find((item) => item.id === userId);
-    if (!user) {
-      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
-    }
-    if (actor.id === userId && status === 0) {
-      throw new ApiRequestError(t('serverErrors.user.selfDisable'), 400);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('user:update');
+      const user = getMockDb().users.find((item) => item.id === userId);
+      if (!user) {
+        throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
+      }
+      if (actor.id === userId && status === 0) {
+        throw new ApiRequestError(t('serverErrors.user.selfDisable'), 400);
+      }
 
-    updateMockDb((db) => {
-      db.users.find((item) => item.id === userId)!.status = status;
-    });
-    return response(undefined);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.users.find((item) => item.id === userId)!.status = status;
+        recordAudit(db, {
+          actor,
+          action: 'user.status',
+          target_type: 'user',
+          target_id: userId,
+          target_name: user.user_name,
+          params: { status },
+          traceId,
+        });
+      });
+      return response(undefined, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'user.status',
+        target_type: 'user',
+        target_id: userId,
+        target_name: getMockDb().users.find((item) => item.id === userId)?.user_name,
+        params: { status },
+      }));
+      throw error;
+    }
   },
 
   resetPassword: async (userId: string, password: string): Promise<ApiResponse<void>> => {
-    await delay();
-    requirePermission('user:reset-password');
-    validatePassword(password);
-    if (!getMockDb().users.some((user) => user.id === userId)) {
-      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('user:reset-password');
+      validatePassword(password);
+      const user = getMockDb().users.find((item) => item.id === userId);
+      if (!user) {
+        throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
+      }
 
-    updateMockDb((db) => {
-      db.users.find((item) => item.id === userId)!.password = password;
-    });
-    return response(undefined);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.users.find((item) => item.id === userId)!.password = password;
+        recordAudit(db, {
+          actor,
+          action: 'user.reset_password',
+          target_type: 'user',
+          target_id: userId,
+          target_name: user.user_name,
+          traceId,
+        });
+      });
+      return response(undefined, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'user.reset_password',
+        target_type: 'user',
+        target_id: userId,
+        target_name: getMockDb().users.find((item) => item.id === userId)?.user_name,
+      }));
+      throw error;
+    }
   },
 
   deleteUser: async (userId: string): Promise<ApiResponse<void>> => {
-    await delay();
-    const actor = requirePermission('user:delete');
-    if (userId === actor.id) {
-      throw new ApiRequestError(t('serverErrors.user.selfDelete'), 400);
-    }
-    const user = getMockDb().users.find((item) => item.id === userId);
-    if (!user) {
-      throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('user:delete');
+      if (userId === actor.id) {
+        throw new ApiRequestError(t('serverErrors.user.selfDelete'), 400);
+      }
+      const user = getMockDb().users.find((item) => item.id === userId);
+      if (!user) {
+        throw new ApiRequestError(t('serverErrors.user.notFound'), 404);
+      }
 
-    updateMockDb((db) => {
-      db.users = db.users.filter((item) => item.id !== userId);
-    });
-    addActivity(actor.user_name, t('activity.user.deleted', { name: user.user_name }), 'trash-2');
-    return response(undefined);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.users = db.users.filter((item) => item.id !== userId);
+        recordAudit(db, {
+          actor,
+          action: 'user.delete',
+          target_type: 'user',
+          target_id: userId,
+          target_name: user.user_name,
+          traceId,
+        });
+      });
+      return response(undefined, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'user.delete',
+        target_type: 'user',
+        target_id: userId,
+        target_name: getMockDb().users.find((item) => item.id === userId)?.user_name,
+      }));
+      throw error;
+    }
   },
 };
 

@@ -1,10 +1,12 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import type { ApiResponse, Button, Menu, PageResult, Role } from '@/types';
 import type { PageQuery } from './pagination';
 import { flattenMenuTree } from './menuService';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { currentUser, mockMenus, requireMenu, requirePermission } from '@/mock/access';
-import { addActivity, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
+import { createTraceId, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 import { cachedQuery } from '../queryCache';
 import type { MockRole } from '@/mock/seed';
@@ -79,36 +81,53 @@ export const roleService = {
     role_code: string;
     description?: string;
   }): Promise<ApiResponse<Role>> => {
-    await delay();
-    const actor = requirePermission('role:create');
-    if (!data.role_name.trim() || !/^[a-zA-Z0-9_]+$/.test(data.role_code)) {
-      throw new ApiRequestError(t('serverErrors.role.invalidRole'), 400);
-    }
-    if (getMockDb().roles.some((role) => role.role_code === data.role_code)) {
-      throw new ApiRequestError(t('serverErrors.role.codeExists'), 409);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('role:create');
+      if (!data.role_name.trim() || !/^[a-zA-Z0-9_]+$/.test(data.role_code)) {
+        throw new ApiRequestError(t('serverErrors.role.invalidRole'), 400);
+      }
+      if (getMockDb().roles.some((role) => role.role_code === data.role_code)) {
+        throw new ApiRequestError(t('serverErrors.role.codeExists'), 409);
+      }
 
-    const date = new Date().toISOString();
-    const role = {
-      ...data,
-      id: `role-${crypto.randomUUID()}`,
-      role_name: data.role_name.trim(),
-      status: 1 as const,
-      menuIds: [],
-      buttonIds: [],
-      auto_grant: false,
-      menu_count: 0,
-      button_count: 0,
-      create_by: actor.id,
-      create_date: date,
-      last_update_by: actor.id,
-      last_update_date: date,
-    };
-    updateMockDb((db) => {
-      db.roles.push(role);
-    });
-    addActivity(actor.user_name, t('activity.role.created', { name: role.role_name }), 'shield-check');
-    return response(publicRole(role));
+      const date = new Date().toISOString();
+      const role = {
+        ...data,
+        id: `role-${crypto.randomUUID()}`,
+        role_name: data.role_name.trim(),
+        status: 1 as const,
+        menuIds: [],
+        buttonIds: [],
+        auto_grant: false,
+        menu_count: 0,
+        button_count: 0,
+        create_by: actor.id,
+        create_date: date,
+        last_update_by: actor.id,
+        last_update_date: date,
+      };
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.roles.push(role);
+        recordAudit(db, {
+          actor,
+          action: 'role.create',
+          target_type: 'role',
+          target_id: role.id,
+          target_name: role.role_name,
+          traceId,
+        });
+      });
+      return response(publicRole(role), traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'role.create',
+        target_type: 'role',
+        target_name: data.role_name,
+      }));
+      throw error;
+    }
   },
 
   updateRole: async (roleId: string, data: {
@@ -116,73 +135,154 @@ export const roleService = {
     role_code?: string;
     description?: string;
   }): Promise<ApiResponse<Role>> => {
-    await delay();
-    requirePermission('role:update');
-    getRole(roleId);
-    if (data.role_name !== undefined && !data.role_name.trim()) {
-      throw new ApiRequestError(t('serverErrors.role.nameRequired'), 400);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('role:update');
+      getRole(roleId);
+      if (data.role_name !== undefined && !data.role_name.trim()) {
+        throw new ApiRequestError(t('serverErrors.role.nameRequired'), 400);
+      }
 
-    updateMockDb((db) => {
-      const role = db.roles.find((item) => item.id === roleId)!;
-      if (data.role_name !== undefined) {
-        role.role_name = data.role_name.trim();
-      }
-      if (data.description !== undefined) {
-        role.description = data.description;
-      }
-    });
-    return response(publicRole(getRole(roleId)));
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const role = db.roles.find((item) => item.id === roleId)!;
+        if (data.role_name !== undefined) {
+          role.role_name = data.role_name.trim();
+        }
+        if (data.description !== undefined) {
+          role.description = data.description;
+        }
+        recordAudit(db, {
+          actor,
+          action: 'role.update',
+          target_type: 'role',
+          target_id: roleId,
+          target_name: role.role_name,
+          traceId,
+        });
+      });
+      return response(publicRole(getRole(roleId)), traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'role.update',
+        target_type: 'role',
+        target_id: roleId,
+        target_name: getMockDb().roles.find((item) => item.id === roleId)?.role_name,
+      }));
+      throw error;
+    }
   },
 
   updateRoleStatus: async (roleId: string, status: 0 | 1): Promise<ApiResponse<void>> => {
-    await delay();
-    requirePermission('role:update');
-    getRole(roleId);
-    updateMockDb((db) => {
-      db.roles.find((role) => role.id === roleId)!.status = status;
-    });
-    return response(undefined);
+    try {
+      await delay();
+      const actor = requirePermission('role:update');
+      getRole(roleId);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const role = db.roles.find((item) => item.id === roleId)!;
+        role.status = status;
+        recordAudit(db, {
+          actor,
+          action: 'role.status',
+          target_type: 'role',
+          target_id: roleId,
+          target_name: role.role_name,
+          params: { status },
+          traceId,
+        });
+      });
+      return response(undefined, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'role.status',
+        target_type: 'role',
+        target_id: roleId,
+        target_name: getMockDb().roles.find((item) => item.id === roleId)?.role_name,
+        params: { status },
+      }));
+      throw error;
+    }
   },
 
   updateRolePermissions: async (roleId: string, menuIds: string[], buttonIds: string[]): Promise<ApiResponse<boolean>> => {
-    await delay();
-    const actor = requirePermission('role:permissions');
-    getRole(roleId);
-    const catalog = collectMenuCatalog(mockMenus());
-    const menus = catalog.entries.map(({ menu }) => menu);
-    const menuMap = new Map(menus.map((menu) => [menu.id, menu]));
-    const selected = new Set(menuIds.filter((id) => menuMap.has(id)));
-    const selectedButtons = menus.flatMap((menu) => menu.buttons || []).filter((button) => buttonIds.includes(button.id));
+    try {
+      await delay();
+      const actor = requirePermission('role:permissions');
+      getRole(roleId);
+      const catalog = collectMenuCatalog(mockMenus());
+      const menus = catalog.entries.map(({ menu }) => menu);
+      const menuMap = new Map(menus.map((menu) => [menu.id, menu]));
+      const selected = new Set(menuIds.filter((id) => menuMap.has(id)));
+      const selectedButtons = menus.flatMap((menu) => menu.buttons || []).filter((button) => buttonIds.includes(button.id));
 
-    selectedButtons.forEach((button) => selected.add(button.menu_id));
-    const selectedMenus = addRouteLessAncestors([...selected], catalog);
+      selectedButtons.forEach((button) => selected.add(button.menu_id));
+      const selectedMenus = addRouteLessAncestors([...selected], catalog);
 
-    updateMockDb((db) => {
-      const role = db.roles.find((item) => item.id === roleId)!;
-      role.menuIds = selectedMenus;
-      role.buttonIds = selectedButtons.map((button) => button.id);
-      role.menu_count = role.menuIds.length;
-      role.button_count = role.buttonIds.length;
-    });
-    addActivity(actor.user_name, t('activity.role.permissionsUpdated', { name: getRole(roleId).role_name }), 'shield-check');
-    return response(true);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const role = db.roles.find((item) => item.id === roleId)!;
+        role.menuIds = selectedMenus;
+        role.buttonIds = selectedButtons.map((button) => button.id);
+        role.menu_count = role.menuIds.length;
+        role.button_count = role.buttonIds.length;
+        recordAudit(db, {
+          actor,
+          action: 'role.permissions',
+          target_type: 'role',
+          target_id: roleId,
+          target_name: role.role_name,
+          params: getDeclaredPermissionCounts(role),
+          traceId,
+        });
+      });
+      return response(true, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'role.permissions',
+        target_type: 'role',
+        target_id: roleId,
+        target_name: getMockDb().roles.find((item) => item.id === roleId)?.role_name,
+        params: { menu_count: new Set(menuIds).size, button_count: new Set(buttonIds).size },
+      }));
+      throw error;
+    }
   },
 
   deleteRole: async (roleId: string): Promise<ApiResponse<void>> => {
-    await delay();
-    requirePermission('role:delete');
-    getRole(roleId);
-    if (roleId === 'role-admin') {
-      throw new ApiRequestError(t('serverErrors.role.builtInProtected'), 400);
-    }
-    if (getMockDb().users.some((user) => user.role_ids.includes(roleId))) {
-      throw new ApiRequestError(t('serverErrors.role.inUse'), 400);
-    }
+    try {
+      await delay();
+      const actor = requirePermission('role:delete');
+      getRole(roleId);
+      if (roleId === 'role-admin') {
+        throw new ApiRequestError(t('serverErrors.role.builtInProtected'), 400);
+      }
+      if (getMockDb().users.some((user) => user.role_ids.includes(roleId))) {
+        throw new ApiRequestError(t('serverErrors.role.inUse'), 400);
+      }
 
-    updateMockDb((db) => {
-      db.roles = db.roles.filter((role) => role.id !== roleId);
-    });
-    return response(undefined);
+      const role = getRole(roleId);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.roles = db.roles.filter((item) => item.id !== roleId);
+        recordAudit(db, {
+          actor,
+          action: 'role.delete',
+          target_type: 'role',
+          target_id: roleId,
+          target_name: role.role_name,
+          traceId,
+        });
+      });
+      return response(undefined, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'role.delete',
+        target_type: 'role',
+        target_id: roleId,
+        target_name: getMockDb().roles.find((item) => item.id === roleId)?.role_name,
+      }));
+      throw error;
+    }
   },
 };

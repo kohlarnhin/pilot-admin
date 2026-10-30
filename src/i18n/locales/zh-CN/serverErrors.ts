@@ -1,4 +1,5 @@
 export default {
+  "audit": { "invalidParams": "审计参数不符合动作定义" },
   "auth": {
     "invalidCredentials": "账号或密码错误，请检查后重试",
     "accountDisabled": "账号已停用，请联系管理员",

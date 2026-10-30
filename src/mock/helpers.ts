@@ -2,15 +2,17 @@ import { t } from '@/i18n';
 import { ApiRequestError } from '@/api/http';
 import type { ApiResponse, PageResult } from '@/types';
 import type { PageQuery } from '@/api/services/pagination';
-import { getMockDb, updateMockDb } from './db';
+import { getMockDb } from './db';
 
 export const delay = () => new Promise<void>((resolve) => window.setTimeout(resolve, 150 + Math.random() * 300));
 
-export const response = <T,>(data: T): ApiResponse<T> => ({
+export const createTraceId = () => `mock-${crypto.randomUUID()}`;
+
+export const response = <T,>(data: T, traceId = createTraceId()): ApiResponse<T> => ({
   code: 0,
   message: 'success',
   data: structuredClone(data),
-  traceId: `mock-${crypto.randomUUID()}`,
+  traceId,
 });
 
 export function pageResult<T>(records: T[], { pageNo = 1, pageSize = 20 }: PageQuery): PageResult<T> {
@@ -43,17 +45,4 @@ export function validatePassword(password: string): void {
   if (requireNumber && !/\d/.test(password)) {
     throw new ApiRequestError(t('serverErrors.password.needNumber'), 400);
   }
-}
-
-export function addActivity(actor: string, action: string, icon: string): void {
-  updateMockDb((db) => {
-    db.activities.unshift({
-      id: crypto.randomUUID(),
-      actor,
-      action,
-      icon,
-      time: new Date().toISOString(),
-    });
-    db.activities = db.activities.slice(0, 30);
-  });
 }

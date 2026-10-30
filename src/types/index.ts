@@ -86,12 +86,83 @@ export interface SystemSettings {
   notifications: { systemNotice: boolean; accountChange: boolean; weeklySummary: boolean };
 }
 
-export interface Activity {
+export type AuditModule = 'auth' | 'user' | 'role' | 'menu' | 'settings' | 'agent_config' | 'agent_profile' | 'profile' | 'example';
+export type AuditResult = 'success' | 'failure';
+export type AuditReason = 'invalid_credentials' | 'account_disabled' | 'forbidden' | 'invalid_input' | 'not_found' | 'conflict';
+export type AuditSection = keyof SystemSettings;
+export type AuditProfileField = 'user_name' | 'email' | 'agent_mode_entry';
+
+/** 每个动作只接受业务代码和数量，不接受任意输入对象。 */
+export interface AuditParamsMap {
+  'auth.login': Record<never, never>;
+  'auth.login_failed': Record<never, never>;
+  'auth.logout': Record<never, never>;
+  'auth.password_change': Record<never, never>;
+  'user.create': Record<never, never>;
+  'user.update': Record<never, never>;
+  'user.status': { status: 0 | 1 };
+  'user.reset_password': Record<never, never>;
+  'user.delete': Record<never, never>;
+  'role.create': Record<never, never>;
+  'role.update': Record<never, never>;
+  'role.status': { status: 0 | 1 };
+  'role.delete': Record<never, never>;
+  'role.permissions': { menu_count: number; button_count: number };
+  'menu.rename': Record<never, never>;
+  'button.rename': Record<never, never>;
+  'settings.update': { section: AuditSection };
+  'settings.reset_demo': Record<never, never>;
+  'agent_config.create': Record<never, never>;
+  'agent_config.update': Record<never, never>;
+  'agent_config.delete': Record<never, never>;
+  'agent_config.status': { status: 0 | 1 };
+  'agent_profile.update': Record<never, never>;
+  'profile.update': { fields: AuditProfileField[] };
+  'example.create': Record<never, never>;
+  'example.update': Record<never, never>;
+  'example.delete': Record<never, never>;
+  'example.batch_delete': { count: number };
+}
+export type AuditAction = keyof AuditParamsMap;
+export interface AuditDisplayParams {
+  status?: 0 | 1;
+  menu_count?: number;
+  button_count?: number;
+  section?: AuditSection;
+  count?: number;
+  fields?: AuditProfileField[];
+}
+export interface AuditLog {
   id: string;
-  actor: string;
-  action: string;
-  time: string;
-  icon: string;
+  actor_id?: string;
+  actor_name: string;
+  module: AuditModule;
+  action: AuditAction;
+  target_type?: 'user' | 'role' | 'menu' | 'button' | 'settings' | 'agent_config' | 'agent_profile' | 'example';
+  target_id?: string;
+  target_name?: string;
+  params?: AuditDisplayParams;
+  result: AuditResult;
+  reason?: AuditReason;
+  trace_id: string;
+  create_date: string;
+}
+export interface AuditActivity {
+  id: string;
+  actor_name: string;
+  action: AuditAction;
+  target_name?: string;
+  display_params: AuditDisplayParams;
+  create_date: string;
+}
+export type ExampleProjectStatus = 'active' | 'paused' | 'archived';
+export interface ExampleProject extends AuditFields {
+  id: string;
+  name: string;
+  code: string;
+  owner: string;
+  status: ExampleProjectStatus;
+  description?: string;
 }
 
 export interface DashboardData {
@@ -100,7 +171,7 @@ export interface DashboardData {
   totalRoles: number;
   totalMenus: number;
   todos: { id: string; code: 'users' | 'roles' | 'components' | 'settings'; route: string; icon: string }[];
-  activities: Activity[];
+  activities: AuditActivity[];
 }
 
 export type AgentMessageRole = 'user' | 'assistant';

@@ -1,4 +1,5 @@
 export default {
+  "auditLogs": "操作日志",
   "assistant": "助手设置",
   "dashboard": "概览",
   "components": "组件示例",

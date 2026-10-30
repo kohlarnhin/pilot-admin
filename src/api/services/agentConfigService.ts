@@ -1,8 +1,10 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import type { AgentConfig } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requirePermission } from '@/mock/access';
-import { delay } from '@/mock/helpers';
+import { createTraceId, delay } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 import { AGENT_CONFIG_CHANGED_EVENT } from './agentProfileService';
 
@@ -48,63 +50,142 @@ export const agentConfigService = {
     return getMockDb().agentConfigs.some((config) => config.status === 1);
   },
 
-  async addConfig(input: AgentConfigInput): Promise<void> {
-    await delay();
-    requirePermission('agent-config:update');
-    validate(input);
-    const date = new Date().toISOString();
+  addConfig: async (input: AgentConfigInput): Promise<void> => {
+    try {
+      await delay();
+      const actor = requirePermission('agent-config:update');
+      validate(input);
+      const date = new Date().toISOString();
 
-    updateMockDb((db) => {
-      db.agentConfigs.push({
-        ...input,
-        id: crypto.randomUUID(),
-        apiKey: input.apiKey || '',
-        api_key_masked: '••••••••',
-        status: 1,
-        create_date: date,
-        last_update_date: date,
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const id = crypto.randomUUID();
+        db.agentConfigs.push({
+          ...input,
+          id,
+          apiKey: input.apiKey || '',
+          api_key_masked: '••••••••',
+          status: 1,
+          create_date: date,
+          last_update_date: date,
+        });
+        recordAudit(db, {
+          actor,
+          action: 'agent_config.create',
+          target_type: 'agent_config',
+          target_id: id,
+          target_name: input.model_name,
+          traceId,
+        });
       });
-    });
-    changed();
+      changed();
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'agent_config.create',
+        target_type: 'agent_config',
+        target_name: input.model_name,
+      }));
+      throw error;
+    }
   },
 
-  async updateConfig(id: string, input: AgentConfigInput): Promise<void> {
-    await delay();
-    requirePermission('agent-config:update');
-    validate(input);
+  updateConfig: async (id: string, input: AgentConfigInput): Promise<void> => {
+    try {
+      await delay();
+      const actor = requirePermission('agent-config:update');
+      validate(input);
 
-    updateMockDb((db) => {
-      const config = db.agentConfigs.find((item) => item.id === id);
-      if (!config) {
-        throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
-      }
-      Object.assign(config, input, {
-        apiKey: input.apiKey || config.apiKey,
-        last_update_date: new Date().toISOString(),
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const config = db.agentConfigs.find((item) => item.id === id);
+        if (!config) {
+          throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
+        }
+        Object.assign(config, input, {
+          apiKey: input.apiKey || config.apiKey,
+          last_update_date: new Date().toISOString(),
+        });
+        recordAudit(db, {
+          actor,
+          action: 'agent_config.update',
+          target_type: 'agent_config',
+          target_id: id,
+          target_name: config.model_name,
+          traceId,
+        });
       });
-    });
-    changed();
+      changed();
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'agent_config.update',
+        target_type: 'agent_config',
+        target_id: id,
+        target_name: getMockDb().agentConfigs.find((item) => item.id === id)?.model_name,
+      }));
+      throw error;
+    }
   },
 
-  async updateConfigStatus(id: string, status: 0 | 1): Promise<void> {
-    await delay();
-    requirePermission('agent-config:update');
-    updateMockDb((db) => {
-      const config = db.agentConfigs.find((item) => item.id === id);
-      if (!config) {
-        throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
-      }
-      config.status = status;
-    });
-    changed();
+  updateConfigStatus: async (id: string, status: 0 | 1): Promise<void> => {
+    try {
+      await delay();
+      const actor = requirePermission('agent-config:update');
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const config = db.agentConfigs.find((item) => item.id === id);
+        if (!config) {
+          throw new ApiRequestError(t('serverErrors.agentConfig.notFound'), 404);
+        }
+        config.status = status;
+        recordAudit(db, {
+          actor,
+          action: 'agent_config.status',
+          target_type: 'agent_config',
+          target_id: id,
+          target_name: config.model_name,
+          params: { status },
+          traceId,
+        });
+      });
+      changed();
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'agent_config.status',
+        target_type: 'agent_config',
+        target_id: id,
+        target_name: getMockDb().agentConfigs.find((item) => item.id === id)?.model_name,
+        params: { status },
+      }));
+      throw error;
+    }
   },
 
-  async deleteConfig(id: string): Promise<void> {
-    await delay();
-    requirePermission('agent-config:update');
-    updateMockDb((db) => {
-      db.agentConfigs = db.agentConfigs.filter((config) => config.id !== id);
-    });
-    changed();
+  deleteConfig: async (id: string): Promise<void> => {
+    try {
+      await delay();
+      const actor = requirePermission('agent-config:update');
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        const target = db.agentConfigs.find((config) => config.id === id);
+        db.agentConfigs = db.agentConfigs.filter((config) => config.id !== id);
+        recordAudit(db, {
+          actor,
+          action: 'agent_config.delete',
+          target_type: 'agent_config',
+          target_id: id,
+          target_name: target?.model_name,
+          traceId,
+        });
+      });
+      changed();
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'agent_config.delete',
+        target_type: 'agent_config',
+        target_id: id,
+        target_name: getMockDb().agentConfigs.find((item) => item.id === id)?.model_name,
+      }));
+      throw error;
+    }
   },
 };

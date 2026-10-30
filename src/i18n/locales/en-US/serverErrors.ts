@@ -2,6 +2,7 @@ import type source from '../zh-CN/serverErrors';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "audit": { "invalidParams": "Audit parameters do not match the action" },
   "auth": {
     "invalidCredentials": "Incorrect account or password. Please try again.",
     "accountDisabled": "This account is disabled. Contact an administrator.",

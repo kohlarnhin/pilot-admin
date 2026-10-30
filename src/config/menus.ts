@@ -27,6 +27,9 @@ export const menuConfig: MenuConfig[] = [
     ] },
     { id: 'menus', route_path: '/system/menus', icon: 'list-tree', sort_no: 3,
       buttons: [{ id: 'menu-update', permission: 'menu:update' }] },
+    { id: 'audit-logs', route_path: '/system/audit-logs', icon: 'history', sort_no: 3.5, buttons: [
+      { id: 'audit-log-export', permission: 'audit-log:export' },
+    ] },
     { id: 'assistant', route_path: '/system/assistant', icon: 'wand-sparkles', sort_no: 5 },
     { id: 'settings', route_path: '/system/settings', icon: 'settings-2', sort_no: 4, buttons: [
       { id: 'settings-update', permission: 'settings:update' },

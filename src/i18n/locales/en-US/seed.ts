@@ -71,13 +71,14 @@ export const seedText = {
     "provider": "OpenAI compatible",
     "name": "Demo model"
   },
-  "activities": {
-    "system": "System",
-    "settings": "Updated basic settings",
-    "user": "Updated user details",
-    "permissions": "Updated the operator’s menu permissions",
-    "role": "Created the viewer role",
-    "ready": "Demo data is ready"
+  "exampleProjects": {
+    "names": [
+      "Example project",
+      "Workspace",
+      "Collaboration plan",
+      "Resource hub"
+    ],
+    "description": "A project for the standard CRUD example"
   },
   "agentProfile": {
     "name": "Pilot assistant",

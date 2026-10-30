@@ -1,8 +1,10 @@
+import { recordAuditFailure } from '@/mock/auditFailure';
+import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
 import type { ApiResponse, SystemSettings } from '@/types';
 import { getMockDb, resetMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';
-import { addActivity, delay, response } from '@/mock/helpers';
+import { createTraceId, delay, response } from '@/mock/helpers';
 import { ApiRequestError } from '../http';
 
 export { MOCK_DB_RESET_EVENT as DEMO_DATA_RESET_EVENT } from '@/mock/db';
@@ -30,28 +32,53 @@ export const settingsService = {
     section: K,
     value: SystemSettings[K],
   ): Promise<ApiResponse<SystemSettings>> => {
-    await delay();
-    const actor = requirePermission('settings:update');
-    if (section === 'basic' && !(value as SystemSettings['basic']).siteName.trim()) {
-      throw new ApiRequestError(t('serverErrors.settings.nameRequired'), 400);
-    }
-    if (section === 'security') {
-      const minimum = (value as SystemSettings['security']).passwordMinLength;
-      if (!Number.isInteger(minimum) || minimum < 6 || minimum > 32) {
-        throw new ApiRequestError(t('serverErrors.password.invalidMinLength'), 400);
+    try {
+      await delay();
+      const actor = requirePermission('settings:update');
+      if (section === 'basic' && !(value as SystemSettings['basic']).siteName.trim()) {
+        throw new ApiRequestError(t('serverErrors.settings.nameRequired'), 400);
       }
-    }
+      if (section === 'security') {
+        const minimum = (value as SystemSettings['security']).passwordMinLength;
+        if (!Number.isInteger(minimum) || minimum < 6 || minimum > 32) {
+          throw new ApiRequestError(t('serverErrors.password.invalidMinLength'), 400);
+        }
+      }
 
-    updateMockDb((db) => {
-      db.settings[section] = value;
-    });
-    addActivity(actor.user_name, t('activity.settings.updated'), 'settings-2');
-    return response(getMockDb().settings);
+      const traceId = createTraceId();
+      updateMockDb((db) => {
+        db.settings[section] = value;
+        recordAudit(db, {
+          actor,
+          action: 'settings.update',
+          target_type: 'settings',
+          params: { section },
+          traceId,
+        });
+      });
+      return response(getMockDb().settings, traceId);
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'settings.update',
+        target_type: 'settings',
+        params: { section },
+      }));
+      throw error;
+    }
   },
 
   resetDemoData: async (): Promise<void> => {
-    await delay();
-    requirePermission('settings:reset');
-    resetMockDb();
+    try {
+      await delay();
+      const actor = requirePermission('settings:reset');
+      const traceId = createTraceId();
+      resetMockDb((db) => recordAudit(db, { actor, action: 'settings.reset_demo', target_type: 'settings', traceId }));
+    } catch (error) {
+      recordAuditFailure(error, () => ({
+        action: 'settings.reset_demo',
+        target_type: 'settings',
+      }));
+      throw error;
+    }
   },
 };
