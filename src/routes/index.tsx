@@ -1,18 +1,11 @@
 import { Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 import { AssistantRuntimeLayout } from '@/components/assistant/AssistantRuntime';
 import { Spin } from '@/ui/spinner';
 import { Page403, Page404 } from '@/pages/error';
 import { RouteErrorPage } from '@/pages/error/RouteErrorPage';
-import { getFirstAccessiblePage } from './access';
-import { useAuthStore } from '@/store/authStore';
+import { IndexRedirect } from './IndexRedirect';
 import { adminPages, LoginPage, AgentPage, AppLayout } from './routeModules';
-
-const IndexRedirect = () => {
-  const menus = useAuthStore((state) => state.menus);
-  const permissions = useAuthStore((state) => state.permissions);
-  return <Navigate to={getFirstAccessiblePage(menus, permissions)} replace />;
-};
 
 const basename = import.meta.env.BASE_URL.replace(/\/+$/, '') || undefined;
 

@@ -1,6 +1,6 @@
 import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '@/store/authStore';
 import { agentProfileService, DEFAULT_AGENT_PROFILE, AGENT_CONFIG_CHANGED_EVENT } from '@/api/services/agentProfileService';
@@ -10,6 +10,7 @@ import { useAssistantNotifications } from './useAssistantNotifications';
 import { parseAttachment, attachmentMetadata, clearAttachments, type AssistantAttachment } from './attachmentStore';
 import { useAssistantStore } from '@/store/assistantStore';
 import { canNavigateToPage } from '@/routes/access';
+import { AssistantContext } from './assistantContext';
 
 function useRuntime(userId: string) {
   const { locale } = useT();
@@ -32,11 +33,14 @@ function useRuntime(userId: string) {
     chat.setShowHistory(false);
     setNotificationSession(sessionId);
   });
-  useEffect(() => {
+  const openNotificationSession = useEffectEvent(() => {
     if (notificationSession === null || chat.isSending || chat.planBusyMessageId !== null
       || chat.isLoadingSession || chat.isReconciling) return;
     setNotificationSession(null);
     if (String(chat.activeSessionId) !== String(notificationSession)) void chat.loadSessionDetail(notificationSession);
+  });
+  useEffect(() => {
+    openNotificationSession();
   }, [notificationSession, chat.isSending, chat.planBusyMessageId, chat.isLoadingSession,
     chat.isReconciling, chat.activeSessionId, chat.loadSessionDetail]);
   completedRef.current = (result) => {
@@ -97,17 +101,11 @@ function useRuntime(userId: string) {
   };
 }
 
-const AssistantContext = createContext<ReturnType<typeof useRuntime> | null>(null);
+export type AssistantRuntime = ReturnType<typeof useRuntime>;
 
 function AssistantProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const runtime = useRuntime(userId);
   return <AssistantContext.Provider value={runtime}>{children}</AssistantContext.Provider>;
-}
-
-export function useAssistantRuntime() {
-  const runtime = useContext(AssistantContext);
-  if (!runtime) throw new Error('AssistantRuntime is unavailable');
-  return runtime;
 }
 
 /** 只有一个聊天实例；控制台面板和独立 Agent 页面在同一实例上切换。 */

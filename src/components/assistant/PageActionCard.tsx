@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import type { AgentPageAction, AgentPageActionOutcome } from '@/types';
 import { agentService } from '@/api/services/agentService';
-import { useAssistantRuntime } from './AssistantRuntime';
+import { useAssistantRuntime } from './assistantContext';
 import { useAuthStore } from '@/store/authStore';
 import { canNavigateToPage } from '@/routes/access';
 import { Button } from '@/ui/button';

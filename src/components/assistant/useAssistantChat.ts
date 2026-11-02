@@ -70,7 +70,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
   const loadingDetailRef = useRef(false);
   const detailRequestRef = useRef(0);
   const persistedStateRef = useRef({ messages, draft, sessionId: activeSessionId });
-  const lifecycleGenerationRef = useRef(0);
+  const lifecycleGenerationRef = useRef({ value: 0 });
   const [planBusyMessageId, setPlanBusyMessageId] = useState<string | null>(null);
   const planRunRef = useRef<{ id: number; messageId: string; executionId: string; stopped: boolean;
     suspended: boolean; turns: number } | null>(null);
@@ -113,7 +113,8 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
   }, [storageKey, messages, draft, activeSessionId]);
 
   useEffect(() => {
-    const generation = ++lifecycleGenerationRef.current;
+    const lifecycleGeneration = lifecycleGenerationRef.current;
+    const generation = ++lifecycleGeneration.value;
     const persist = () => {
       const state = persistedStateRef.current;
       writeConversation(storageKey, state.messages, { draft: state.draft, sessionId: state.sessionId });
@@ -124,7 +125,7 @@ export function useAssistantChat(userId: string, isOpen: boolean, onResult?: (re
       persist();
       // StrictMode 的同步重挂继续使用同一请求；真正卸载才取消，避免历史对账永远停在加载态。
       queueMicrotask(() => {
-        if (lifecycleGenerationRef.current !== generation) return;
+        if (lifecycleGeneration.value !== generation) return;
         planRunRef.current = null;
         activeRequestRef.current?.abort();
         activeRequestRef.current = null;

@@ -17,7 +17,7 @@ import type { Role, User } from '@/types';
 import type { AssistantActionProps } from './registry';
 import { registerAssistantAction } from './registry';
 
-function AssignRoleAction({ onComplete, onCancel }: AssistantActionProps) {
+export function AssignRoleAction({ onComplete, onCancel }: AssistantActionProps) {
   useT();
   const [roles, setRoles] = useState<Role[]>([]);
   const [roleId, setRoleId] = useState('');

@@ -13,6 +13,6 @@ export const NavVertical: React.FC<NavProps> = ({ data, className, ...props }) =
   );
 };
 
-export * from './nav-group';
-export * from './nav-item';
-export * from './nav-list';
+export { NavGroup } from './nav-group';
+export { NavItem } from './nav-item';
+export { NavList } from './nav-list';

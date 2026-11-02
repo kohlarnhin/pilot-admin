@@ -1,6 +1,6 @@
 import { t, useT } from '@/i18n';
 import { useEffect } from 'react';
-import { useAssistantRuntime } from './AssistantRuntime';
+import { useAssistantRuntime } from './assistantContext';
 import { useAssistantScroll } from './useAssistantScroll';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';

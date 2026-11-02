@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as DropdownPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/utils";
-import { resolvePlacement, type Placement } from "./tooltip";
+import { resolvePlacement, type Placement } from "./placement";
 
 export interface DropdownMenuItem {
   key: string;

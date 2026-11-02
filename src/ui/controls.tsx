@@ -192,7 +192,8 @@ export function CheckboxGroup({ value = [], onChange, disabled, className, child
   );
 }
 
-export const Checkbox = Object.assign(CheckboxBase, { Group: CheckboxGroup });
+export const Checkbox = CheckboxBase as typeof CheckboxBase & { Group: typeof CheckboxGroup };
+Checkbox.Group = CheckboxGroup;
 
 /* ------------------------------------------------------------------------ */
 /* InputNumber                                                               */

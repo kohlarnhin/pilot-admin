@@ -3,7 +3,7 @@ import React from 'react';
 import { RouterProvider } from 'react-router';
 import { router } from './routes';
 import { TooltipProvider } from '@/ui/tooltip';
-import { Toaster } from '@/ui/message';
+import { Toaster } from '@/ui/toaster';
 import { ModalHost } from '@/ui/modal';
 import { ErrorPage } from './pages/error/ErrorPage';
 import { useAppStore } from './store/appStore';

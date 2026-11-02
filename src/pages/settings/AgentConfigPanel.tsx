@@ -75,12 +75,12 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
     form.setFieldsValue({ provider: t('agentConfig.providers.openai'), base_url: 'https://api.example.com/v1' });
     setModalOpen(true);
   };
-  const openEdit = (config: AgentConfig) => {
+  const openEdit = useCallback((config: AgentConfig) => {
     setEditingConfig(config);
     form.resetFields();
     form.setFieldsValue({ provider: config.provider, base_url: config.base_url, model_code: config.model_code, model_name: config.model_name });
     setModalOpen(true);
-  };
+  }, [form]);
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -122,7 +122,10 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   };
 
   const columns = useMemo<ColumnsType<AgentConfig>>(
-    () => [
+    () => {
+      // t() 实时读取语言，列标题仍需在语言切换时重新生成。
+      void locale;
+      return [
       {
         title: t('agentConfig.columns.model'),
         dataIndex: 'model_name',
@@ -186,8 +189,9 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
           /><RowAction icon="trash-2" label={t('agentConfig.actions.delete')} disabled={!canUpdate} onClick={() => Modal.confirm({ title: t('agentConfig.deleteDialog.title'), content: t('agentConfig.deleteDialog.content', { name: record.model_name }), okText: t('common.actions.delete'), onOk: async () => { await agentConfigService.deleteConfig(record.id); await loadConfigs(); } })} /></div>
         ),
       },
-    ],
-    [canUpdate, changingStatusIds, locale]
+      ];
+    },
+    [canUpdate, changingStatusIds, locale, loadConfigs, openEdit]
   );
 
   return (

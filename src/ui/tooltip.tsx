@@ -3,23 +3,9 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/utils";
 
-export type Placement =
-  | "top" | "topLeft" | "topRight"
-  | "bottom" | "bottomLeft" | "bottomRight"
-  | "left" | "leftTop" | "leftBottom"
-  | "right" | "rightTop" | "rightBottom";
+import { resolvePlacement, type Placement } from "./placement";
 
-export function resolvePlacement(placement: Placement = "top") {
-  const side = placement.startsWith("top")
-    ? "top"
-    : placement.startsWith("bottom")
-    ? "bottom"
-    : placement.startsWith("left")
-    ? "left"
-    : "right";
-  const align = /Left$|Top$/.test(placement) ? "start" : /Right$|Bottom$/.test(placement) ? "end" : "center";
-  return { side, align } as const;
-}
+export type { Placement } from "./placement";
 
 export const TooltipProvider = TooltipPrimitive.Provider;
 

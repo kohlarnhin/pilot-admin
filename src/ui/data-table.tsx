@@ -254,19 +254,32 @@ export function DataTable<T extends object>({
   }, [initialLoading]);
 
   React.useLayoutEffect(() => {
-    if (!showEmptyState) {
-      setEmptyAnimationFinished(false);
-    } else if (refreshing || wasRefreshing.current || emptyStateRef.current?.getClientRects().length === 0) {
+    const emptyState = emptyStateRef.current;
+    const update = () => {
       // 刷新或后台挂载的空状态不补播动画，直接保留稳定的数据区。
-      setEmptyAnimationFinished(true);
-    }
-    wasRefreshing.current = refreshing;
-  });
+      const skipAnimation = refreshing || wasRefreshing.current || emptyState?.getClientRects().length === 0;
+      setEmptyAnimationFinished((finished) => !showEmptyState ? false : skipAnimation ? true : finished);
+      wasRefreshing.current = refreshing;
+    };
+    update();
+    if (!emptyState) return;
+    const observer = new ResizeObserver(update);
+    observer.observe(emptyState);
+    return () => observer.disconnect();
+  }, [showEmptyState, refreshing]);
 
   React.useLayoutEffect(() => {
-    const height = headerRef.current?.offsetHeight ?? 0;
-    if (!showHeader || height > 0) setHeaderHeight(height);
-  });
+    const header = headerRef.current;
+    const update = () => {
+      const height = header?.offsetHeight ?? 0;
+      if (!showHeader || height > 0) setHeaderHeight((current) => current === height ? current : height);
+    };
+    update();
+    if (!header) return;
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [showHeader]);
 
   const virtualizer = useVirtualizer({
     count: shouldVirtualize ? rows.length : 0,

@@ -4,7 +4,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/utils";
 import { Button, type ButtonProps } from "./button";
-import { resolvePlacement, type Placement } from "./tooltip";
+import { resolvePlacement, type Placement } from "./placement";
 
 export const PopoverRoot = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;

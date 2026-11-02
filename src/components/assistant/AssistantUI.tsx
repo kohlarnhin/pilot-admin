@@ -3,7 +3,7 @@ import { AssistantHeader } from './AssistantHeader';
 import { AssistantPanel } from './AssistantPanel';
 import { SessionHistory } from './SessionHistory';
 import { AssistantConversation } from './AssistantConversation';
-import { useAssistantRuntime } from './AssistantRuntime';
+import { useAssistantRuntime } from './assistantContext';
 import { useAssistantStore } from '@/store/assistantStore';
 
 export { AgentWorkspace } from '@/agent/AgentWorkspace';

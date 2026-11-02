@@ -13,7 +13,7 @@ export const NavMini: React.FC<NavProps> = ({ data, className, ...props }) => {
   );
 };
 
-export * from './nav-group';
-export * from './nav-root-item';
-export * from './nav-sub-item';
-export * from './nav-list';
+export { NavGroup } from './nav-group';
+export { NavRootItem } from './nav-root-item';
+export { NavSubItem } from './nav-sub-item';
+export { NavList } from './nav-list';

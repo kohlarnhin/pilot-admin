@@ -17,7 +17,7 @@ Open http://localhost:3300. No backend or environment file is needed. Demo accou
 
 | Command | Purpose |
 | --- | --- |
-| `pnpm lint` | ESLint; zero errors required |
+| `pnpm lint` | ESLint; 0 errors / 0 warnings required (`--max-warnings 0`) |
 | `pnpm i18n:check` | Dictionary parity, placeholders and source CJK gate |
 | `pnpm typecheck` | Strict TypeScript check |
 | `pnpm test` | Run Vitest logic unit tests once |

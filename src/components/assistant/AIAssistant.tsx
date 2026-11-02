@@ -1,9 +1,9 @@
 import { t, useT } from '@/i18n';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { useLazyResource } from '@/hooks/useLazyResource';
-import { useAssistantRuntime } from './AssistantRuntime';
+import { useAssistantRuntime } from './assistantContext';
 import { useAssistantStore } from '@/store/assistantStore';
 import { assistantUI } from './assistantResources';
 import { AssistantLoadState } from './AssistantLoadState';
@@ -24,22 +24,22 @@ export function AIAssistant() {
 
   useEffect(() => () => setStreaming(false), [setStreaming]);
 
+  const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.isComposing) return;
+    if (event.key === 'Escape' && isOpen) {
+      event.preventDefault();
+      if (chat.showHistory) chat.setShowHistory(false);
+      else closePanel();
+    } else if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'j') {
+      const target = event.target;
+      if (target instanceof HTMLElement
+        && target.closest('input, textarea, select, [contenteditable], [role="textbox"]')
+        && !target.closest('[data-assistant-composer]')) return;
+      event.preventDefault();
+      togglePanel(target instanceof HTMLElement ? target : undefined);
+    }
+  });
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.isComposing) return;
-      if (event.key === 'Escape' && isOpen) {
-        event.preventDefault();
-        if (chat.showHistory) chat.setShowHistory(false);
-        else closePanel();
-      } else if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'j') {
-        const target = event.target;
-        if (target instanceof HTMLElement
-          && target.closest('input, textarea, select, [contenteditable], [role="textbox"]')
-          && !target.closest('[data-assistant-composer]')) return;
-        event.preventDefault();
-        togglePanel(target instanceof HTMLElement ? target : undefined);
-      }
-    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, chat.showHistory, chat.setShowHistory, closePanel, togglePanel]);

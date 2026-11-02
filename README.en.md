@@ -245,7 +245,7 @@ Profile changes and audit share one draft. `profile.update` records only changed
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server on port 3300; no proxy by default |
-| `pnpm lint` | ESLint; zero errors required, Hooks/Refresh warnings remain visible |
+| `pnpm lint` | ESLint; 0 errors / 0 warnings required (`--max-warnings 0`) |
 | `pnpm i18n:check` | Dictionary/placeholder parity and source CJK gate |
 | `pnpm typecheck` | Strict TypeScript check |
 | `pnpm test` | Run Vitest logic unit tests once |

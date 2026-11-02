@@ -4,10 +4,10 @@ import { Icon } from '@/components/icon';
 import { Kbd } from '@/components/common/Kbd';
 import { Tooltip } from '@/ui/tooltip';
 import { cn } from '@/utils';
+import { modKey } from './shortcut';
 
 const Palette = lazy(() => import('./GlobalSearchPalette'));
 const OPEN_EVENT = 'pilot-admin:search:open';
-export const modKey = () => /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
 
 export function GlobalSearchTrigger({ collapsed = false, workspace = false }: { collapsed?: boolean; workspace?: boolean }) {
   useT();

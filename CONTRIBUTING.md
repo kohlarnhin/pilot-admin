@@ -19,7 +19,7 @@ pnpm dev
 
 | 命令 | 用途 |
 | --- | --- |
-| `pnpm lint` | ESLint 检查，提交前须无 error |
+| `pnpm lint` | ESLint 检查，须 0 error / 0 warning（`--max-warnings 0`） |
 | `pnpm i18n:check` | 字典、占位符一致性及 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |

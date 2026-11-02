@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/utils";
 import { resolveIcon } from "./registry";
 
-export { ICONS, ICON_NAMES, resolveIcon, type IconName } from "./registry";
+export type { IconName } from "./registry";
 
 export interface IconProps {
   /** 图标名称（见 registry 的 lucide 名称）或 lucide 图标组件 */

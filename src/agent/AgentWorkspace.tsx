@@ -1,11 +1,11 @@
 import { t, useT } from '@/i18n';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { ArrowLeft, BookOpen, PanelLeft, Plus } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { AccountMenu } from '@/components/layout/AccountMenu';
 import { AssistantConversation } from '@/components/assistant/AssistantConversation';
-import { useAssistantRuntime } from '@/components/assistant/AssistantRuntime';
+import { useAssistantRuntime } from '@/components/assistant/assistantContext';
 import { SessionHistory } from '@/components/assistant/SessionHistory';
 import { Icon } from '@/components/icon';
 import { useAuthStore } from '@/store/authStore';
@@ -23,14 +23,20 @@ export function AgentWorkspace() {
   const [params, setParams] = useSearchParams();
   const requestedSession = params.get('session');
   const handledSession = useRef<string | null>(null);
-  useEffect(() => {
+  const openRequestedSession = useEffectEvent(() => {
     if (!requestedSession || !/^[\w-]+$/.test(requestedSession)) { handledSession.current = null; return; }
     if (busy || handledSession.current === requestedSession) return;
     handledSession.current = requestedSession;
     if (String(chat.activeSessionId) !== requestedSession) void chat.loadSessionDetail(requestedSession);
-  }, [requestedSession, busy, chat.activeSessionId, chat.loadSessionDetail]);
+  });
   useEffect(() => {
+    openRequestedSession();
+  }, [requestedSession, busy, chat.activeSessionId, chat.loadSessionDetail]);
+  const refreshHistory = useEffectEvent(() => {
     if (historyOpen && !chat.isSending) void chat.loadSessions();
+  });
+  useEffect(() => {
+    refreshHistory();
   }, [historyOpen, chat.activeSessionId, chat.isSending, chat.loadSessions]);
   return <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-white text-slate-700">
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-5">

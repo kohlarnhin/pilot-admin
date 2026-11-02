@@ -420,7 +420,7 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 | 命令 | 用途 |
 | --- | --- |
 | `pnpm dev` | 0.0.0.0:3300 开发服务，不自动打开浏览器，默认无代理 |
-| `pnpm lint` | ESLint 检查，须无 error；保留 Hooks 依赖和 Fast Refresh 警告 |
+| `pnpm lint` | ESLint 检查，须 0 error / 0 warning（`--max-warnings 0`） |
 | `pnpm i18n:check` | 字典 / 占位符一致性和源代码 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
