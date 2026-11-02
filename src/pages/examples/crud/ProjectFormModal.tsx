@@ -61,8 +61,8 @@ export function ProjectFormModal({ project, onClose, onSaved }: {
           <Select disabled={saving} options={(['active', 'paused', 'archived'] as const).map((value) => ({ value, label: t(`exampleProjects.status.${value}`) }))} />
         </Form.Item>
       </div>
-      <Form.Item name="description" label={t('exampleProjects.fields.description')} rules={[{ max: 200, message: t('serverErrors.example.invalidDescription') }]}>
-        <TextArea rows={3} maxLength={200} showCount disabled={saving} />
+      <Form.Item name="description" label={t('exampleProjects.fields.description')} rules={[{ max: 1000, message: t('serverErrors.example.invalidDescription') }]}>
+        <TextArea rows={4} maxLength={1000} showCount disabled={saving} />
       </Form.Item>
     </Form>
   </Modal>;

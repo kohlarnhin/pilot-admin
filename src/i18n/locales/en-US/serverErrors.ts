@@ -2,13 +2,14 @@ import type source from '../zh-CN/serverErrors';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "staleBuild": "A newer page has upgraded this data. Reload this page to continue.",
   profile: { invalidName: 'Enter a display name of up to 40 characters' },
   "example": {
     "invalidName": "Enter a project name of up to 60 characters",
     "invalidCode": "Use 2–20 uppercase letters, numbers or hyphens, starting with a letter",
     "invalidOwner": "Enter an owner of up to 40 characters",
     "invalidStatus": "Select a valid project status",
-    "invalidDescription": "Description must be at most 200 characters",
+    "invalidDescription": "Description must be at most 1000 characters",
     "codeExists": "This project code already exists",
     "notFound": "Project not found or already deleted",
     "batchLimit": "Select 1–100 projects per batch"

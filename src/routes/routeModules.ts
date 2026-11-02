@@ -1,5 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 import type { MessageKey, MessageParams } from '@/i18n/types';
+import { assertPageAccessPaths, createPageResolver } from './pageResolver';
 
 type PageTitleKey = { [K in MessageKey]: [MessageParams<K>] extends [never] ? K : never }[MessageKey];
 
@@ -34,6 +35,7 @@ export const AgentPage = lazy(loadAgentPage);
 
 interface PageDefinition {
   path: string;
+  accessPath?: string;
   load: () => Promise<{ default: ComponentType }>;
   requires?: string[];
   access?: 'menu' | 'authenticated';
@@ -58,30 +60,28 @@ export const adminPages = [
   definePage({ path: '/system/assistant', requires: ['agent-config:view'], load: () => import('../pages/assistant').then((module) => ({ default: module.AgentSettingsPage })) }),
   definePage({ path: '/examples/components', load: () => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })) }),
   definePage({ path: '/examples/crud', load: () => import('../pages/examples/crud').then((module) => ({ default: module.CrudExamplePage })) }),
+  definePage({ path: '/examples/crud/:id', accessPath: '/examples/crud', load: () => import('../pages/examples/crud/ProjectDetailPage').then((module) => ({ default: module.ProjectDetailPage })) }),
 ];
 
-const routeLoaders: Record<string, () => Promise<unknown>> = {
-  '/agent': loadAgentPage,
-  '/login': loadLoginPage,
-  ...Object.fromEntries(adminPages.map((page) => [page.path, page.load])),
-};
+if (import.meta.env.DEV || import.meta.env.MODE === 'test') assertPageAccessPaths(adminPages);
 
-export const isKnownPageRoute = (path: string) => Boolean(routeLoaders[path]);
+export const resolvePage = createPageResolver([
+  ...adminPages,
+  { path: '/agent', access: 'authenticated' as const, requires: ['agent:use'], accessPath: undefined, load: loadAgentPage },
+  { path: '/login', access: 'public' as const, requires: [], accessPath: undefined, load: loadLoginPage },
+]);
+
+export const isKnownPageRoute = (path: string) => Boolean(resolvePage(path));
 
 const preloadPromises = new Map<string, Promise<unknown>>();
-
-const normalizeRoutePath = (path: string): string => {
-  const pathname = path.split(/[?#]/, 1)[0] || '/';
-  return pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
-};
 
 /**
  * 根据用户导航意图预取路由模块。失败会静默释放缓存，正式点击时仍可正常重试。
  */
 export const preloadRoute = (path: string): Promise<unknown> | undefined => {
-  const normalizedPath = normalizeRoutePath(path);
-  const loader = routeLoaders[normalizedPath];
-  if (!loader) return undefined;
+  const resolved = resolvePage(path);
+  if (!resolved) return undefined;
+  const { path: normalizedPath, load: loader } = resolved.page;
 
   const existing = preloadPromises.get(normalizedPath);
   if (existing) return existing;

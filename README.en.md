@@ -119,11 +119,17 @@ Adding a page takes three steps:
 
 The default `access: 'menu'` checks an enabled, visible granted menu. Add `requires: ['feature:manage']` for extra permissions, or use `access: 'authenticated'` for a signed-in page without a menu, such as `/profile`. Add `titleKey: 'profile.title', searchable: true` to make it searchable by its localized title; title keys must have no placeholders. Guards, navigation, search and landing routes share `src/routes/access.ts`. Use `usePermission`, `useCan` or `<Access>` for buttons, and `useDataChanged` to refresh after assistant writes. Services must still check access.
 
+Register details with `definePage({ path: '/examples/crud/:id', accessPath: '/examples/crud', load })`. The owner must be a registered static menu page; details also enforce their own `requires`. The shared `resolvePage` uses Router ranking, handles encoded segments and trailing slashes, and preserves ID case. Parameter pages are omitted from search and the profile page list. List links may pass `state.listSearch` to preserve the return query. Assistant cards and automatic navigation use the same access check and reject external paths.
+
 Mock catalog sync is recursive, monotonic and add-only. Only the seeded admin role has the internal `auto_grant` flag; newly created roles do not. New permissions are granted on DB load/storage reload without resetting demo data or changing role seeds. Revoked old permissions stay revoked. All roles gain missing route-less ancestors of their existing menus; routed ancestors are never granted implicitly. Removed definitions remain inert and counts reflect current definitions. Other roles need explicit grants; real backends decide and enforce grants server-side. Custom menu names override defaults. [Full guide](README.md#添加页面与权限).
 
 ### Add a service or connect a backend
 
-Pages call `src/api/services`; they never access the mock DB directly. Define entity types and deterministic seeds, validate stored shapes, and bump the DB version for incompatible changes. Use the existing paged response and infinite-list helpers. To connect a backend, replace service function bodies with `http` calls and use `runSseStream` for assistant streaming. Authentication and RBAC must be enforced on the server. [Services and mocks](README.md#添加-service-与-mock), [backend integration](README.md#接真实后端).
+Pages call `src/api/services`; they never access the mock DB directly. For a new collection or incompatible shape, update types, deterministic seeds and full validation; bump `MOCK_DB_VERSION` and the seed/type version, then add each `fromVersion → nextVersion` function in `src/mock/migrations.ts`. Migrations must be pure and deterministic: no clock, randomness, locale, storage, `createId()`, `Date.now()` or `t()`. Derive new fields from old data or fixed anchors, and test preservation with old-version fixtures.
+
+The injected storage core prefers a valid current key. Otherwise it migrates the highest supported lower key, validates, syncs the permission catalog, validates again and persists. Keep the source during this start; only a later start with an already-valid current key removes lower keys. Failed migrations use seed data without touching the source this time; failed persistence retains migrated data in memory. The current version and minimum migration version are both v5, with an empty migration map. Older or corrupt data still falls back to seed.
+
+A higher-version key makes the current build read-only: writes/reset fail with code `40990` and a localized reload message. Higher keys are never deleted. Even after removing a test key, reload to resume writes. Previously deployed builds without this guard cannot be controlled; close or reload those old tabs during upgrades. Use the existing paged response and infinite-list helpers. To connect a backend, replace service function bodies with `http` calls and use `runSseStream` for assistant streaming. Authentication and RBAC must be enforced on the server. [Services and mocks](README.md#添加-service-与-mock), [backend integration](README.md#接真实后端).
 
 Mock services and pages import errors from lightweight `src/api/errors.ts`; importing `src/api/http.ts` in a real service loads Axios and still supports the original error imports.
 
@@ -251,11 +257,10 @@ Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm i18n
 
 ## Demo storage and reset
 
-Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key is `pilot-admin:mock-db:v5`. Upgrading from v4 resets demo data once and removes only lower-version DB keys on read; each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
+Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key and migration starting point are v5 (`pilot-admin:mock-db:v5`); v4 and earlier fall back to seed. Source retention and stale-tab guards follow the migration rules above. Each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
 
 ## Roadmap
 
-- Mock DB migrations and version guards, unified parameter-route resolution and a CRUD detail page.
 - CSV import with atomic batches, idempotent retry and failed-row downloads.
 - A tree directory with a record table, and an inline-editing workbench with history.
 - Assistant/example module switches and a pruning guide verified by actual removal.

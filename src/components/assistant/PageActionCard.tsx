@@ -5,7 +5,7 @@ import type { AgentPageAction, AgentPageActionOutcome } from '@/types';
 import { agentService } from '@/api/services/agentService';
 import { useAssistantRuntime } from './AssistantRuntime';
 import { useAuthStore } from '@/store/authStore';
-import { flattenMenuTree } from '@/api/services/menuService';
+import { canNavigateToPage } from '@/routes/access';
 import { Button } from '@/ui/button';
 import { Icon } from '@/components/icon';
 import { getAssistantAction } from './actions/registry';
@@ -22,8 +22,8 @@ export function PageActionCard({ action, sessionId, messageId }: { action: Agent
   const pendingOutcome = useRef<Omit<AgentPageActionOutcome, 'finishedAt'> | null>(null);
   const Component = getAssistantAction(action.actionKey || '');
   const menus = useAuthStore((state) => state.menus);
-  const granted = action.action === 'navigate' && action.route?.startsWith('/') && !action.route.startsWith('//')
-    && flattenMenuTree(menus).some((menu) => menu.route_path === action.route!.split('?')[0]);
+  const permissions = useAuthStore((state) => state.permissions);
+  const granted = action.action === 'navigate' && canNavigateToPage(action.route, { menus, permissions });
   const busy = chat.isSending || chat.isLoadingSession || chat.isReconciling;
   const complete = async (outcome: Omit<AgentPageActionOutcome, 'finishedAt'>) => {
     if (saving.current) return;

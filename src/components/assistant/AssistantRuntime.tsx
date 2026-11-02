@@ -9,6 +9,7 @@ import { useAssistantChat } from './useAssistantChat';
 import { useAssistantNotifications } from './useAssistantNotifications';
 import { parseAttachment, attachmentMetadata, clearAttachments, type AssistantAttachment } from './attachmentStore';
 import { useAssistantStore } from '@/store/assistantStore';
+import { canNavigateToPage } from '@/routes/access';
 
 function useRuntime(userId: string) {
   const { locale } = useT();
@@ -41,7 +42,7 @@ function useRuntime(userId: string) {
   completedRef.current = (result) => {
     notifications.onResult(result);
     const action = result.interaction;
-    if (action?.type === 'page_action' && action.action === 'navigate' && action.autoOpen && action.route) {
+    if (action?.type === 'page_action' && action.action === 'navigate' && action.autoOpen && canNavigateToPage(action.route, useAuthStore.getState())) {
       navigate(action.route, { state: fullScreen ? { agentReturnTo: `/agent?session=${encodeURIComponent(String(result.sessionId))}` } : undefined });
     }
   };

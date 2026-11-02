@@ -5,8 +5,9 @@ import { isUnauthorizedError } from '@/api/errors';
 import { useAuthStore } from '@/store/authStore';
 import { useDataChanged } from '@/hooks/useDataChanged';
 import { canAccessPage } from '@/routes/access';
-import { adminPages } from '@/routes/routeModules';
+import { adminPages, resolvePage } from '@/routes/routeModules';
 import { canAccessAgent } from '@/agent/access';
+import { isParameterizedPage } from '@/routes/pageResolver';
 import { Icon } from '@/components/icon';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Alert } from '@/ui/controls';
@@ -61,12 +62,13 @@ export function ProfilePermissions() {
   const walk = (items: Menu[]): PageNode[] => [...items].sort((a, b) => a.sort_no - b.sort_no).flatMap((menu) => {
     if (menu.status === 0 || menu.visible === 0) return [];
     const children = walk(menu.children || []);
-    const accessible = canAccessPage(menu.route_path, { menus, permissions });
+    const page = resolvePage(menu.route_path)?.page;
+    const accessible = page && !isParameterizedPage(page) && canAccessPage(menu.route_path, { menus, permissions });
     return accessible || children.length ? [{ id: menu.id, name: menu.menu_name, icon: menu.icon, route: accessible ? menu.route_path : undefined, children }] : [];
   });
   const pages = walk(menus);
   for (const page of adminPages) {
-    if (page.access === 'authenticated' && page.titleKey && canAccessPage(page.path, { menus, permissions })) {
+    if (!isParameterizedPage(page) && page.access === 'authenticated' && page.titleKey && canAccessPage(page.path, { menus, permissions })) {
       pages.push({ id: page.path, name: t(page.titleKey), icon: 'user', route: page.path, children: [] });
     }
   }

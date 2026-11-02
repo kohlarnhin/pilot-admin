@@ -26,11 +26,7 @@ export const AppLayout: React.FC = () => {
   const agentReturnTo = agentReturnPath(location.state?.agentReturnTo);
   const permissions = useAuthStore((state) => state.permissions);
   const canUseAgent = usePermission('agent:use');
-  const routePath = (() => {
-    try { return decodeURI(pathname).replace(/\/+$/, '').toLowerCase() || '/'; }
-    catch { return pathname; }
-  })();
-  const forbidden = isKnownPageRoute(routePath) && !canAccessPage(routePath, { menus, permissions });
+  const forbidden = isKnownPageRoute(pathname) && !canAccessPage(pathname, { menus, permissions });
 
   useEffect(() => { void initAuth(); }, [initAuth]);
 

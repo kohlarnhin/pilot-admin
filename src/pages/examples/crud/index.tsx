@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
+import { Link, useLocation } from 'react-router';
 import { t, useT } from '@/i18n';
 import { exampleProjectService, type ProjectFilters } from '@/api/services/exampleProjectService';
 import type { ExampleProject, ExampleProjectStatus } from '@/types';
@@ -24,9 +25,11 @@ import { message } from '@/ui/message';
 import type { ColumnsType } from '@/ui/data-table';
 import { downloadCsv, toCsv } from '@/utils/csv';
 import { ProjectFormModal } from './ProjectFormModal';
+import { preloadRoute } from '@/routes/routeModules';
 
 export function CrudExamplePage() {
   const { locale } = useT();
+  const location = useLocation();
   const can = useCan();
   const canDelete = can('example:delete');
   const canManage = can(['example:update', 'example:delete'], 'any');
@@ -118,7 +121,7 @@ export function CrudExamplePage() {
   };
   const columns: ColumnsType<ExampleProject> = [
     { title: t('exampleProjects.fields.name'), key: 'name', render: (_, project) => <div className="min-w-0">
-      <div className="truncate text-13 font-medium text-slate-900" title={project.name}>{project.name}</div>
+      <Link to={`/examples/crud/${encodeURIComponent(project.id)}`} state={{ listSearch: location.search }} onPointerEnter={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} onFocus={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} className="block truncate rounded text-13 font-medium text-slate-700 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" title={project.name}>{project.name}</Link>
       <div className="flex min-w-0 items-center gap-1"><span className="truncate font-mono text-[11px] text-slate-500" title={project.code}>{project.code}</span><CopyButton text={project.code} /></div>
     </div> },
     { title: t('exampleProjects.fields.owner'), key: 'owner', width: '25%', render: (_, project) => <span className="block truncate text-13 text-slate-600" title={project.owner}>{project.owner}</span> },

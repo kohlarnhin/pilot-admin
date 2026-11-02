@@ -1,12 +1,13 @@
 import { t } from '@/i18n';
 import { ApiRequestError } from '@/api/errors';
-import type { ApiResponse, ExampleProject, ExampleProjectStatus, PageResult } from '@/types';
+import type { ApiResponse, AuditLog, ExampleProject, ExampleProjectStatus, PageResult } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';
 import { recordAudit } from '@/mock/audit';
 import { recordAuditFailure } from '@/mock/auditFailure';
 import { createTraceId, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
 import { createId } from '@/utils/id';
+import { allowAuditParams } from '@/audit/catalog';
 
 // 模板：业务错误码供表单定位字段，不能比较服务端文案。
 export const PROJECT_CODE_EXISTS = 40901;
@@ -15,6 +16,11 @@ export interface ProjectFilters {
   status?: ExampleProjectStatus;
 }
 export type ProjectInput = Pick<ExampleProject, 'name' | 'code' | 'owner' | 'status' | 'description'>;
+export interface ExampleProjectDetail extends ExampleProject {
+  create_by_name: string;
+  last_update_by_name: string;
+}
+export type ProjectHistoryEntry = Pick<AuditLog, 'id' | 'action' | 'module' | 'actor_name' | 'result' | 'reason' | 'create_date' | 'target_name' | 'params'>;
 
 const filteredProjects = (filters: ProjectFilters) => getMockDb().exampleProjects.filter((project) => (
   matchesKeyword(filters.keyword, project.name, project.code, project.owner)
@@ -34,7 +40,7 @@ function validate(input: ProjectInput, currentId?: string): ProjectInput {
   if (!['active', 'paused', 'archived'].includes(input.status)) {
     throw new ApiRequestError(t('serverErrors.example.invalidStatus'), 400);
   }
-  if (input.description !== undefined && (typeof input.description !== 'string' || input.description.length > 200)) {
+  if (input.description !== undefined && (typeof input.description !== 'string' || input.description.length > 1000)) {
     throw new ApiRequestError(t('serverErrors.example.invalidDescription'), 400);
   }
   if (getMockDb().exampleProjects.some((project) => project.code === input.code && project.id !== currentId)) {
@@ -49,13 +55,48 @@ function validate(input: ProjectInput, currentId?: string): ProjectInput {
   };
 }
 
-function getProject(id: string): ExampleProject {
+function findProject(id: string): ExampleProject {
   const project = getMockDb().exampleProjects.find((item) => item.id === id);
   if (!project) throw new ApiRequestError(t('serverErrors.example.notFound'), 404);
   return project;
 }
 
 export const exampleProjectService = {
+  async getProject(id: string): Promise<ApiResponse<ExampleProjectDetail>> {
+    await delay();
+    requireMenu('/examples/crud');
+    const project = findProject(id);
+    const actorName = (userId: string) => userId === 'system'
+      ? t('exampleProjects.detail.systemActor')
+      : getMockDb().users.find((user) => user.id === userId)?.user_name || userId;
+    return response({
+      ...project,
+      create_by_name: actorName(project.create_by),
+      last_update_by_name: actorName(project.last_update_by),
+    });
+  },
+
+  async getProjectHistory(id: string, query: { pageNo?: number; pageSize?: number } = {}): Promise<ApiResponse<PageResult<ProjectHistoryEntry>>> {
+    await delay();
+    requireMenu('/examples/crud');
+    findProject(id);
+    const entries = getMockDb().auditLogs
+      .filter((entry) => entry.target_type === 'example' && entry.target_id === id)
+      .sort((a, b) => Date.parse(b.create_date) - Date.parse(a.create_date) || b.id.localeCompare(a.id))
+      .map((entry): ProjectHistoryEntry => ({
+        id: entry.id,
+        action: entry.action,
+        module: entry.module,
+        actor_name: entry.actor_name,
+        result: entry.result,
+        reason: entry.reason,
+        create_date: entry.create_date,
+        target_name: entry.target_name,
+        params: allowAuditParams(entry.action, entry.params),
+      }));
+    return response(pageResult(entries, query));
+  },
+
   async getProjects(params: ProjectFilters & { pageNo?: number; pageSize?: number } = {}): Promise<ApiResponse<PageResult<ExampleProject>>> {
     await delay();
     requireMenu('/examples/crud');
@@ -109,7 +150,7 @@ export const exampleProjectService = {
     try {
       await delay();
       const actor = requirePermission('example:update');
-      getProject(id);
+      findProject(id);
       const values = validate(input, id);
       const traceId = createTraceId();
       updateMockDb((db) => {
@@ -127,7 +168,7 @@ export const exampleProjectService = {
           traceId,
         });
       });
-      return response(getProject(id), traceId);
+      return response(findProject(id), traceId);
     } catch (error) {
       recordAuditFailure(error, () => ({
         action: 'example.update',
@@ -143,7 +184,7 @@ export const exampleProjectService = {
     try {
       await delay();
       const actor = requirePermission('example:delete');
-      const project = getProject(id);
+      const project = findProject(id);
       const traceId = createTraceId();
       updateMockDb((db) => {
         db.exampleProjects = db.exampleProjects.filter((item) => item.id !== id);
@@ -175,7 +216,7 @@ export const exampleProjectService = {
       const actor = requirePermission('example:delete');
       if (!ids.length || ids.length > 100) throw new ApiRequestError(t('serverErrors.example.batchLimit'), 400);
       // 模板：全部验证后再提交，任一目标失效时不做部分删除。
-      selected.forEach(getProject);
+      selected.forEach(findProject);
       const traceId = createTraceId();
       updateMockDb((db) => {
         db.exampleProjects = db.exampleProjects.filter((item) => !selected.includes(item.id));

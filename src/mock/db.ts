@@ -2,10 +2,16 @@ import { AUDIT_MODULES, AUDIT_PARAMS, AUDIT_REASONS, allowAuditParams, auditModu
 import { clearQueryCache } from '@/api/queryCache';
 import { createSeed, type MockDb } from './seed';
 import { syncPermissionCatalog } from './permissionCatalog';
+import { hasNewerMockDb, loadMockDb, MOCK_DB_PREFIX } from './dbStorage';
+import { mockDbMigrations } from './migrations';
+import { ApiRequestError } from '@/api/errors';
+import { t } from '@/i18n';
+import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 
 export const MOCK_DB_RESET_EVENT = 'pilot-admin:mock-db-reset';
 export const MOCK_DB_VERSION = 5;
-export const MOCK_DB_KEY = `pilot-admin:mock-db:v${MOCK_DB_VERSION}`;
+export const MOCK_DB_KEY = `${MOCK_DB_PREFIX}${MOCK_DB_VERSION}`;
+export const STALE_BUILD_CODE = 40990;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -16,7 +22,7 @@ const hasAudit = (value: Record<string, unknown>) => (
   ['create_by', 'create_date', 'last_update_by', 'last_update_date'].every((key) => typeof value[key] === 'string')
 );
 
-// 旧版本、截断 JSON 和形状损坏均回退到确定性种子。
+// 完整形状校验；迁移后与同步权限目录后都必须通过。
 function isMockDb(value: unknown): value is MockDb {
   if (!isRecord(value) || value.version !== MOCK_DB_VERSION || !Array.isArray(value.users) || !Array.isArray(value.roles)
     || !isRecord(value.permissionCatalog) || !isStringArray(value.permissionCatalog.menuIds) || !isStringArray(value.permissionCatalog.buttonIds)
@@ -108,59 +114,58 @@ function isMockDb(value: unknown): value is MockDb {
   });
 }
 
-function readDb(): MockDb {
-  try {
-    // 只清理更低版本，避免旧构建的标签页删除新版本数据。
-    for (const key of Object.keys(localStorage)) {
-      const version = Number(/^pilot-admin:mock-db:v(\d+)$/.exec(key)?.[1]);
-      if (version < MOCK_DB_VERSION) localStorage.removeItem(key);
-    }
-  } catch {
-    // 清理旧版本失败不影响当前数据读取。
-  }
-  try {
-    const stored: unknown = JSON.parse(localStorage.getItem(MOCK_DB_KEY) || 'null');
-    if (isMockDb(stored)) {
-      const reconciled = syncPermissionCatalog(stored);
-      if (reconciled.changed) {
-        try {
-          localStorage.setItem(MOCK_DB_KEY, JSON.stringify(reconciled.db));
-        } catch {
-          // 同步持久化失败仍保留补齐后的内存数据，不回退种子。
-        }
-      }
-      return reconciled.db;
-    }
-  } catch {
-    // 无效存储使用初始数据。
-  }
+let stale = false;
+// 延迟访问全局 Storage；浏览器连 localStorage getter 都拒绝时仍可读种子。
+const storage = {
+  get length() { return localStorage.length; },
+  key: (index: number) => localStorage.key(index),
+  getItem: (key: string) => localStorage.getItem(key),
+  setItem: (key: string, value: string) => localStorage.setItem(key, value),
+  removeItem: (key: string) => localStorage.removeItem(key),
+};
 
-  const seed = createSeed();
-  try {
-    localStorage.setItem(MOCK_DB_KEY, JSON.stringify(seed));
-  } catch {
-    // 存储不可用时允许内存演示。
-  }
-  return seed;
+function readDb(atStartup = false): MockDb {
+  const loaded = loadMockDb({
+    storage,
+    version: MOCK_DB_VERSION,
+    minMigratableVersion: 5,
+    migrations: mockDbMigrations,
+    validate: isMockDb,
+    seed: createSeed,
+    sync: (db) => syncPermissionCatalog(db).db,
+    readOnly: stale,
+    cleanupLowerVersions: atStartup,
+  });
+  stale = stale || loaded.stale;
+  return loaded.db;
 }
 
-let database = readDb();
+function requireWritableBuild(): void {
+  stale = stale || hasNewerMockDb(storage, MOCK_DB_VERSION);
+  if (stale) throw new ApiRequestError(t('serverErrors.staleBuild'), 409, STALE_BUILD_CODE);
+}
+
+let database = readDb(true);
 
 export const getMockDb = (): MockDb => database;
 
 export function updateMockDb(update: (draft: MockDb) => void): void {
+  requireWritableBuild();
   const draft = structuredClone(database);
   update(draft);
 
   // 修改时要求持久化成功，避免界面报告保存成功但刷新后丢失。
+  requireWritableBuild();
   localStorage.setItem(MOCK_DB_KEY, JSON.stringify(draft));
   database = draft;
   clearQueryCache();
 }
 
 export function resetMockDb(update?: (draft: MockDb) => void): void {
+  requireWritableBuild();
   const seed = createSeed();
   update?.(seed);
+  requireWritableBuild();
   localStorage.setItem(MOCK_DB_KEY, JSON.stringify(seed));
   database = seed;
 
@@ -174,8 +179,9 @@ export function resetMockDb(update?: (draft: MockDb) => void): void {
 }
 
 window.addEventListener('storage', (event) => {
+  if (event.key && Number(/^pilot-admin:mock-db:v(\d+)$/.exec(event.key)?.[1]) > MOCK_DB_VERSION) stale = true;
   if (event.key === MOCK_DB_KEY || event.key === null) {
     database = readDb();
-    clearQueryCache();
+    triggerDataChangeSideEffects();
   }
 });

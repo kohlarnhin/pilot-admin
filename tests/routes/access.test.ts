@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canAccessPage, getFirstAccessiblePage } from '@/routes/access';
+import { canAccessPage, canNavigateToPage, getFirstAccessiblePage } from '@/routes/access';
+import { searchTargets } from '@/components/search/searchTargets';
 import { menu } from '../fixtures/menu';
 
 describe('canAccessPage', () => {
@@ -57,5 +58,26 @@ describe('getFirstAccessiblePage', () => {
     expect(getFirstAccessiblePage([], [])).toBe('/403');
     expect(getFirstAccessiblePage([menu('unknown', { route_path: '/unknown' })], [])).toBe('/403');
     expect(getFirstAccessiblePage([menu('dashboard', { route_path: '/dashboard' })], [], { exclude: ['/dashboard'] })).toBe('/403');
+  });
+});
+
+describe('assistant navigation access', () => {
+  const menus = [menu('crud', { route_path: '/examples/crud' })];
+  it('grants a concrete detail route through its owning menu, including query and hash', () => {
+    expect(canNavigateToPage('/examples/crud/MiXeD?tab=history#last', { menus, permissions: [] })).toBe(true);
+    expect(canNavigateToPage('/examples/crud/A%20b?query=two words', { menus, permissions: [] })).toBe(true);
+    expect(canNavigateToPage('/examples/crud/MiXeD', { menus: [], permissions: [] })).toBe(false);
+    expect(canNavigateToPage('/system/assistant', { menus: [menu('assistant', { route_path: '/system/assistant' })], permissions: [] })).toBe(false);
+  });
+  it.each(['https://evil.example/examples/crud/id', '//evil.example', '/\\evil.example', 'examples/crud/id', '/examples/crud/id\n', undefined])('rejects unsafe navigation: %j', (route) => {
+    expect(canNavigateToPage(route, { menus, permissions: [] })).toBe(false);
+  });
+  it('checks Agent permissions and keeps detail pages out of search', () => {
+    expect(canNavigateToPage('/agent?session=1', { menus: [], permissions: ['agent:use'] })).toBe(true);
+    expect(canNavigateToPage('/agent', { menus, permissions: [] })).toBe(false);
+    expect(canNavigateToPage('/login', { menus, permissions: [] })).toBe(false);
+    const targets = searchTargets([...menus, menu('detail', { route_path: '/examples/crud/id' })], []);
+    expect(targets.some((page) => page.route === '/examples/crud')).toBe(true);
+    expect(targets.some((page) => page.route.includes('/examples/crud/'))).toBe(false);
   });
 });

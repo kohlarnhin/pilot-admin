@@ -140,6 +140,19 @@ SECURITY.md / CHANGELOG.md / LICENSE  安全边界、版本记录与许可证
 
 默认 `access: 'menu'` 要求已授权、可见且启用的菜单。额外条件写为 `requires: ['project:manage']`，所有权限都满足才可进入；路由守卫、侧栏、搜索、首页和登录落点使用 `src/routes/access.ts` 的同一个规则。`access: 'authenticated'` 用于不需要菜单的登录后页面，可通过链接进入；例如个人中心 `/profile`。注册项增加 `titleKey: 'profile.title', searchable: true`，即可按本地化标题出现在全局搜索（`titleKey` 只接受无占位符的字典键），无需菜单声明。页面用 `usePermission('project:create')`、`useCan()` 或 `<Access permission={...} fallback={...}>` 控制按钮，service 仍须重新校验权限。`useCan()` / `Access` 支持数组和 `mode="all" | "any"`（默认 all）。`useDataChanged(handler)` 订阅助手写入后的数据变更信号。
 
+详情页只需新增参数路由，授权继承拥有它的静态菜单页面：
+
+```tsx
+definePage({
+  path: '/examples/crud/:id',
+  accessPath: '/examples/crud',
+  load: () => import('../pages/examples/crud/ProjectDetailPage')
+    .then((module) => ({ default: module.ProjectDetailPage })),
+});
+```
+
+`accessPath` 必须指向已注册的静态 `access: 'menu'` 页面，开发与测试时会检查。详情自己的 `requires` 也必须满足。`resolvePage(pathname)` 使用 React Router 的 `matchRoutes` 排名：静态路径优先于参数路径，支持尾斜杠和编码片段，不改变 ID 大小写。参数页不单独出现在菜单、搜索或个人权限列表；列表用语义 `Link` 打开详情，并可通过 `state.listSearch` 传回原列表查询串。助手卡片和自动打开也使用相同授权判断，拒绝外部地址。
+
 Mock DB 的权限目录递归覆盖所有层级。种子只有管理员角色设有内部 `auto_grant: true`；新增角色默认为 false。DB 加载及跨标签页存储重载时，auto_grant 角色只获得目录中新出现的菜单/按钮，已手动撤回的旧权限不会恢复；所有角色都会补齐已授权菜单缺失的无路由祖先，不会自动授予有路由的祖先。历史目录只增不减，删除的声明和残留授权不生效，角色计数只统计当前声明。因此新增页面通常无需改角色种子或重置数据；其他角色仍在角色管理中按需授权，角色种子只用于可选的默认授权。真实后端自行决定并校验授权，不依赖这套 Mock 同步。
 
 非路由权限可放在类似 `ai-permissions` 的独立组中。空组不出现在侧栏，但其按钮会进入 me 的权限集合。`/agent` 通过 `agent:use` 守卫，助手设置同时需要页面菜单与 `agent-config:view`。已持久化的菜单自定义名称始终优先于默认名称。
@@ -149,10 +162,16 @@ Mock DB 的权限目录递归覆盖所有层级。种子只有管理员角色设
 页面只从 `src/api/services/*` 获取数据，不直接访问 DB。新增实体时：
 
 1. 在 `src/types/index.ts` 定义类型，在 `src/mock/seed.ts` 添加确定性种子。
-2. 在 `db.ts` 补充形状校验；不兼容的存储结构要升级 `MOCK_DB_KEY` 和 `version`。损坏或旧结构回退种子。
+2. 在 `db.ts` 补充完整形状校验。新增集合或改变持久化结构时，提升 `MOCK_DB_VERSION`、`MockDb.version` 和种子版本，并在 `src/mock/migrations.ts` 按旧版本号添加迁移（如键 `5` 表示 v5 → v6）；每一步都返回下一版本的数据，不靠升版重置用户数据。
 3. service 使用 `delay()`、`response()`、`pageResult()`，返回 `ApiResponse<T>` 或 `PageResult<T>`。分页字段为 `records / pageNo / pageSize / total / hasNext`。
 4. 使用 `updateMockDb()` 持久化，存储失败会抛错。不要在页面重复实现延迟、分页或权限。
 5. 大列表接 `useInfinitePage` 与 `FixedTable`，保留每页 20 条、静默追加、ID 去重、代次隔离和显式重试；不增加页码分页。
+
+迁移函数必须纯且确定：不读取时钟、随机数、语言或存储，不调用 `createId()`、`Date.now()`、`t()`；新增 ID、日期和文本从旧数据或固定锚点派生。`src/mock/dbStorage.ts` 注入 Storage、迁移、校验、种子与目录同步：优先读有效当前键；否则取支持范围内最高的旧键，依次迁移，完整校验，补齐权限目录并再次校验，再写当前键。用旧版本 fixture 测试账号、角色、会话、项目和审计均保留，并测试迁移失败、写入失败、并发迁移和未来版本键。
+
+迁移或首次回退的这一轮保留源键；仅下次启动已存在有效当前键时才清理低版本键。迁移异常、缺少迁移或结果无效会回退种子，源键在本轮不动；写入失败保留迁移后的内存数据。当前版本仍为 v5，迁移起点为 v5，映射暂为空；更早或损坏的数据仍回退种子。
+
+只要检测到更高版本键，旧页面仍可读取自己的数据，但不再写入或重置，返回业务码 `40990` 和「数据已由新版本页面升级，请刷新本页」。移除测试用未来键后也需刷新才能继续。已有、未包含此保护的旧部署无法被新页面约束；升级期间应关闭或刷新这些旧标签页。未来版本键始终不删除。
 
 `createUser()` 统一生成默认 10 位随机密码并返回 `initial_password`。若密码策略要求更长，则使用策略长度。页面只在创建成功弹窗中展示和复制；查询接口不返回密码。助手新增用户使用同一接口，并在本次创建回复中显示账号和初始密码；该回复随会话保留。
 
@@ -249,7 +268,7 @@ export const myTool: AgentTool = {
 
 系统设置 → 演示数据 →「重置演示数据」恢复所有种子，包含 150 用户、3 角色、模型资料和 25 个管理员历史会话，清理助手草稿/对话缓存并重新载入。也可从 service 调用 `settingsService.resetDemoData()`，内部使用 `resetMockDb()`。
 
-DB key 为 `pilot-admin:mock-db:v5`；本次从 v4 升级会一次性重置演示数据，并在读取时只清理更低版本 DB key（不删除未来版本）。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
+DB key 为 `pilot-admin:mock-db:v5`，迁移起点为 v5；v4 及更早数据不在迁移范围，仍回退种子。源键保留及旧标签页写入保护见[迁移说明](#添加-service-与-mock)。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
 
 ## 环境变量
 
@@ -372,13 +391,15 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 
 示例 → 标准列表页（`/examples/crud`）是完整的 CRUD 参考：分页与虚拟化、组合筛选、内联校验、单条/批量删除和安全 CSV。导出有意只要求页面访问，访客也可导出；需要独立导出权限时参考操作日志页。管理员自动取得新菜单/按钮；已有本地 v5 数据不改写其他角色的授权，运营（新增/编辑）与访客（只读）的默认菜单需在「重置演示数据」后出现。模板沿用 DB v5，不重置已有数据。
 
+点击项目名称进入 `/examples/crud/:id`：元数据、可复制编码、最多 1000 字的描述和生命周期历史分别展示。描述与分页虚拟历史独立滚动，短视口改为整列滚动；运营可编辑、管理员可删除，访客只读。历史只返回该记录的安全展示投影，不要求操作日志菜单权限。已有记录的正文不变，前 5 个多段示例只用于首次创建或重置的数据。
+
 按下面顺序复制，避免只复制页面却遗漏服务、类型或权限。以 `Widget` 为例，统一替换 `ExampleProject` → `Widget`、`ExampleProjectStatus` → `WidgetStatus`、`exampleProjects` → `widgets`、`exampleProjectService` → `widgetService`、`ProjectInput/ProjectFilters` → `WidgetInput/WidgetFilters`、`PROJECT_CODE_EXISTS` → `WIDGET_CODE_EXISTS`、`example:*` → `widget:*`、`example.*` → `widget.*`、`/examples/crud` → `/examples/widgets`；菜单 ID `crud-example` → `widgets`、按钮 ID `example-*` → `widget-*`，字典键相应改为 `menu.widgets` / `button.widgetCreate|Update|Delete`。
 
 1. **类型**：在 `src/types/index.ts` 复制 `ExampleProject` / `ExampleProjectStatus`，保留 `AuditFields`；按实际字段修改。
-2. **Mock 集合**：在 `src/mock/seed.ts` 复制别名 `MockExampleProject`、`MockDb.exampleProjects` 与 80 行种子生成/返回代码；在两种语言的 `seed.ts` 及 `src/i18n/seed.ts` 增加对应种子文本。在 `src/mock/db.ts` 的 `isMockDb` 加入集合数组和逐行形状校验。新增持久化集合/形状通常应同步提升 `MOCK_DB_VERSION` 与 `MockDb.version`/`createSeed().version`，并注明演示重置；模板集合已随 DB v5 提供，加入模板页面无需再次提升版本。旧版本只清理更低版本。
+2. **Mock 集合**：在 `src/mock/seed.ts` 复制别名 `MockExampleProject`、`MockDb.exampleProjects` 与 80 行种子生成/返回代码；在两种语言的 `seed.ts` 及 `src/i18n/seed.ts` 增加对应种子文本。在 `src/mock/db.ts` 的 `isMockDb` 加入集合数组和逐行形状校验。新增持久化集合/形状时同步提升 `MOCK_DB_VERSION` 与 `MockDb.version`/`createSeed().version`，按[迁移说明](#添加-service-与-mock)添加纯迁移和旧数据保留测试；使用现有模板集合无需提升版本。
 3. **审计目录**：在 `src/types/index.ts` 扩展 `AuditModule`、`AuditParamsMap`、`AuditLog.target_type`；在 `src/audit/catalog.ts` 增加模块与动作白名单（批量删除仅 `{ count }`），在 `src/mock/db.ts` 扩展目标类型校验，在 `src/audit/format.ts` 增加动作/模块/目标映射。两种语言 `audit.ts` 增加句子、模块及目标名称。在 `src/mock/auditSeed.ts` 的模块目标映射中增加新模块目标（该表覆盖所有 `AuditModule`）；若不需要历史演示记录，在动作筛选中排除新模块。不要把原始输入或错误放入日志。
 4. **服务**：复制 `src/api/services/exampleProjectService.ts` 为 `widgetService.ts`，替换集合、类型、路由、权限、审计代码和业务错误常量。两种语言 `serverErrors.ts` 增加 `widget` 分组；保留服务校验、数字重复码、同 draft 审计、失败不覆盖原错，以及批量先验证后一次提交的逻辑。
-5. **页面**：复制整个 `src/pages/examples/crud/` 为 `src/pages/examples/widgets/`，重命名 `ProjectFormModal.tsx` / 导出组件与 import、`CrudExamplePage`，按上面的映射替换类型/服务/权限/字典；定制列、筛选、表单规则与 CSV 字段。`// 模板：…` 标出了需要按产品取舍的位置。页面保持只调用服务。
+5. **页面**：复制整个 `src/pages/examples/crud/` 为 `src/pages/examples/widgets/`，重命名 `ProjectFormModal`、`ProjectDetailPage`、`ProjectHistory` 和 `CrudExamplePage` 的文件、导出与 import，按上面的映射替换类型/服务/权限/字典及列表/详情路径；定制列、筛选、表单规则与 CSV 字段。详情的 `accessPath` 指向新列表，历史使用服务投影而非直接读取日志。`// 模板：…` 标出了需要按产品取舍的位置。页面保持只调用服务。
 6. **文案**：复制两种语言的 `exampleProjects.ts` 为 `widgets.ts`，英文的 source import 也要改名，并在两种语言 `index.ts` 注册；在 `menu.ts` / `button.ts` 添加菜单和按钮键。保留语义 camelCase 命名及占位符一致性。
 7. **注册与授权**：在 `src/routes/routeModules.ts` 增加一个 `definePage`（新的路径、文件与导出名）；在 `src/config/menus.ts` 增加一个菜单项及 create/update/delete 按钮。图标从现有 registry 选择。Mock 的 `auto_grant` 角色会自动取得新权限；如需其他默认角色，在 `src/mock/seed.ts` 配置其菜单/按钮 ID，并重置演示数据验证。真实后端决定实际授权。
 8. **验证**：运行 `pnpm lint`、`pnpm i18n:check`、`pnpm typecheck`、`pnpm test`、`pnpm build`。用三角色与双语检查 1280×720 / 1440×900，覆盖重复编码、批量失败、分页、选择与语言切换、导出和审计；确认新集合刷新后仍存在。
@@ -411,7 +432,6 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 
 ## 路线图
 
-- Mock DB 迁移与跨版本保护、统一参数路由解析和 CRUD 详情页。
 - CSV 导入、逐批进度、幂等重试与失败行下载。
 - 左树右表目录示例、带历史面板的行内编辑工作台。
 - 助手/示例模块开关与经过实际删除验证的裁剪指南。

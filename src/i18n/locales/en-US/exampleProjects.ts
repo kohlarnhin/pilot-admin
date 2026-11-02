@@ -3,6 +3,20 @@ import type { LocalizedDictionary } from '../../types';
 
 export default {
   "description": "A complete reference for paging, forms, permissions and batch actions",
+  "detail": {
+    "title": "Project Details",
+    "back": "Back to projects",
+    "metadata": "Project information",
+    "createdBy": "Created by",
+    "updatedBy": "Updated by",
+    "systemActor": "System",
+    "history": "Lifecycle",
+    "historyCount": "Loaded: {count}",
+    "historyEmpty": "No activity yet",
+    "historyError": "Could not load activity",
+    "notFound": "Project not found or already deleted",
+    "noDescription": "No description"
+  },
   "fields": {
     "name": "Project name",
     "code": "Project code",

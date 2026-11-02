@@ -167,7 +167,7 @@ export function createSeed(): MockDb {
       code: `PRJ-${String(index + 1).padStart(3, '0')}`,
       owner: users[(index * 7) % users.length].user_name,
       status: (['active', 'paused', 'archived'] as const)[index % 3],
-      description: text.exampleProjects.description,
+      description: index < 5 ? text.exampleProjects.longDescription : text.exampleProjects.description,
       create_by: users[index % users.length].id,
       create_date: new Date(createdAt).toISOString(),
       last_update_by: users[(index * 7) % users.length].id,

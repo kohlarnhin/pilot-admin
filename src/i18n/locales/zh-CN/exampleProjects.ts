@@ -1,5 +1,19 @@
 export default {
   "description": "分页、表单、权限与批量操作的完整参考",
+  "detail": {
+    "title": "项目详情",
+    "back": "返回项目列表",
+    "metadata": "项目信息",
+    "createdBy": "创建人",
+    "updatedBy": "更新人",
+    "systemActor": "系统",
+    "history": "生命周期",
+    "historyCount": "已加载 {count} 条",
+    "historyEmpty": "暂无操作记录",
+    "historyError": "加载操作记录失败",
+    "notFound": "项目不存在或已被删除",
+    "noDescription": "暂无描述"
+  },
   "fields": {
     "name": "项目名称",
     "code": "项目编码",
