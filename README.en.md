@@ -92,6 +92,8 @@ src/pages/, routes/        Pages, routing and cached lazy loaders
 src/types/, utils/         Shared types and utilities
 tests/                    Node logic tests and browser stubs, mirroring src paths
 vitest.config.ts          Standalone test configuration; no app entry or Vite plugins
+e2e/                      Playwright real-browser journeys and isolated fixtures
+playwright.config.ts      Chromium root/subpath production preview configuration
 skills/pilot-ui-spec/      Portable UI contract and reference assets
 .github/                  CI, Pages/Release workflows, Dependabot and bilingual Issue/PR templates
 .vscode/extensions.json   Recommended editor extensions
@@ -250,10 +252,15 @@ Profile changes and audit share one draft. `profile.update` records only changed
 | `pnpm typecheck` | Strict TypeScript check |
 | `pnpm test` | Run Vitest logic unit tests once |
 | `pnpm test:watch` | Watch and rerun tests |
+| `pnpm exec playwright install chromium` | Install Chromium before the first E2E run |
+| `pnpm test:e2e` | Build and start production previews on 3320/3321, then run browser regressions |
+| `pnpm test:e2e:ui` | Debug tests and inspect steps in Playwright UI |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
 Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm i18n:check && pnpm typecheck && pnpm test && pnpm build`. Root `tests/` uses Node with minimal browser stubs to cover commands, permission catalogs, page access, CSV, SSE, i18n, mock DB persistence and paging; see the [testing guide](CONTRIBUTING.en.md#unit-tests) for singleton isolation. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md) or the [full Chinese guide](CONTRIBUTING.md) for the contribution workflow.
+
+E2E covers authentication, RBAC, navigation, users, CRUD/CSV, assistant plans and shared sessions, English persistence, demo reset and the `/pilot-admin/` subpath. Each test starts with fresh browser storage. After installing Chromium once, `pnpm test:e2e` handles builds and servers automatically. CI runs it after engineering checks, including fork PRs. See the [browser testing guide](CONTRIBUTING.en.md#browser-end-to-end-tests) for debugging and traces.
 
 ## Demo storage and reset
 

@@ -22,6 +22,8 @@ Open http://localhost:3300. No backend or environment file is needed. Demo accou
 | `pnpm typecheck` | Strict TypeScript check |
 | `pnpm test` | Run Vitest logic unit tests once |
 | `pnpm test:watch` | Watch and rerun tests |
+| `pnpm test:e2e` | Playwright Chromium browser regressions with automatic build/preview |
+| `pnpm test:e2e:ui` | Interactive Playwright UI debugging |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
@@ -51,6 +53,21 @@ Keep pure-logic tests in root `tests/`, mirroring `src/` (for example `tests/age
 `tests/setup.ts` installs a minimal EventTarget-based `window`, `document.documentElement` and in-memory local/session storage before app imports, then clears storage and isolates event listeners for each test. There is no DOM emulator. Import test APIs explicitly from `vitest`. For DB, locale or token singletons, seed storage first, call `vi.resetModules()`, then use dynamic `import()`. Mock network boundaries, and avoid real `delay()` waits. Keep CJK fixtures outside `src/`; do not relax i18n checks. Typecheck and build also check tests and the Vitest config.
 
 Run `pnpm test`, use `pnpm test:watch` during development, or focus a file with `pnpm test tests/agent/commands.test.ts`. CI, Pages and Release run the suite before building. Unit tests complement the real-app UI verification required above.
+
+## Browser end-to-end tests
+
+Run `pnpm test:e2e` when changing authentication, routes, RBAC, navigation, list CRUD, the assistant, internationalization or persistence, and before each milestone. Install the browser once:
+
+```sh
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+Tests live in `e2e/`. The config builds and serves production previews on 3320 (root) and 3321 (`/pilot-admin/`, separate `dist-subpath/` output); no dev server is needed. Local runs can reuse existing previews on these ports; stop old previews after app/config changes to avoid testing stale builds. Chromium is the only browser. Each test gets a fresh context and signs in through the UI without shared authentication storage. Fixtures reject external/backend requests and fail on console errors or page errors. Prefer role/label locators and imported locale strings; use web-first assertions without fixed sleeps.
+
+Use `pnpm test:e2e:ui` to inspect steps and rerun tests, or `pnpm test:e2e e2e/users.spec.ts --project=root` to focus a journey. CI retries failures once and records traces. To record locally, run `pnpm test:e2e --trace on`, then `pnpm exec playwright show-trace test-results/<test-directory>/trace.zip`. CI runs E2E after engineering checks, including fork PRs, and uploads `playwright-report/` and `test-results/` on failure. Download the artifact and open it with `pnpm exec playwright show-report playwright-report`. Pages/Release do not repeat E2E.
+
+E2E complements Vitest and the manual real-page checks at **1280×720 / 1440×900** with **admin / operator / viewer**; retain bilingual checks and visual review. Record actual results and coverage limits in the PR.
 
 ## Internationalization
 

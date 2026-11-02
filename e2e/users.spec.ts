@@ -1,0 +1,54 @@
+import { test, expect, zh, createUser } from './fixtures';
+
+test('admin validates, creates, searches, edits and disables/enables a user', async ({ page, loginAs }) => {
+  await loginAs('admin');
+  await page.getByRole('link', { name: zh.menu.users, exact: true }).click();
+  const account = 'e2e_user';
+  const success = await createUser(page, account, { validateFirst: true });
+  await expect(success).toBeVisible();
+  await expect(success.getByText(account, { exact: true })).toBeVisible();
+  const passwordRow = success.getByText(zh.common.fields.password, { exact: true }).locator('..');
+  await expect(passwordRow.locator('.font-mono')).toHaveText(/.{8,}/);
+  await success.getByRole('button', { name: zh.common.actions.gotIt, exact: true }).click();
+  const search = page.getByPlaceholder(zh.users.searchPlaceholder);
+  await search.fill(account);
+  await search.press('Enter');
+  const row = page.getByRole('row').filter({ hasText: `@${account}` });
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: zh.button.userUpdate, exact: true }).click();
+  const edit = page.getByRole('dialog', { name: zh.button.userUpdate, exact: true });
+  await edit.getByRole('textbox', { name: zh.users.fields.displayName, exact: true }).fill('E2E updated user');
+  await edit.getByRole('textbox', { name: zh.users.fields.workEmail, exact: true }).fill('e2e@example.com');
+  await edit.getByRole('button', { name: zh.common.actions.save, exact: true }).click();
+  await expect(edit).toBeHidden();
+  await expect(row).toContainText('E2E updated user');
+  await expect(row).toContainText('e2e@example.com');
+  await row.getByRole('switch', { name: zh.users.actions.disable, exact: true }).click();
+  await expect(row.getByRole('switch')).not.toBeChecked();
+  await expect(row.getByRole('switch')).toBeEnabled();
+  await page.reload();
+  await search.fill(account);
+  await search.press('Enter');
+  await expect(row.getByRole('switch')).not.toBeChecked();
+  await row.getByRole('switch', { name: zh.users.actions.enable, exact: true }).click();
+  await expect(row.getByRole('switch')).toBeEnabled();
+  await page.reload();
+  await search.fill(account);
+  await search.press('Enter');
+  await expect(row.getByRole('switch')).toBeChecked();
+});
+
+test('users infinite list appends records through the table scroller', async ({ page, loginAs }) => {
+  await loginAs('admin');
+  await page.goto('system/users');
+  const table = page.getByRole('table');
+  await expect(table.locator('[data-row-key]').first()).toBeVisible();
+  const initialCount = Number(await table.getAttribute('data-record-count'));
+  expect(initialCount).toBeGreaterThan(0);
+  await table.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(async () => Number(await table.getAttribute('data-record-count'))).toBeGreaterThan(initialCount);
+  await expect.poll(() => table.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const keys = await table.locator('[data-row-key]').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-row-key')));
+  expect(new Set(keys).size).toBe(keys.length);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && window.scrollY === 0)).toBe(true);
+});

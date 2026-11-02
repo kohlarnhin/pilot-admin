@@ -104,6 +104,8 @@ src/
   types/ utils/       通用类型、错误恢复等
 tests/                与 src 路径对应的 Node 纯逻辑测试及浏览器 stubs
 vitest.config.ts      独立测试配置，不加载应用入口或 Vite 插件
+e2e/                  Playwright 真实浏览器旅程与隔离 fixtures
+playwright.config.ts  Chromium 根路径 / 子路径生产预览配置
 skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现映射
 .github/              CI、Pages/Release 工作流、Dependabot 与双语 Issue/PR 模板
 .vscode/extensions.json 编辑器扩展推荐
@@ -425,10 +427,15 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
 | `pnpm test:watch` | 监听变更并重跑测试 |
+| `pnpm exec playwright install chromium` | 首次安装 E2E 使用的 Chromium |
+| `pnpm test:e2e` | 自动构建并启动 3320 / 3321 生产预览，运行真实浏览器回归 |
+| `pnpm test:e2e:ui` | Playwright UI 调试，可选择测试与查看步骤 |
 | `pnpm build` | `tsc -b && vite build` |
 | `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |
 
 提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm i18n:check && pnpm typecheck && pnpm test && pnpm build`。根目录 `tests/` 使用 Node 环境和最小浏览器 stubs，覆盖命令、权限目录、页面访问、CSV、SSE、国际化、Mock DB 与分页；测试隔离和单例导入方式见[贡献指南](CONTRIBUTING.md#验证与交付)。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
+
+E2E 覆盖登录、角色权限、导航、用户、标准列表 CRUD/CSV、助手计划与共享会话、英语持久化、数据重置和 `/pilot-admin/` 子路径；每个测试独立初始化浏览器存储。首次安装 Chromium 后，运行 `pnpm test:e2e` 即可，无需手动启动服务。CI 在工程检查通过后自动运行，包括 fork PR。调试与 trace 用法见 [贡献指南](CONTRIBUTING.md#浏览器端到端测试)。
 
 ## 路线图
 

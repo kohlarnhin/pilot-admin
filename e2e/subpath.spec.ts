@@ -1,0 +1,25 @@
+import { test, expect, zh, logout, signIn } from './fixtures';
+
+test('prefixed cold deep link, login, navigation, assets and logout', async ({ page }) => {
+  const assets: { url: string; status: number }[] = [];
+  page.on('response', (response) => {
+    if (['script', 'stylesheet', 'font', 'image'].includes(response.request().resourceType())) {
+      assets.push({ url: response.url(), status: response.status() });
+    }
+  });
+  await page.goto('system/users');
+  await expect(page).toHaveURL('http://localhost:3321/pilot-admin/login');
+  await signIn(page, 'admin');
+  await page.getByRole('dialog', { name: zh.agentEntry.title }).getByRole('button', { name: zh.agentEntry.console, exact: true }).click();
+  await expect(page).toHaveURL('http://localhost:3321/pilot-admin/dashboard');
+  await page.getByRole('link', { name: zh.menu.users, exact: true }).click();
+  await expect(page).toHaveURL('http://localhost:3321/pilot-admin/system/users');
+  await expect(page.getByRole('heading', { name: zh.menu.users, exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: zh.button.userCreate, exact: true })).toBeVisible();
+  await expect.poll(() => assets.filter((asset) => asset.url.endsWith('.js')).length).toBeGreaterThan(0);
+  await expect.poll(() => assets.filter((asset) => asset.url.endsWith('.css')).length).toBeGreaterThan(0);
+  expect(assets.every((asset) => new URL(asset.url).pathname.startsWith('/pilot-admin/') && asset.status === 200)).toBe(true);
+  await logout(page);
+  await expect(page).toHaveURL('http://localhost:3321/pilot-admin/login');
+});

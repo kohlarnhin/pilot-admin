@@ -3,6 +3,10 @@ node_modules/
 
 # build output
 dist/
+dist-subpath/
+playwright-report/
+test-results/
+blob-report/
 *.tsbuildinfo
 
 # logs

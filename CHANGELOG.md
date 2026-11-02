@@ -7,6 +7,7 @@
 ### Added
 
 - **数据迁移与详情**：可注入的 Mock DB 迁移核心、保留源键与未来版本写入保护；统一 Router 参数页面解析和 `accessPath` 授权；CRUD 详情页、独立滚动的描述和分页虚拟历史、列表详情链接及缺失记录状态。
+- **浏览器回归**：Playwright Chromium 真实应用 E2E，覆盖登录、权限、导航、用户、标准列表 CRUD/CSV、助手计划与共享运行时、英语持久化、数据重置和子路径；`pnpm test:e2e` 自动构建双生产预览，新增 UI 调试脚本、fork PR CI 浏览器缓存与失败报告，双语文档及 PR 清单同步。
 - **核心逻辑测试**：Vitest 4.1.12、独立 Node 配置与最小浏览器/存储 stubs；根目录 `tests/` 覆盖命令边界、权限目录、页面访问、CSV、SSE、国际化、Mock DB 持久化及分页，新增 `pnpm test` / `pnpm test:watch`。
 - **部署与演示**：`VITE_BASE_PATH` 页面/资源前缀、Router basename、GitHub Pages 检查与部署工作流及深链 404 页面；双语文档补充静态托管、缓存、子路径与发布步骤。
 - **发布与维护**：按版本标签校验和打包的 Release 工作流、严格提取对应 CHANGELOG 章节的脚本、按月分组的 Dependabot minor/patch 更新及编辑器扩展推荐。

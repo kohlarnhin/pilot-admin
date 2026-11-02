@@ -24,6 +24,8 @@ pnpm dev
 | `pnpm typecheck` | TypeScript strict 检查 |
 | `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
 | `pnpm test:watch` | 监听变更并重跑测试 |
+| `pnpm test:e2e` | Playwright Chromium 真实浏览器回归（自动构建并启动预览） |
+| `pnpm test:e2e:ui` | Playwright UI 交互调试 |
 | `pnpm build` | 类型检查与生产构建 |
 | `pnpm preview` | 预览生产构建 |
 
@@ -75,6 +77,21 @@ UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280�
 用 `pnpm test` 运行全套，`pnpm test:watch` 交互开发，`pnpm test tests/agent/commands.test.ts` 聚焦单个文件。单元测试不能替代真实 UI 验证。请提供可复现步骤和实际结果；未执行的检查须明确说明。CI、Pages 部署与 Release 均在构建前运行测试，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 申请私下联系。
 
 生成 ID 用 `createId()`；局域网 http 不是安全上下文，`crypto.randomUUID` / `navigator.clipboard` 不可用。
+
+## 浏览器端到端测试
+
+改动登录、路由、权限、导航、列表 CRUD、助手、国际化或持久化时，以及每个里程碑提交前，运行 `pnpm test:e2e`。首次先安装浏览器：
+
+```sh
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+测试位于 `e2e/`，配置自动构建并在 3320 启动根路径生产预览、在 3321 启动 `/pilot-admin/` 子路径预览（独立 `dist-subpath/`），无需运行 `pnpm dev`。本地可复用这两个端口的现有预览；应用或配置有变化时先停止旧预览，避免验证旧产物。仅 Chromium；每个测试使用独立 context 和真实 UI 登录，不共享认证存储。fixtures 会拒绝外部/后端请求，并将控制台 error 和 pageerror 视为失败。优先使用 role/label 定位器，系统文案从双语字典导入；使用 web-first assertions，不加固定等待。
+
+使用 `pnpm test:e2e:ui` 查看步骤并重跑，`pnpm test:e2e e2e/users.spec.ts --project=root` 聚焦旅程。CI 仅在失败时重试一次并记录 trace；本地可运行 `pnpm test:e2e --trace on` 主动录制，再用 `pnpm exec playwright show-trace test-results/<测试目录>/trace.zip` 查看。CI 工程检查通过后执行 E2E，包括 fork PR；失败时上传 `playwright-report/` 和 `test-results/`，下载后用 `pnpm exec playwright show-report playwright-report` 查看 HTML 报告。Pages/Release 不重复运行 E2E。
+
+E2E 补充 Vitest 逻辑测试，也不能替代上方 **1280×720 / 1440×900、admin / operator / viewer** 的真实页面人工检查、双语和视觉评审。PR 中记录实际执行结果及未覆盖项。
 
 ## 国际化约定与术语
 

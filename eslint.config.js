@@ -4,10 +4,10 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 
-const typescriptFiles = ['src/**/*.{ts,tsx}', 'tests/**/*.ts', '*.ts'];
+const typescriptFiles = ['src/**/*.{ts,tsx}', 'tests/**/*.ts', 'e2e/**/*.ts', '*.ts'];
 
 export default [
-  { ignores: ['dist/**', 'node_modules/**', '.codex-runs/**', 'skills/**/assets/**', '**/*.tsbuildinfo'] },
+  { ignores: ['dist/**', 'dist-subpath/**', 'playwright-report/**', 'test-results/**', 'blob-report/**', 'node_modules/**', '.codex-runs/**', 'skills/**/assets/**', '**/*.tsbuildinfo'] },
   { ...js.configs.recommended, files: [...typescriptFiles, '*.js'] },
   ...tseslint.configs.recommended.map((config) => ({ ...config, files: typescriptFiles })),
   {
@@ -35,7 +35,7 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
-  { files: ['*.{js,ts}', 'tests/**/*.ts'], languageOptions: { globals: globals.node } },
+  { files: ['*.{js,ts}', 'tests/**/*.ts', 'e2e/**/*.ts'], languageOptions: { globals: globals.node } },
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     ignores: ['src/utils/id.ts'],
