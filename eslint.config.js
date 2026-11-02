@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 
-const typescriptFiles = ['src/**/*.{ts,tsx}', '*.ts'];
+const typescriptFiles = ['src/**/*.{ts,tsx}', 'tests/**/*.ts', '*.ts'];
 
 export default [
   { ignores: ['dist/**', 'node_modules/**', '.codex-runs/**', 'skills/**/assets/**', '**/*.tsbuildinfo'] },
@@ -35,7 +35,7 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
-  { files: ['*.{js,ts}'], languageOptions: { globals: globals.node } },
+  { files: ['*.{js,ts}', 'tests/**/*.ts'], languageOptions: { globals: globals.node } },
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     ignores: ['src/utils/id.ts'],

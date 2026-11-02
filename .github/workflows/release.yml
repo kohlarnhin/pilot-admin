@@ -32,7 +32,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm i18n:check
       - run: pnpm typecheck
-      # M8b: run pnpm test here before the production build.
+      - run: pnpm test
       - run: pnpm build
         env:
           VITE_BASE_PATH: /

@@ -90,6 +90,8 @@ src/mock/                  Typed seed, local DB and agent engine/tools
 src/hooks/, store/         Paging, virtualization and application state
 src/pages/, routes/        Pages, routing and cached lazy loaders
 src/types/, utils/         Shared types and utilities
+tests/                    Node logic tests and browser stubs, mirroring src paths
+vitest.config.ts          Standalone test configuration; no app entry or Vite plugins
 skills/pilot-ui-spec/      Portable UI contract and reference assets
 .github/                  CI, Pages/Release workflows, Dependabot and bilingual Issue/PR templates
 .vscode/extensions.json   Recommended editor extensions
@@ -240,10 +242,12 @@ Profile changes and audit share one draft. `profile.update` records only changed
 | `pnpm lint` | ESLint; zero errors required, Hooks/Refresh warnings remain visible |
 | `pnpm i18n:check` | Dictionary/placeholder parity and source CJK gate |
 | `pnpm typecheck` | Strict TypeScript check |
+| `pnpm test` | Run Vitest logic unit tests once |
+| `pnpm test:watch` | Watch and rerun tests |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
-Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md) or the [full Chinese guide](CONTRIBUTING.md) for the contribution workflow.
+Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm i18n:check && pnpm typecheck && pnpm test && pnpm build`. Root `tests/` uses Node with minimal browser stubs to cover commands, permission catalogs, page access, CSV, SSE, i18n, mock DB persistence and paging; see the [testing guide](CONTRIBUTING.en.md#unit-tests) for singleton isolation. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md) or the [full Chinese guide](CONTRIBUTING.md) for the contribution workflow.
 
 ## Demo storage and reset
 
@@ -251,7 +255,6 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 
 ## Roadmap
 
-- Vitest logic tests with isolated Node browser stubs.
 - Mock DB migrations and version guards, unified parameter-route resolution and a CRUD detail page.
 - CSV import with atomic batches, idempotent retry and failed-row downloads.
 - A tree directory with a record table, and an inline-editing workbench with history.

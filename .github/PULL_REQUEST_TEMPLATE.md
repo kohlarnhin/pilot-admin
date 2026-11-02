@@ -9,7 +9,7 @@ Describe the problem, resulting behavior and scope. Link related issues.
 Check only completed items; explain anything not applicable or not run.
 
 - [ ] `pnpm install --frozen-lockfile` 成功，锁文件同步。 / Install passes and dependency changes include the lockfile.
-- [ ] `pnpm lint`、`pnpm i18n:check`、`pnpm typecheck`、`pnpm build` 通过。 / All checks pass.
+- [ ] `pnpm lint`、`pnpm i18n:check`、`pnpm typecheck`、`pnpm test`、`pnpm build` 通过。 / All checks pass.
 - [ ] UI 变更已在真实页面验证，附关键截图。 / UI changes verified in the running app with screenshots.
 - [ ] 已检查 1280×720 / 1440×900 的操作列、滚动、面板与长列表。 / Checked action columns, document scroll isolation, panels and long lists at both sizes.
 - [ ] 已检查键盘、焦点、错误恢复、三种角色及双语。 / Checked keyboard, focus, recovery, admin/operator/viewer and zh-CN/en-US.

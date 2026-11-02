@@ -20,6 +20,8 @@ Open http://localhost:3300. No backend or environment file is needed. Demo accou
 | `pnpm lint` | ESLint; zero errors required |
 | `pnpm i18n:check` | Dictionary parity, placeholders and source CJK gate |
 | `pnpm typecheck` | Strict TypeScript check |
+| `pnpm test` | Run Vitest logic unit tests once |
+| `pnpm test:watch` | Watch and rerun tests |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
@@ -36,10 +38,19 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm i18n:check
 pnpm typecheck
+pnpm test
 pnpm build
 ```
 
-Verify UI changes in the real running app at **1280×720** and **1440×900**, in zh-CN and en-US, as admin, operator and viewer. Check action columns, document scroll isolation, panel sizes, long lists, keyboard/focus and error recovery. Production preview must send no external or backend requests. Include screenshots and actual results in the PR; identify checks not run. There is currently no additional test framework.
+Verify UI changes in the real running app at **1280×720** and **1440×900**, in zh-CN and en-US, as admin, operator and viewer. Check action columns, document scroll isolation, panel sizes, long lists, keyboard/focus and error recovery. Production preview must send no external or backend requests. Include screenshots and actual results in the PR; identify checks not run.
+
+## Unit tests
+
+Keep pure-logic tests in root `tests/`, mirroring `src/` (for example `tests/agent/commands.test.ts`). The standalone `vitest.config.ts` uses Node and a fixed timezone. Vitest 4.1.12 is pinned because its [official package manifest](https://github.com/vitest-dev/vitest/blob/v4.1.12/packages/vitest/package.json) supports Vite 6 and the full Node 22 line without upgrading Vite or narrowing the project's Node requirement.
+
+`tests/setup.ts` installs a minimal EventTarget-based `window`, `document.documentElement` and in-memory local/session storage before app imports, then clears storage and isolates event listeners for each test. There is no DOM emulator. Import test APIs explicitly from `vitest`. For DB, locale or token singletons, seed storage first, call `vi.resetModules()`, then use dynamic `import()`. Mock network boundaries, and avoid real `delay()` waits. Keep CJK fixtures outside `src/`; do not relax i18n checks. Typecheck and build also check tests and the Vitest config.
+
+Run `pnpm test`, use `pnpm test:watch` during development, or focus a file with `pnpm test tests/agent/commands.test.ts`. CI, Pages and Release run the suite before building. Unit tests complement the real-app UI verification required above.
 
 ## Internationalization
 

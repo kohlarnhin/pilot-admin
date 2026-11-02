@@ -22,6 +22,8 @@ pnpm dev
 | `pnpm lint` | ESLint 检查，提交前须无 error |
 | `pnpm i18n:check` | 字典、占位符一致性及 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
+| `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
+| `pnpm test:watch` | 监听变更并重跑测试 |
 | `pnpm build` | 类型检查与生产构建 |
 | `pnpm preview` | 预览生产构建 |
 
@@ -49,7 +51,7 @@ chore: 初始化仓库
 - 页面通过 `src/api/services` 访问数据，不直接读写 Mock DB；写操作在 service 重新校验权限。
 - 保留分页无限追加、虚拟化、ID 去重、代次保护及失败后的显式重试。
 - 助手面板与 Agent 页面共用路由上层运行时；保留取消、账号隔离和计划停止语义。附件只传元数据。
-- 不主动升级样式框架或增加测试框架；异步失败保留输入，字段错误内联并关联 ARIA。
+- 沿用既有样式和 Vitest 测试框架；异步失败保留输入，字段错误内联并关联 ARIA。
 
 扩展步骤请读 README 的 [添加页面与权限](README.md#添加页面与权限)、[添加 service 与 Mock](README.md#添加-service-与-mock)、[接真实后端](README.md#接真实后端)、[新增助手能力](README.md#新增助手能力) 和 [添加助手弹窗操作](README.md#添加助手弹窗操作)。
 
@@ -58,14 +60,19 @@ chore: 初始化仓库
 ```sh
 pnpm install --frozen-lockfile
 pnpm lint
-pnpm typecheck
-pnpm build
 pnpm i18n:check
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
 UI 改动必须在运行中的真实页面验证，附关键截图；在 **1280×720** 和 **1440×900** 检查操作列、文档不滚动、面板尺寸、长列表、键盘/焦点与错误恢复，并覆盖 admin、operator、viewer 三种角色。生产预览不得发送外部或后端请求。
 
-本项目没有额外测试框架。请提供与改动对应的可复现步骤和实际检查结果；未执行的检查须明确说明。CI 会执行安装、lint、i18n:check、类型检查和构建，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 私密报告。
+纯逻辑测试放在根目录 `tests/`，按 `src/` 的路径组织（如 `tests/agent/commands.test.ts`），由独立的 `vitest.config.ts` 配置。固定 Vitest 4.1.12：其[官方包声明](https://github.com/vitest-dev/vitest/blob/v4.1.12/packages/vitest/package.json)支持 Vite 6 和完整 Node 22 版本线，无需升级项目的 Vite 或收紧 Node 要求。
+
+测试使用 Node 环境，不安装 DOM 模拟器；`tests/setup.ts` 在应用模块导入前提供 EventTarget 型 `window`、`document.documentElement` 和内存 `localStorage` / `sessionStorage`，每个测试清空存储并隔离事件监听器。测试显式从 `vitest` 导入 API。涉及 DB、语言或令牌单例时，先设置存储，再调用 `vi.resetModules()` 和动态 `import()`；网络在边界 mock `fetch`，不要等待真实 `delay()`。测试和 CJK fixtures 留在 `tests/`，不放进 `src/`，也不放宽 i18n 门禁。`pnpm typecheck` 与构建会检查测试和配置的类型。
+
+用 `pnpm test` 运行全套，`pnpm test:watch` 交互开发，`pnpm test tests/agent/commands.test.ts` 聚焦单个文件。单元测试不能替代真实 UI 验证。请提供可复现步骤和实际结果；未执行的检查须明确说明。CI、Pages 部署与 Release 均在构建前运行测试，真实页面验证仍需在 PR 中记录。安全问题按 [SECURITY.md](SECURITY.md) 申请私下联系。
 
 生成 ID 用 `createId()`；局域网 http 不是安全上下文，`crypto.randomUUID` / `navigator.clipboard` 不可用。
 

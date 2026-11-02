@@ -102,6 +102,8 @@ src/
   pages/              登录、概览、系统页面、组件示例与错误页
   routes/             页面注册表、访问判断、悬停预取与路由配置
   types/ utils/       通用类型、错误恢复等
+tests/                与 src 路径对应的 Node 纯逻辑测试及浏览器 stubs
+vitest.config.ts      独立测试配置，不加载应用入口或 Vite 插件
 skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现映射
 .github/              CI、Pages/Release 工作流、Dependabot 与双语 Issue/PR 模板
 .vscode/extensions.json 编辑器扩展推荐
@@ -379,7 +381,7 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 5. **页面**：复制整个 `src/pages/examples/crud/` 为 `src/pages/examples/widgets/`，重命名 `ProjectFormModal.tsx` / 导出组件与 import、`CrudExamplePage`，按上面的映射替换类型/服务/权限/字典；定制列、筛选、表单规则与 CSV 字段。`// 模板：…` 标出了需要按产品取舍的位置。页面保持只调用服务。
 6. **文案**：复制两种语言的 `exampleProjects.ts` 为 `widgets.ts`，英文的 source import 也要改名，并在两种语言 `index.ts` 注册；在 `menu.ts` / `button.ts` 添加菜单和按钮键。保留语义 camelCase 命名及占位符一致性。
 7. **注册与授权**：在 `src/routes/routeModules.ts` 增加一个 `definePage`（新的路径、文件与导出名）；在 `src/config/menus.ts` 增加一个菜单项及 create/update/delete 按钮。图标从现有 registry 选择。Mock 的 `auto_grant` 角色会自动取得新权限；如需其他默认角色，在 `src/mock/seed.ts` 配置其菜单/按钮 ID，并重置演示数据验证。真实后端决定实际授权。
-8. **验证**：运行 `pnpm lint`、`pnpm typecheck`、`pnpm build`、`pnpm i18n:check`。用三角色与双语检查 1280×720 / 1440×900，覆盖重复编码、批量失败、分页、选择与语言切换、导出和审计；确认新集合刷新后仍存在。
+8. **验证**：运行 `pnpm lint`、`pnpm i18n:check`、`pnpm typecheck`、`pnpm test`、`pnpm build`。用三角色与双语检查 1280×720 / 1440×900，覆盖重复编码、批量失败、分页、选择与语言切换、导出和审计；确认新集合刷新后仍存在。
 
 ## 个人中心
 
@@ -400,14 +402,15 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 | `pnpm lint` | ESLint 检查，须无 error；保留 Hooks 依赖和 Fast Refresh 警告 |
 | `pnpm i18n:check` | 字典 / 占位符一致性和源代码 CJK 门禁 |
 | `pnpm typecheck` | TypeScript strict 检查 |
+| `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
+| `pnpm test:watch` | 监听变更并重跑测试 |
 | `pnpm build` | `tsc -b && vite build` |
 | `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |
 
-提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。无测试框架依赖；项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
+提交前跑 `pnpm install --frozen-lockfile && pnpm lint && pnpm i18n:check && pnpm typecheck && pnpm test && pnpm build`。根目录 `tests/` 使用 Node 环境和最小浏览器 stubs，覆盖命令、权限目录、页面访问、CSV、SSE、国际化、Mock DB 与分页；测试隔离和单例导入方式见[贡献指南](CONTRIBUTING.md#验证与交付)。UI 改动必须启动真实页面，在 1280×720 和 1440×900 操作并检查滚动、三种角色权限、焦点与错误恢复；生产预览不应发送外部或后端请求。项目内 AI 工作约定见 AGENTS.md，视觉契约见 `skills/pilot-ui-spec/`。
 
 ## 路线图
 
-- Vitest 纯逻辑测试与 Node 环境隔离。
 - Mock DB 迁移与跨版本保护、统一参数路由解析和 CRUD 详情页。
 - CSV 导入、逐批进度、幂等重试与失败行下载。
 - 左树右表目录示例、带历史面板的行内编辑工作台。
