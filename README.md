@@ -2,6 +2,13 @@
 
 # Pilot Admin（领航）
 
+[![CI](https://github.com/kohlarnhin/pilot-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/kohlarnhin/pilot-admin/actions/workflows/ci.yml)
+[![Pages](https://github.com/kohlarnhin/pilot-admin/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/kohlarnhin/pilot-admin/actions/workflows/deploy-pages.yml)
+[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node ≥22](https://img.shields.io/badge/node-%E2%89%A522-339933.svg)](https://nodejs.org/)
+
+**[在线演示 →](https://kohlarnhin.github.io/pilot-admin/)** 演示数据保存在访问者的浏览器中，不发送后端请求；演示账号见下方表格。
+
 可直接 fork 的通用 React 管理端起点，包含设计系统、固定侧栏、Mock 登录与 RBAC、管理页面、组件示例、AI 助手面板和全屏 Agent 模式。所有数据和助手执行都在浏览器中完成；默认没有后端请求或真实模型调用。
 
 ## 开箱即用
@@ -96,6 +103,12 @@ src/
   routes/             页面注册表、访问判断、悬停预取与路由配置
   types/ utils/       通用类型、错误恢复等
 skills/pilot-ui-spec/  可随 fork 复制的 UI 契约、参考资产与实现映射
+.github/              CI、Pages/Release 工作流、Dependabot 与双语 Issue/PR 模板
+.vscode/extensions.json 编辑器扩展推荐
+scripts/release-notes.mjs 按版本提取 CHANGELOG 发布说明
+CODE_OF_CONDUCT.md    Contributor Covenant 2.1 与举报入口
+CONTRIBUTING.md / CONTRIBUTING.en.md  双语贡献指南
+SECURITY.md / CHANGELOG.md / LICENSE  安全边界、版本记录与许可证
 ```
 
 ## 换品牌
@@ -242,6 +255,7 @@ DB key 为 `pilot-admin:mock-db:v5`；本次从 v4 升级会一次性重置演�
 
 | 变量 | 默认值 | 用途 |
 | --- | --- | --- |
+| `VITE_BASE_PATH` | `/` | 页面与静态资源的部署前缀，例如 `/pilot-admin/`；自动补齐首尾 `/`，不接受域名或完整 URL |
 | `VITE_API_BASE_URL` | `/api` | HTTP 两个 Axios 实例及 SSE 相对路径的基础地址，可设根路径或完整 HTTP(S) URL |
 | `VITE_DEV_PROXY_TARGET` | 空 | 仅开发服务使用的代理目标，留空不启用代理 |
 
@@ -250,6 +264,47 @@ DB key 为 `pilot-admin:mock-db:v5`；本次从 v4 升级会一次性重置演�
 HTTP 调用中的 `/users` 由 Axios 结合 API base。SSE 的 `agent/chat`、`./agent/chat` 使用 API base；以 `/` 开头的路径和完整 URL 按原值请求，因此现有 `/api/agent/chat` 不会重复加前缀。需要跟随自定义 base 时，使用无前导斜杠的 SSE 路径。
 
 `VITE_*` 变量可被客户端读取，不得填写密码、Token 或模型密钥。修改环境变量后需重启开发服务；生产配置在构建时生效。
+
+## 部署
+
+### 静态托管与子路径
+
+默认构建部署在站点根路径，`dist/` 是完整静态产物：
+
+```sh
+pnpm build
+pnpm preview --port 3300
+```
+
+部署到 `/pilot-admin/` 等子路径时，在构建前设置前缀，也可写入 `.env.local`：
+
+```sh
+VITE_BASE_PATH=/pilot-admin/ pnpm build
+pnpm preview --port 3300
+```
+
+此时预览地址为 http://localhost:3300/pilot-admin/ 。Vite 会调整 HTML、favicon、字体、CSS 和 JS 分包资源地址，Router 使用同一 basename；页面注册和 `navigate('/profile')` 等内部导航继续使用不带部署前缀的路由。前缀只接受路径，禁止 scheme、host、查询、fragment、空白、反斜杠及 `.` / `..` 路径段；修改前缀后须重新构建。
+
+静态服务器需把 `dist/` 内容挂载到构建前缀对应的 URL 目录。对不存在的**页面导航路径**回退到该目录的 `index.html`；`assets/` 下缺失的资源应返回真实 404，不能返回 HTML。哈希资源可用 `Cache-Control: public, max-age=31536000, immutable`，`index.html` 用 `Cache-Control: no-cache`，避免部署后继续引用旧分包。默认演示只读取本地数据，不需要 API 代理。
+
+localStorage 按 origin 共享，而不是按部署路径隔离。项目键均带 `pilot-admin:` 前缀，不清空其他应用的存储；同一域名下的多个 Pilot Admin 副本仍共享这些键，需要隔离时应在 fork 中统一更换命名空间或使用不同域名。
+
+### GitHub Pages
+
+仓库已包含 `.github/workflows/deploy-pages.yml`：推送 `main` 或手动运行时，执行冻结安装、lint、i18n、类型检查和构建，再上传并部署 `dist/`。仓库需在 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**；本仓库已完成该设置。工作流按仓库名称使用 `/<repository-name>/`，适用于项目站点；用户/组织根站点或自定义根域名部署时，把工作流的 `VITE_BASE_PATH` 改为 `/`。
+
+工作流将 `index.html` 复制成 `404.html`，使 `/pilot-admin/system/users` 等深链刷新后仍可启动应用。**GitHub Pages 对此返回 HTTP 404 状态，而非 200**；这是该托管方式的行为，不能把它当作支持服务器重写的 SPA fallback。普通静态主机应优先配置导航重写。
+
+### 发布静态产物
+
+先同步 `package.json` 版本和 CHANGELOG 对应的 `## [X.Y.Z]` 章节并提交，再创建并推送版本标签：
+
+```sh
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Release 工作流会校验标签必须等于 `v` 加包版本，执行工程检查，以 `/` 为前缀构建，并发布 `pilot-admin-vX.Y.Z-dist.zip`。发布说明由 `node scripts/release-notes.mjs X.Y.Z` 提取；章节缺失或为空时发布失败。源码仍保持 `private: true`，不发布 npm 包。Fork 后请同步修改仓库、演示和徽章链接。
 
 ## 国际化
 
@@ -352,12 +407,16 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 
 ## 路线图
 
-- 更多可复用页面模式与扩展示例。
+- Vitest 纯逻辑测试与 Node 环境隔离。
+- Mock DB 迁移与跨版本保护、统一参数路由解析和 CRUD 详情页。
+- CSV 导入、逐批进度、幂等重试与失败行下载。
+- 左树右表目录示例、带历史面板的行内编辑工作台。
+- 助手/示例模块开关与经过实际删除验证的裁剪指南。
 - 持续改进无障碍、性能与开发文档。
 
 ## 参与贡献
 
-开发流程、提交规范和验证要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全边界与私密漏洞报告方式见 [SECURITY.md](SECURITY.md)，版本记录见 [CHANGELOG.md](CHANGELOG.md)。
+开发流程、提交规范和验证要求见 [中文贡献指南](CONTRIBUTING.md) / [English](CONTRIBUTING.en.md)，参与须遵守 [行为准则](CODE_OF_CONDUCT.md)。安全问题按 [SECURITY.md](SECURITY.md) 仅申请私下联系，不在公开 Issue 附漏洞细节、PoC、日志或密钥；版本记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 许可证
 

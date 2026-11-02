@@ -2,6 +2,13 @@
   "name": "pilot-admin",
   "description": "A fork-ready React admin starter with mock RBAC and an AI assistant workspace.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kohlarnhin/pilot-admin.git"
+  },
+  "homepage": "https://kohlarnhin.github.io/pilot-admin/",
+  "bugs": "https://github.com/kohlarnhin/pilot-admin/issues",
+  "author": "kohlarnhin",
   "keywords": [
     "admin",
     "react",

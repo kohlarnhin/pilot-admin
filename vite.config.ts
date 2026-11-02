@@ -4,10 +4,18 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
+  const basePath = env.VITE_BASE_PATH?.trim() || '/';
+  const baseSegments = basePath.split('/').filter(Boolean);
+  if (/^[a-z][a-z\d+.-]*:|^\/\/|:\/\/|[\\?#\s]/i.test(basePath)
+    || baseSegments.some((segment) => segment === '.' || segment === '..')) {
+    throw new Error('VITE_BASE_PATH must be a pathname such as /pilot-admin/, without a scheme, host, query, fragment, whitespace, backslash or dot segments.');
+  }
+  const base = baseSegments.length ? `/${baseSegments.join('/')}/` : '/';
   const proxyTarget = env.VITE_DEV_PROXY_TARGET?.trim();
   const apiBasePath = new URL(env.VITE_API_BASE_URL || '/api', 'http://localhost').pathname.replace(/\/+$/, '') || '/';
 
   return {
+    base,
     plugins: [react()],
     resolve: {
       alias: {

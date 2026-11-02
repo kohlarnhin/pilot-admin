@@ -14,6 +14,8 @@ const IndexRedirect = () => {
   return <Navigate to={getFirstAccessiblePage(menus, permissions)} replace />;
 };
 
+const basename = import.meta.env.BASE_URL.replace(/\/+$/, '') || undefined;
+
 export const router = createBrowserRouter([{ element: <AssistantRuntimeLayout />, errorElement: <RouteErrorPage fullScreen />, children: [
   {
     path: '/login', errorElement: <RouteErrorPage fullScreen />,
@@ -31,4 +33,4 @@ export const router = createBrowserRouter([{ element: <AssistantRuntimeLayout />
       { path: '*', element: <Page404 /> },
     ] }],
   },
-] }]);
+] }], { basename });

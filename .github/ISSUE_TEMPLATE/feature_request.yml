@@ -1,26 +1,28 @@
-name: 功能建议
-description: 提出有助于通用管理端和二次开发的改进
+name: 功能建议 / Feature request
+description: 提出有助于通用管理端和二次开发的改进 / Suggest an improvement for the starter or forks
 title: "[Feature] "
 body:
   - type: markdown
     attributes:
-      value: 请先搜索已有 Issue，并说明建议对通用底座或二次开发的价值。
+      value: |
+        请先搜索已有 Issue，并说明建议对通用底座或二次开发的价值。
+        Search existing issues first and explain how the proposal helps the generic starter or forks.
   - type: textarea
     id: problem
     attributes:
-      label: 要解决的问题
-      description: 当前在哪个开发或使用场景遇到困难？
+      label: 要解决的问题 / Problem to solve
+      description: 当前在哪个开发或使用场景遇到困难？ / What development or usage scenario is difficult today?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: 建议方案
-      description: 描述预期行为及范围；涉及界面时可附示意图。
+      label: 建议方案 / Proposed solution
+      description: 描述预期行为及范围，可附界面示意图。 / Describe the expected behavior and scope; include a UI sketch if useful.
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: 替代方案与影响
-      description: 可补充已尝试的方式、兼容性和对现有交互的影响。
+      label: 替代方案与影响 / Alternatives and impact
+      description: 已尝试的方式、兼容性和交互影响。 / Alternatives tried, compatibility concerns and impact on existing interactions.

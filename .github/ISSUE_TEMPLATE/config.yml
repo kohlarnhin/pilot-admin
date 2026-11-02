@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+  - name: 安全报告指引 / Security reporting
+    url: https://github.com/kohlarnhin/pilot-admin/blob/main/SECURITY.md
+    about: 只申请私下联系，不公开漏洞细节、PoC、日志或密钥。 / Request private contact without details, PoCs, logs or secrets.

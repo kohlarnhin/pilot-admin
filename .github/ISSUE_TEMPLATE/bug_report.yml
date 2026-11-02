@@ -1,36 +1,38 @@
-name: 问题反馈
-description: 报告可复现的功能、交互或工程问题
+name: 问题反馈 / Bug report
+description: 报告可复现的功能、交互或工程问题 / Report a reproducible problem
 title: "[Bug] "
 body:
   - type: markdown
     attributes:
-      value: 请先搜索已有 Issue。安全漏洞请按 SECURITY.md 私密报告，不要公开密钥或敏感数据。
+      value: |
+        请先搜索已有 Issue。安全问题请先阅读 [SECURITY.md](https://github.com/kohlarnhin/pilot-admin/blob/main/SECURITY.md)，只申请私下联系，不要公开漏洞细节、PoC、日志或密钥。
+        Search existing issues first. For security concerns, follow [SECURITY.md](https://github.com/kohlarnhin/pilot-admin/blob/main/SECURITY.md): request private contact only; do not publish vulnerability details, PoCs, logs or secrets.
   - type: input
     id: version
     attributes:
-      label: 版本或提交
-      description: 请填写版本号或 git commit，以及是否有二次开发改动。
-      placeholder: main / 提交哈希
+      label: 版本或提交 / Version or commit
+      description: 填写版本或 commit，并说明二次开发改动。 / Include the version or commit and any fork changes.
+      placeholder: main / commit SHA
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
-      label: 复现步骤
-      description: 写明页面、演示账号角色、操作顺序；可提供最小复现。
+      label: 复现步骤 / Steps to reproduce
+      description: 写明页面、角色、操作顺序；可提供最小复现。 / Include the page, role, steps and a minimal reproduction if possible.
     validations:
       required: true
   - type: textarea
     id: behavior
     attributes:
-      label: 预期与实际结果
-      description: 可附截图、控制台错误或脱敏后的日志。
+      label: 预期与实际结果 / Expected and actual behavior
+      description: 可附截图、控制台错误或脱敏日志。 / Attach screenshots, console errors or sanitized logs if useful.
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
-      label: 运行环境
-      description: 操作系统、浏览器版本、视口尺寸、Node 与 pnpm 版本，以及使用 dev 还是 preview。
+      label: 运行环境 / Environment
+      description: 系统、浏览器、视口、Node/pnpm 版本和 dev/preview 模式。 / OS, browser, viewport, Node/pnpm versions and dev/preview mode.
     validations:
       required: true

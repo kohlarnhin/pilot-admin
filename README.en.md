@@ -2,6 +2,13 @@
 
 # Pilot Admin
 
+[![CI](https://github.com/kohlarnhin/pilot-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/kohlarnhin/pilot-admin/actions/workflows/ci.yml)
+[![Pages](https://github.com/kohlarnhin/pilot-admin/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/kohlarnhin/pilot-admin/actions/workflows/deploy-pages.yml)
+[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node ≥22](https://img.shields.io/badge/node-%E2%89%A522-339933.svg)](https://nodejs.org/)
+
+**[Live demo →](https://kohlarnhin.github.io/pilot-admin/)** Demo data lives in the visitor's browser, with no backend requests; demo accounts are in the table below.
+
 A fork-ready React admin starter with a compact design system, mock authentication and RBAC, system pages, an assistant panel and a full-screen Agent workspace. Data and assistant execution stay in the browser: the default demo sends no backend requests and calls no real model. The shell, admin pages, service messages, demo data, assistant conversations and tools support zh-CN / en-US.
 
 ## Features
@@ -84,6 +91,12 @@ src/hooks/, store/         Paging, virtualization and application state
 src/pages/, routes/        Pages, routing and cached lazy loaders
 src/types/, utils/         Shared types and utilities
 skills/pilot-ui-spec/      Portable UI contract and reference assets
+.github/                  CI, Pages/Release workflows, Dependabot and bilingual Issue/PR templates
+.vscode/extensions.json   Recommended editor extensions
+scripts/release-notes.mjs  Versioned CHANGELOG section extraction
+CODE_OF_CONDUCT.md        Contributor Covenant 2.1 and reporting route
+CONTRIBUTING.md, CONTRIBUTING.en.md  Contribution guides
+SECURITY.md, CHANGELOG.md, LICENSE   Security boundaries, history and license
 ```
 
 ## Extend the starter
@@ -124,12 +137,54 @@ Copy `.env.example` to `.env.local` only when needed. All `.env*` files except t
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `VITE_BASE_PATH` | `/` | Page and asset deployment prefix, e.g. `/pilot-admin/`; leading/trailing slashes are normalized; hosts and full URLs are rejected |
 | `VITE_API_BASE_URL` | `/api` | Shared Axios base and the base for relative SSE paths; use a root path or full HTTP(S) URL |
 | `VITE_DEV_PROXY_TARGET` | Empty | Optional development proxy target; empty means no proxy |
 
 The dev proxy matches the API base's pathname on same-origin requests, keeps the prefix, changes the origin and disables WebSocket proxying. For `/api` and `http://localhost:8080`, `/api/users` reaches `http://localhost:8080/api/users`. Full API URLs bypass that proxy. Preview has no proxy; setting variables does not replace mock services automatically.
 
 Axios combines `/users` with its API base. SSE paths such as `agent/chat` or `./agent/chat` use the same base; root-relative paths such as `/api/agent/chat` and absolute URLs are used unchanged. Use SSE paths without a leading slash to follow a custom base. Restart dev after changing env files; production values are applied at build time. Never put secrets in client-readable `VITE_*` variables.
+
+## Deployment
+
+### Static hosting and subpaths
+
+Build for the site root and preview locally:
+
+```sh
+pnpm build
+pnpm preview --port 3300
+```
+
+For a subpath, set the prefix before building, or put it in `.env.local`:
+
+```sh
+VITE_BASE_PATH=/pilot-admin/ pnpm build
+pnpm preview --port 3300
+```
+
+The preview URL is then http://localhost:3300/pilot-admin/. Vite adjusts HTML, favicon, font, CSS and JS chunk URLs; Router uses the same basename. Keep internal route definitions and calls such as `navigate('/profile')` free of the deployment prefix. The prefix is a pathname: schemes, hosts, queries, fragments, whitespace, backslashes and `.` / `..` segments are rejected. Rebuild after changing it.
+
+Mount the contents of `dist/` at the configured URL prefix. Rewrite missing **page navigation paths** to that prefix's `index.html`. Missing files under `assets/` must return a real 404 rather than HTML. Use `Cache-Control: public, max-age=31536000, immutable` for hashed assets and `Cache-Control: no-cache` for `index.html`, so deployments do not leave old chunk references cached. The default demo needs no API proxy.
+
+localStorage is shared by origin, not deployment path. Keys use the `pilot-admin:` prefix and do not clear unrelated applications' storage. Multiple copies of Pilot Admin on one origin still share those keys; change the namespace consistently in a fork or use separate origins when isolation is needed.
+
+### GitHub Pages
+
+`.github/workflows/deploy-pages.yml` runs on pushes to `main` and manual dispatch. It performs frozen installation, lint, i18n and type checks, builds and deploys `dist/`. Under **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**; this repository is already configured. The workflow builds project sites at `/<repository-name>/`. For a user/organization root site or a custom root domain, change its `VITE_BASE_PATH` to `/`.
+
+The workflow copies `index.html` to `404.html`, so deep links such as `/pilot-admin/system/users` can reload the app. **GitHub Pages serves that response with HTTP 404, not 200.** Hosts supporting SPA navigation rewrites should use those instead.
+
+### Release static assets
+
+Update and commit the package version and its matching `## [X.Y.Z]` CHANGELOG section, then create and push a tag:
+
+```sh
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+The Release workflow requires the tag to equal `v` plus the package version, runs checks, builds at `/`, and publishes `pilot-admin-vX.Y.Z-dist.zip`. `node scripts/release-notes.mjs X.Y.Z` extracts the notes and fails for a missing or empty section. The package stays `private: true`; no npm package is published. Update repository, demo and badge URLs after forking.
 
 ## Internationalization
 
@@ -188,7 +243,7 @@ Profile changes and audit share one draft. `profile.update` records only changed
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |
 
-Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.
+Before submitting, run `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm i18n:check`. Verify UI changes in the real app at 1280×720 and 1440×900, including all three roles, scrolling, focus and error recovery. Preview must make no external or backend requests. See [CONTRIBUTING.en.md](CONTRIBUTING.en.md) or the [full Chinese guide](CONTRIBUTING.md) for the contribution workflow.
 
 ## Demo storage and reset
 
@@ -196,12 +251,16 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 
 ## Roadmap
 
-- More reusable page patterns and extension examples.
+- Vitest logic tests with isolated Node browser stubs.
+- Mock DB migrations and version guards, unified parameter-route resolution and a CRUD detail page.
+- CSV import with atomic batches, idempotent retry and failed-row downloads.
+- A tree directory with a record table, and an inline-editing workbench with history.
+- Assistant/example module switches and a pruning guide verified by actual removal.
 - Continued accessibility, performance and developer-documentation improvements.
 
 ## Contributing and security
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md). Mock authentication and tokens are not a security boundary; use GitHub's private vulnerability reporting for security issues.
+Read [CONTRIBUTING.en.md](CONTRIBUTING.en.md), the [Chinese guide](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) and [CHANGELOG.md](CHANGELOG.md). Mock authentication and tokens are not a security boundary. For security concerns, open an issue requesting private contact only; do not publish vulnerability details, PoCs, logs or secrets. The maintainer will arrange follow-up.
 
 ## License
 

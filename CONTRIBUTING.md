@@ -1,6 +1,10 @@
 # 参与贡献
 
+[English](CONTRIBUTING.en.md)
+
 欢迎改进 Pilot Admin 的通用能力、二次开发体验、文档和细节。请保持业务无关的底座定位；较大的功能或交互变化可先通过 Issue 说明问题与范围。
+
+参与本项目须遵守 [行为准则](CODE_OF_CONDUCT.md)。安全问题按 [SECURITY.md](SECURITY.md) 申请私下联系，公开 Issue 不得附漏洞细节、PoC、日志或密钥。
 
 ## 本地开发
 

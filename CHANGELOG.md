@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- **部署与演示**：`VITE_BASE_PATH` 页面/资源前缀、Router basename、GitHub Pages 检查与部署工作流及深链 404 页面；双语文档补充静态托管、缓存、子路径与发布步骤。
+- **发布与维护**：按版本标签校验和打包的 Release 工作流、严格提取对应 CHANGELOG 章节的脚本、按月分组的 Dependabot minor/patch 更新及编辑器扩展推荐。
+- **社区文件**：Contributor Covenant 2.1 行为准则、双语 Issue/PR 模板和英文贡献指南；安全报告改为公开 Issue 仅申请私下联系，由维护者后续安排。
+
+### Changed
+
+- **开源入口**：补齐仓库、演示、问题反馈与作者元数据，双语 README 增加徽章、在线演示及具体近期路线图；CI 与新增工作流统一采用当前 Actions 主版本。
+
 ## [0.2.0] - 2026-10-30
 
 ### Added
