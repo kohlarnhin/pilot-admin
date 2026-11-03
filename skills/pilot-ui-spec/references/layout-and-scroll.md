@@ -195,7 +195,7 @@ Column definitions are shared between header and body through a single `gridTemp
 - If the content minimum width exceeds the viewport, preserve table-local horizontal scrolling.
 - At 1280x720 the card content is about 1006px, of which the stable 14px scrollbar gutter leaves **992px usable**. Confirm the action column is fully visible at that width.
 - This project sets no universal table minimum width. Column widths define the minimum: for example the users table uses 26% / 22% / 24% flexible columns plus 72px, 156px, and 144px fixed columns; the roles table uses 30% / 22% / 18% plus 88px, 156px, and 144px.
-- A future dense workbench may need a 920-1040px minimum width for its own column composition; derive it from the columns rather than copying a number.
+- A dense table may need a larger minimum width for its own column composition; derive it from the columns rather than copying a number.
 - Fixed columns (`fixed: "left" | "right"`) are sticky with an opaque background. Their 1px `#EDF1F5` divider is rendered only while the table is horizontally scrollable.
 - Do not globally hide scrollbar elements to mask rounding. Fix rounding and column allocation while keeping genuine overflow accessible.
 
@@ -213,13 +213,9 @@ A 288px tree card (320px at 1280px) sits beside a flexible detail card with a 16
 
 The assistant panel is a floating column anchored to the bottom-right of the viewport, not a layout column: it never resizes main content. Its header and composer stay fixed; messages and session history scroll independently. The Agent page instead dedicates a 260px rail to history and a flexible column to the conversation; both are real layout columns inside the full-screen shell.
 
-### Future editing workbench
-
-*No reference implementation in Pilot Admin yet; follow these rules when you add one.* Use a `minmax(0, 1fr)` main table plus a 360px history panel, increasing to 420px at 1280px. Gap: 12px. Panels share outer height and independently constrain their body scrollers. Closing history gives width back to the table and triggers width recalculation.
-
 ### Internally divided detail panels
 
-*No reference implementation in Pilot Admin yet.* A useful composition is natural-height metadata, flexible long text, and natural-height lifecycle information. The long text owns scrolling. If a short viewport cannot fit these fixed sections, let the entire detail column become its own scroller; do not leave content inaccessible.
+Reference implementation: `src/pages/examples/crud/ProjectDetailPage.tsx`. The composition is natural-height metadata, flexible long text, and natural-height lifecycle information. The long text owns scrolling. If a short viewport cannot fit these fixed sections, let the entire detail column become its own scroller; do not leave content inaccessible.
 
 ## 6. Narrow viewports and zoom
 
@@ -232,7 +228,7 @@ The project is desktop-oriented with partial responsive behavior; it is not proo
 1. Below 1024px, a mini sidebar can reclaim width. Below 640px, use overlay navigation or an explicit menu entry so content remains usable. If navigation leaves the layout flow, explicitly keep main in the content column; auto-placement must not move it into a zero-width navigation track.
 2. Wrap toolbars deliberately: title first, controls next. Preserve 36px control height and readable text.
 3. Keep the main table in a constrained viewport with local horizontal overflow.
-4. Convert an impractically wide side panel to an overlay or tab; do not force a 420px history panel and a wide table side by side on a phone.
+4. Convert an impractically wide side panel to an overlay or tab; do not force a wide side panel and a wide table side by side on a phone.
 5. Short heights, zoom, and virtual keyboards must not leave zero reachable body area. Keep modal bodies scrollable and reduce decorative spacing when necessary.
 6. Login and error pages use natural document scrolling and must not inherit shell height locking.
 7. The settings split view currently stays side by side at narrow widths; if a target needs mobile support, replace the stacked category card with a compact selector rather than letting the first panel consume all available height.

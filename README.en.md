@@ -294,7 +294,6 @@ Use System settings → Demo data → Reset demo data to restore the seed and cl
 ## Roadmap
 
 - CSV import with atomic batches, idempotent retry and failed-row downloads.
-- An inline-editing workbench with history.
 - Assistant/example module switches and a pruning guide verified by actual removal.
 - Continued accessibility, performance and developer-documentation improvements.
 

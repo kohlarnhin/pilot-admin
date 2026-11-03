@@ -51,7 +51,7 @@ Keep this package repository-local under `skills/pilot-ui-spec/`. To reuse it by
 - Completion and coverage signals use emerald (`#10B981`). The shared `Progress` fill defaults to brand orange and must receive an explicit emerald `strokeColor` when the bar means completion rather than activity. Warnings stay amber with an icon or text label.
 - Brand orange is **#FDA92D**, with **#F59E0B** for stronger in-progress accents and **#A85D13** for readable brand text on white. Titles are dark slate; secondary text is quieter.
 - Use locally bundled **Open Sans Variable + Noto Sans SC** for text and **JetBrains Mono** for identifiers. Body weight is 400, emphasis 500, selected headings 600. Most text is **12-13px**; page titles are **20px/600** and card titles **15px/600**. Table headers are **12px `slate-500`**; meaningful text never goes below **11px**.
-- Normal controls are **36px** tall with **8px** corners. Main cards and dialogs have **16px** corners, internal cards **12px**. Table headers are **44px**; general data rows are content-driven (about 45px for a single-line row, 61-65px for two-line identity cells), and fixed-height editing rows are **56px** in the workbench pattern.
+- Normal controls are **36px** tall with **8px** corners. Main cards and dialogs have **16px** corners, internal cards **12px**. Table headers are **44px**; general data rows are content-driven (about 45px for a single-line row, 61-65px for two-line identity cells).
 - Use one consistent icon family: Lucide through the local `Icon` registry, 18-20px in navigation and 14-18px in actions. Business content remains selectable and copyable.
 
 ### Data lists
@@ -88,7 +88,7 @@ References distinguish:
 - **Portability completion:** a behavior needed for reliable reuse that is absent, inconsistent, or not verified in the current code. Do not claim the repository already implements it.
 - **No reference implementation:** a general pattern that Pilot Admin does not contain yet. Follow the rules when adding one; do not describe it as an existing screen.
 
-Patterns marked *no reference implementation* in the references include the list-plus-detail editing workbench with fixed 56px rows, the card-grid selection hub, the spreadsheet-style import dialog, and the generic workspace top bar for a future second shell. They are specified because forked projects commonly need them, not because this repository renders them.
+Patterns marked *no reference implementation* in the references include the card-grid selection hub, the spreadsheet-style import dialog, and the generic workspace top bar for a future second shell. They are specified because forked projects commonly need them, not because this repository renders them.
 
 ## Reference assets
 

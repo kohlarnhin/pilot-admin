@@ -59,7 +59,7 @@ Title is 15px/600; description is 12px with a 2-4px gap above it. Left text is s
 
 `ListToolbar` is the standard strip for a management list: minimum height **60px**, 24px horizontal padding, 12px vertical padding, search and filters on the left, and a result count on the right in 13px slate-400.
 
-`CardBar` is the compact workbench variant: minimum height **61px**, 24px horizontal, 12px vertical, breadcrumb or title on the left and actions on the right.
+`CardBar` is the compact card-toolbar variant: minimum height **61px**, 24px horizontal, 12px vertical, breadcrumb or title on the left and actions on the right.
 
 ### Standalone page header
 
@@ -133,7 +133,7 @@ Character counters render `12 / 100` (spaces around the slash) in 11px monospace
 
 ### Search and select
 
-- Default search width is 224px; list toolbars commonly use 288px. Workbenches may range from 160px to 288px according to available width.
+- Default search width is 224px; list toolbars commonly use 288px. Dense pages may range from 160px to 288px according to available width.
 - Search icon: 15px, quiet slate-400. Clear action does not change width.
 - Selects align with inputs and buttons at 36px. Typical toolbar selects are 112-144px, depending on label length.
 - Dropdown contents have a bounded height (about 256px) and their own scroll. Long options truncate or wrap within a controlled option layout.

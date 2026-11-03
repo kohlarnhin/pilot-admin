@@ -4,12 +4,11 @@
 
 1. Standard management list
 2. Split views and selection hubs
-3. Editing workbench
-4. Settings workspace
-5. Dashboard
-6. Login page
-7. Assistant settings and Agent
-8. Choosing a composition
+3. Settings workspace
+4. Dashboard
+5. Login page
+6. Assistant settings and Agent
+7. Choosing a composition
 
 ## 1. Standard management list
 
@@ -102,53 +101,7 @@ The whole card can navigate, but nested controls must avoid triggering that navi
 
 If the hierarchy is navigational rather than record-oriented, use the menu tree pattern (40px rows, 20px indent, brand-free selection) instead of a table.
 
-## 3. Editing workbench
-
-*No reference implementation in Pilot Admin yet; follow this pattern when a target needs frequent inline row editing with related history.* This is a full-width page variant.
-
-```text
-+---------------- flexible main card ---------------+ 12 +-- history --+
-| breadcrumb / filters / search                      |    | heading     |
-|---------------------------------------------------|    |-------------|
-| persistent table header                           |    | current item|
-|---------------------------------------------------|    |-------------|
-| fixed-height editable rows; own x/y scrolling      |    | history     |
-|                                                   |    | own scroll  |
-+---------------------------------------------------+    +-------------+
-```
-
-Main toolbar uses 16px horizontal and 10px vertical padding. Keep actions fixed in size; truncate intermediate breadcrumb names when space is limited. Less-important ancestors may disappear at smaller desktop widths, but current context must remain understandable.
-
-### Table composition
-
-The reference composition for a dense editable table: minimum width about 920px; identifier 280px, a 180px secondary column, a flexible editable value, and a 170px timestamp. Header 44px; rows 56px. Current-row selection uses only the left orange indicator, not a full orange background.
-
-Editable value: 36px input, 8px radius, 12px text, flexible width; adjacent 36px submit icon with an 8px gap. Focus and unsaved state use a slate-400 border and neutral ring. The row does not grow when content is long.
-
-### Editing states
-
-| State | Input | Submit |
-| --- | --- | --- |
-| Unmodified | White, light border | Disabled quiet control, with reason |
-| Modified | Slate-400 border and subtle neutral ring | Outlined action becomes enabled |
-| Submitting | Value retained | Spinner, duplicate submission blocked |
-| Saved | Server-confirmed value, dirty marker clears | Returns to normal state |
-| Save failed | Draft retained | Retry remains available, concise feedback |
-| Read only | Truncated text with full-value access | No editing affordance |
-
-Enter submits when valid and authorized. Clicking/focusing the input selects its record but does not trigger unrelated row navigation. Auto-generated content may have an explicit acceptance action even without an edited draft; this is a task-specific variant, not a universal editing rule.
-
-Persist drafts by record ID outside virtual row instances. Define how scope changes handle drafts according to target requirements. Do not silently discard a pending edit simply because its row left the viewport.
-
-### History panel
-
-Width 360px, increasing to 420px at 1280px. White card with 16px corners, same outer height as the main card. Header uses 20px horizontal and 16px vertical padding and includes a close action.
-
-Current highlighted content can occupy a nonshrinking or bounded top region. Its long text gets a local scroller. The remaining timeline/comment list owns another finite body region. Maintain clear boundaries so growing one does not push the other outside the panel.
-
-A no-selection state contains a 56px icon container and short centered guidance. Selecting a row updates details; late history responses must not replace the newly selected record's history. Closing history restores width to the main table.
-
-## 4. Settings workspace
+## 3. Settings workspace
 
 Use a two-panel layout: a **256px** category card, increasing to **288px** at 1280px, plus flexible content; 20px gap. Each side has its own bounded content region.
 
@@ -162,7 +115,7 @@ Sections in the current product: basic site settings, security policy, notificat
 
 The current split view stays side by side on narrow screens. For a target requiring mobile, replace the full-height category card with a compact selector or tab strip; otherwise the first panel can consume all available height.
 
-## 5. Dashboard
+## 4. Dashboard
 
 The dashboard is allowed to scroll as one region **inside main**; metric cards do not each need a tiny internal scrollbar. The sidebar remains stationary; there is no workspace top bar in the admin shell.
 
@@ -175,7 +128,7 @@ The dashboard is allowed to scroll as one region **inside main**; metric cards d
 
 Loading placeholders preserve metric and section geometry. The current dashboard is metrics, todo entries, and recent activity; do not add decorative charts merely to make it look more elaborate.
 
-## 6. Login page
+## 5. Login page
 
 Login is a separate, naturally scrolling variant, not the authenticated shell.
 
@@ -193,11 +146,11 @@ Field-level failures render inline below the control with `aria-invalid` and `ar
 
 Preserve target authentication flows and validation; do not invent providers, credentials, or authorization behavior. If the product offers a second entry mode, ask once after login with a small dialog and persist the preference in the account menu.
 
-## 7. Assistant settings and Agent
+## 6. Assistant settings and Agent
 
 ### Assistant settings
 
-Use the settings workspace from §4: a full-width finite-height page with `PageHeader`, a 256/288px category rail, a 20px gap, and one flexible content card. The card owns its scrolling content; form actions stay in a persistent footbar outside that scroller. Panel sections own their header and actions and have no shared footbar. System settings retains its independent implementation.
+Use the settings workspace from §3: a full-width finite-height page with `PageHeader`, a 256/288px category rail, a 20px gap, and one flexible content card. The card owns its scrolling content; form actions stay in a persistent footbar outside that scroller. Panel sections own their header and actions and have no shared footbar. System settings retains its independent implementation.
 
 `src/pages/assistant/sections/registry.ts` is the ordered extension point. Each entry declares its URL key, icon, localized title/description keys, optional extra permissions, form/panel kind, and lazy component. Only the active section mounts. Form entries also declare their profile fields, save label and validity check, so new sections do not require edits to the page shell.
 
@@ -223,14 +176,13 @@ The Agent page is the full-screen host for the same assistant runtime:
 
 Use the panel for short, contextual work while a page stays visible. Use the Agent page for long conversations, per-session history browsing, and tasks that need more vertical space. They are different presentations of one runtime, not two products.
 
-## 8. Choosing a composition
+## 7. Choosing a composition
 
 Choose the simplest matching composition based on interaction:
 
 - Repeated records and CRUD: standard list.
 - Navigation hierarchy with a detail pane: split view.
 - Selecting a workspace before editing: card-grid hub plus breadcrumbs.
-- Frequent row edits with related history: workbench.
 - Category-based configuration: settings.
 - Cross-resource summary: dashboard.
 - Temporary detail without losing list position: dialog or drawer, as specified in overlays-and-feedback.md.

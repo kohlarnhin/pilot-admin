@@ -29,7 +29,7 @@ Compose a white 16px-radius card, nonshrinking toolbar, persistent table header,
 
 Place primary identity early, secondary codes in quieter monospace, status in compact badges, and dates on one line. Long text cannot displace actions. Avoid default zebra striping, heavy grids, or large colored rows. A user row typically shows a 32px avatar, a 13px/500 name, a monospace identifier with a copy control, role badges, email, a status switch, a monospace timestamp, and three row actions.
 
-Rows are content-driven: a single-line cell produces about a 45px row, while the two-line user identity (32px avatar, 20px name, 16px identifier) produces a 65px row and the two-line role cell about 61px. Measure the actual row rather than forcing one global height. Only the fixed editing workbench specifies 56px explicitly.
+Rows are content-driven: a single-line cell produces about a 45px row, while the two-line user identity (32px avatar, 20px name, 16px identifier) produces a 65px row and the two-line role cell about 61px. Measure the actual row rather than forcing one global height.
 
 ### Fitting the standard table at 1280px
 
@@ -42,13 +42,12 @@ At 1280x720 with the sidebar expanded, the card contains about **1006px** and th
 - Long codes ellipsize inside their cell and expose a `title`; they do not force the table wider.
 - Only when the content's true minimum width exceeds the viewport should the table scroll horizontally. In that case fixed columns keep their opaque background and show the 1px divider.
 
-### Three distinct selection roles
+### Two distinct selection roles
 
 1. **General management checkbox selection:** selected rows stay transparent or very light slate; checkboxes are slate-900. No orange row wash. This is the baseline whenever a list adds row selection.
 2. **Batch selection:** the standard CRUD template (`src/pages/examples/crud/index.tsx`) is the table reference. Delete permission enables its neutral checkbox column; selecting rows reveals an in-card count and batch toolbar. Selection is keyed by ID, survives appended pages and locale changes, and clears on query changes or successful batch deletion. Batch toolbars count selected IDs, not every backend result. The assistant's batch role dialog remains a separate bounded picker with partial-success retry.
-3. **Editing workbench current row:** *no reference implementation in Pilot Admin yet.* White row, 4px brand-500 indicator at the far left, inset 10px from top and bottom. Unselected hover reveals a 3px indicator at 40% opacity. This is the only role that uses orange.
 
-Choose the role appropriate to the feature; do not layer all three treatments together.
+Choose the role appropriate to the feature; do not layer both treatments together.
 
 ### Data table internals
 
@@ -194,7 +193,7 @@ topPadding = start * rowHeight
 bottomPadding = (itemCount - end) * rowHeight
 ```
 
-*Fixed 56px rows are a future editing-workbench pattern, not a current management-list behavior.* Subtract `headerHeight` only if the header is inside the same scrolling flow; use zero for an external fixed header. Top/bottom spacers preserve total `scrollHeight`.
+*Management lists use measured, content-driven rows; this formula applies only when a target deliberately fixes row height.* Subtract `headerHeight` only if the header is inside the same scrolling flow; use zero for an external fixed header. Top/bottom spacers preserve total `scrollHeight`.
 
 - Actual row height must equal the calculation, including borders and padding.
 - Spacer rows have no ordinary cell padding/borders, are not interactive, are `aria-hidden`, and span the current column count.
@@ -233,7 +232,7 @@ Use `src/pages/examples/crud/index.tsx` as the reference for table selection and
 
 The current table selection primitives already behave this way: the header checkbox computes checked, unchecked, and indeterminate from the selectable loaded rows, and disabled rows are excluded from "select all".
 
-The same CRUD folder provides `ProjectFormModal.tsx` for inline validation and numeric 409-to-field errors, permission-gated action columns, and spreadsheet-safe localized CSV export through `src/utils/csv.ts`. Its export deliberately requires only page access. Use `src/pages/audit-logs/index.tsx` for a dedicated export permission and detail drawer. Use `src/pages/profile/` for an independently scrolling settings workspace with authenticated access and no menu grant. The list-plus-detail editing workbench remains a future pattern.
+The same CRUD folder provides `ProjectFormModal.tsx` for inline validation and numeric 409-to-field errors, permission-gated action columns, and spreadsheet-safe localized CSV export through `src/utils/csv.ts`. Its export deliberately requires only page access. Use `src/pages/audit-logs/index.tsx` for a dedicated export permission and detail drawer. Use `src/pages/profile/` for an independently scrolling settings workspace with authenticated access and no menu grant.
 
 ### Row actions
 

@@ -17,8 +17,8 @@ Compare the same viewport, zoom, sidebar state, page composition, dataset shape,
 | Buttons | White outlined ordinary actions with slate hover/focus; slate-900 filled primary only for the single strongest action; red destructive |
 | Table | 44px header, aligned columns, fine horizontal separators, 1px fixed-column divider only when scrollable |
 | Table fit | Action column fully visible at 1280x720 with the expanded sidebar (~992px usable after the stable scrollbar gutter) |
-| General rows | Content-driven height, about 45px single-line and 61-65px for two-line identity cells; no accidental 56px requirement outside the workbench pattern |
-| Selection | Neutral checkboxes and row treatments; orange only for a workbench current-row indicator |
+| General rows | Content-driven height, about 45px single-line and 61-65px for two-line identity cells; no forced fixed row height |
+| Selection | Neutral checkboxes and row treatments; no orange row wash |
 | Icons | One Lucide family, consistent size and stroke; no missing-glyph layout shifts |
 | Assistant entry | Sidebar footer above help and account; no floating launcher |
 | Truncation | Truncated titles/codes expose the full value via `title` or a copy/detail path |
@@ -81,7 +81,6 @@ Inspect request logs or controlled counters, not just the visible number of rows
 - Inspect actual row bounding boxes; compare their heights to the virtualizer's measurement.
 - Scroll far down and back. No blank gaps, overlapping rows, missing borders, or misaligned header widths.
 - Confirm the total scroll height represents loaded records correctly.
-- For a workbench: update a draft, scroll it out of view and back, and confirm the draft remains.
 - Focus an editable row, navigate by supported keyboard controls, and confirm focus is not lost to the document during recycling.
 - Batch selection persists across row unmount/remount. Select all clearly applies to its defined scope.
 - Confirm sparse or duplicate batches release request locks without creating endless prefetch.

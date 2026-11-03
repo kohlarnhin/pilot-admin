@@ -91,7 +91,7 @@ The package separates observable design intent, current implementation variants,
 | Implementation detail | Interpretation in this specification |
 | --- | --- |
 | `Card` uses `#E6EAF0`, while controls, modals, and tables use `#E2E8F0` | Document both by role: a 16px surface card uses the slightly cooler `#E6EAF0`; controls and line separators use `line` (`#E2E8F0`) |
-| Table skeleton rows are 56px; real rows are about 45px single-line and 61-65px two-line; route skeleton rows are 52px | Skeletons are structural placeholders, not pixel matches; 56px belongs to the fixed-row workbench pattern |
+| Table skeleton rows are 56px; real rows are about 45px single-line and 61-65px two-line; route skeleton rows are 52px | Skeletons are structural placeholders, not pixel matches |
 | `DataTable` estimates 57px per row | The estimate only seeds measured virtualization; real heights win after measurement |
 | The table scroller reserves `scrollbar-gutter: stable`, so 1006px of card content yields 992px of usable width at 1280 | Quote the usable width when checking column fit; include the gutter in column calculations |
 | Settings pages use a side-by-side split with no mobile stacking | Specified as a desktop composition; mobile fallback is marked as a portability completion |
@@ -106,7 +106,7 @@ The package separates observable design intent, current implementation variants,
 | Session history is a slide-over in the panel and inline in the Agent rail | Same data and loader, two presentations; do not build a second history service |
 | Role permission dialog is 920px, not a round 900px | The measured width wins |
 | The Agent page conversation wrapper is 792px with 760px messages | Preserve both widths; the difference is intentional padding |
-| The CRUD template implements list row selection and batch deletion; no list-plus-detail editing workbench exists | Use the CRUD template for batch actions, form/409 errors, permission-gated columns and CSV; the editing workbench remains a future pattern |
+| The CRUD template implements list row selection and batch deletion | Use the CRUD template for batch actions, form/409 errors, permission-gated columns and CSV |
 | `FileDropZone` uses a dashed border while all surfaces are solid | The dashed border is the deliberate file-target exception |
 | Assistant settings uses its own registry-driven workspace shell | It follows the shared settings geometry at full available width; System settings keeps its independent behavior |
 | The app renders no help center, only an optional help link | Help-center page patterns are omitted rather than invented |
