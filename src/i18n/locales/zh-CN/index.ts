@@ -1,3 +1,5 @@
+import exampleResults from './exampleResults';
+import exampleForms from './exampleForms';
 import profile from './profile';
 import exampleProjects from './exampleProjects';
 import directory from './directory';
@@ -27,4 +29,4 @@ import assistant from './assistant';
 import agentMode from './agentMode';
 import agentTools from './agentTools';
 import agentCommands from './agentCommands';
-export default { profile, exampleProjects, directory, common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } as const;
+export default { exampleResults, exampleForms, profile, exampleProjects, directory, common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } as const;

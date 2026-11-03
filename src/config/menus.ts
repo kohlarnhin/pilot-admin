@@ -49,6 +49,9 @@ export const menuConfig: MenuConfig[] = [
       { id: 'example-delete', permission: 'example:delete' },
     ] },
     { id: 'directory-example', route_path: '/examples/directory', icon: 'folder', sort_no: 3 },
+    { id: 'form-wizard', route_path: '/examples/forms/wizard', icon: 'list-checks', sort_no: 4 },
+    { id: 'form-sections', route_path: '/examples/forms/sections', icon: 'file-text', sort_no: 5 },
+    { id: 'result-pages', route_path: '/examples/results', icon: 'circle-check', sort_no: 6 },
   ] },
 ];
 

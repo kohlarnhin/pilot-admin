@@ -474,3 +474,11 @@ E2E 覆盖登录、角色权限、导航、用户、标准列表 CRUD/CSV、助�
 ## 许可证
 
 项目代码使用 [MIT 许可证](LICENSE)。第三方依赖遵循各自的许可证。
+
+## 表单与结果页参考
+
+- **分步表单** `/examples/forms/wizard`：步骤校验、编码异步查重、确认页编辑链接、409 字段定位、按账号自动保存/恢复草稿与离开确认。复制 `src/pages/examples/forms/wizard/`、同级 `Field.tsx` / `LeaveGuard.tsx`、`src/components/common/Steps.tsx` / `Result.tsx`，以及 `exampleProjectService.ts` 的 `checkCode` / `createProject` 和 `exampleProjectRules.ts`。沿用标准列表项目类型与详情路由；`example:create` 决定是否显示表单，无权限时显示只读说明。
+- **分区长表单** `/examples/forms/sections`：组织资料等通用长表单布局，左侧锚点与滚动定位、右侧独立滚动、固定操作栏、未提交标记、内联错误及可聚焦字段的错误摘要。复制 `src/pages/examples/forms/sections/`、同级两个公共文件、`src/api/services/exampleFormService.ts` / `exampleFormRules.ts`。服务校验保留名称 `system` 和日期顺序，返回回执但不持久化，因此包括 viewer 在内的所有角色均可填写。接入真实 API 时替换服务函数体并增加相应写权限。高级区使用日期和带单位数字；现有控件无自由标签输入，本例省略标签。
+- **结果与异常页** `/examples/results`：成功、失败、信息、警告、403、404、500、网络及维护九种状态，附真实异步模拟调用的连接重试演示。复制 `src/pages/examples/results/`、`src/components/common/Result.tsx` 和 `src/api/services/exampleResultService.ts`。`Result` 的 `headingLevel` 由宿主按标题层级选择；现有 `StatusPage` 复用同一组件并保留外观和返回首页行为。
+
+表单复制 zh/en 的 `exampleForms.ts` 命名空间（`wizard` / `sections` 分区）；结果页复制 `exampleResults.ts`，均在 locale `index.ts` 注册。按需携带表单复用的 `exampleProjects` / `serverErrors.example` 文案。页面只在 `routeModules.ts` 注册一次；菜单 `form-wizard` / `form-sections` / `result-pages` 及双语 `menu` 名称独立声明。新种子给三种角色授予三个菜单；已有 operator / viewer 的授权不会被自动改写，可在角色管理中授予。没有 DB 形状或版本变更。

@@ -76,6 +76,7 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
     await scan('roles');
     await dialogState('role-permissions', page.getByRole('button', { name: copy.button.rolePermissions, exact: true }).first());
     await page.goto('system/menus');
+    await expect(page.getByText(copy.menus.empty.noActions, { exact: true })).toBeVisible();
     await scan('menus');
     await page.goto('system/audit-logs');
     await scan('audit');
@@ -91,6 +92,7 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
       }
     }
     await page.goto('system/assistant');
+    await expect(page.locator('[data-row-key="model-demo"]')).toBeVisible();
     await scan('assistant-settings');
     await page.goto('examples/components');
     await scan('components');
@@ -109,6 +111,32 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
     });
     await page.locator('main a[href^="/examples/crud/"]').first().click();
     await scan('crud-detail');
+    await page.goto('examples/forms/wizard');
+    await scan('form-wizard-basic');
+    await page.getByLabel(copy.exampleProjects.fields.name, { exact: true }).fill('Accessible project');
+    await page.getByLabel(copy.exampleProjects.fields.code, { exact: true }).fill('AXE-WIZARD');
+    await expect(page.getByText(copy.exampleForms.wizard.available, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: copy.exampleForms.wizard.next, exact: true }).click();
+    await scan('form-wizard-owner');
+    await page.getByLabel(copy.exampleProjects.fields.owner, { exact: true }).fill('Alex Morgan');
+    await page.getByRole('button', { name: copy.exampleForms.wizard.next, exact: true }).click();
+    await scan('form-wizard-review');
+    await page.getByRole('button', { name: copy.exampleForms.wizard.submit, exact: true }).click();
+    await expect(page.getByRole('heading', { name: copy.exampleForms.wizard.success, exact: true })).toBeVisible();
+    await scan('form-wizard-result');
+    await page.goto('examples/forms/sections');
+    await scan('form-sections');
+    await page.getByLabel(copy.exampleForms.fields.organizationName, { exact: true }).fill('');
+    await page.getByRole('button', { name: copy.exampleForms.sections.save, exact: true }).click();
+    await scan('form-sections-errors');
+    // Restore defaults before using a full-document navigation in the matrix.
+    await page.getByRole('button', { name: copy.exampleForms.sections.reset, exact: true }).click();
+    await page.getByRole('button', { name: copy.common.actions.confirmReset, exact: true }).click();
+    await page.goto('examples/results');
+    await scan('results');
+    await page.getByRole('button', { name: copy.exampleResults.retry, exact: true }).first().click();
+    await expect(page.getByRole('heading', { name: copy.exampleResults.connected, exact: true })).toBeVisible();
+    await scan('results-reconnected');
     for (const route of ['403', '404', 'agent']) {
       await page.goto(route);
       await scan(route);

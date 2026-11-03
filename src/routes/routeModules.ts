@@ -62,6 +62,9 @@ export const adminPages = [
   definePage({ path: '/examples/crud', load: () => import('../pages/examples/crud').then((module) => ({ default: module.CrudExamplePage })) }),
   definePage({ path: '/examples/crud/:id', accessPath: '/examples/crud', load: () => import('../pages/examples/crud/ProjectDetailPage').then((module) => ({ default: module.ProjectDetailPage })) }),
   definePage({ path: '/examples/directory', load: () => import('../pages/examples/directory').then((module) => ({ default: module.DirectoryExamplePage })) }),
+  definePage({ path: '/examples/forms/wizard', load: () => import('../pages/examples/forms/wizard').then((module) => ({ default: module.FormWizardPage })) }),
+  definePage({ path: '/examples/forms/sections', load: () => import('../pages/examples/forms/sections').then((module) => ({ default: module.FormSectionsPage })) }),
+  definePage({ path: '/examples/results', load: () => import('../pages/examples/results').then((module) => ({ default: module.ResultPagesPage })) }),
 ];
 
 if (import.meta.env.DEV || import.meta.env.MODE === 'test') assertPageAccessPaths(adminPages);

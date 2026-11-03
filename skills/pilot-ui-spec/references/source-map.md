@@ -10,6 +10,9 @@ The package separates observable design intent, current implementation variants,
 
 | Rule area | Primary implementation files |
 | --- | --- |
+| Multi-step forms, drafts and leave protection | `src/components/common/Steps.tsx`, `src/pages/examples/forms/wizard/`, `src/pages/examples/forms/LeaveGuard.tsx` |
+| Sectioned forms, anchors and error summaries | `src/pages/examples/forms/sections/`, `src/pages/examples/forms/Field.tsx`, `src/api/services/exampleFormService.ts`, `exampleFormRules.ts` |
+| Result and exception feedback | `src/components/common/Result.tsx`, `src/pages/examples/results/`, `src/pages/error/StatusPage.tsx`, `src/api/services/exampleResultService.ts` |
 | Shell geometry, sidebar, navigation states | `src/components/layout/AppLayout.tsx`, `src/components/layout/Sidebar.tsx`, `src/components/nav/`, `src/index.css` |
 | Colors, type, radii, shadows, motion | `tailwind.config.js`, `src/index.css`, `src/main.tsx` |
 | Cards, toolbars, page headers | `src/ui/card.tsx`, `src/components/common/PageHeader.tsx` |
@@ -26,6 +29,9 @@ The package separates observable design intent, current implementation variants,
 
 | Location | What it establishes |
 | --- | --- |
+| `src/components/common/Steps.tsx`, `src/pages/examples/forms/wizard/` | Keyboard-focusable horizontal steps, per-step validation, debounced async code checks, review/edit links, 409 field recovery, per-user values-only drafts and guarded leave |
+| `src/pages/examples/forms/sections/`, `src/api/services/exampleFormRules.ts`, `exampleFormService.ts` | Independent long-form scroller, anchor navigation and scroll-spy, fixed save/reset footer, focused error summary with field links, server field errors and a stateless receipt |
+| `src/components/common/Result.tsx`, `src/pages/examples/results/`, `src/pages/error/StatusPage.tsx` | Nine icon-based result variants, host-selected heading levels, result grid and async connection retry, preserved standalone error-page geometry |
 | `src/index.css` | Layout variables (224/88/56), font stack, white canvas, 14px scrollbars, assistant entrance/history animations, reduced-motion handling |
 | `tailwind.config.js` | Brand and status palettes, custom gray scale, `line` tokens, radii, shadows, dialog/popover/drawer keyframes |
 | `src/main.tsx` | Local Fontsource imports: Open Sans Variable, Noto Sans SC 400/500/600, JetBrains Mono 400/500/600 |

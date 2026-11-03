@@ -68,6 +68,16 @@ function findProject(id: string): ExampleProject {
 }
 
 export const exampleProjectService = {
+  /** 只读预检；创建时仍重新检查，避免检查与提交之间的并发冲突。 */
+  async checkCode(code: string): Promise<ApiResponse<{ available: boolean }>> {
+    await delay();
+    requirePermission('example:create');
+    if (!/^[A-Z][A-Z0-9-]{1,19}$/.test(code)) {
+      throw new ApiRequestError(t('serverErrors.example.invalidCode'), 400, 40012);
+    }
+    return response({ available: !getMockDb().exampleProjects.some((project) => project.code === code) });
+  },
+
   async importProjects({ importId, rows }: { importId: string; rows: ProjectImportRow[] }): Promise<ApiResponse<ProjectImportResult[]>> {
     await delay();
     const actor = requirePermission('example:create');

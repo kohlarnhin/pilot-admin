@@ -9,6 +9,7 @@
 5. Login page
 6. Assistant settings and Agent
 7. Choosing a composition
+8. Form pages and result feedback
 
 ## 1. Standard management list
 
@@ -189,3 +190,21 @@ Choose the simplest matching composition based on interaction:
 - Open-ended or multi-step natural-language work: assistant panel or Agent page.
 
 Do not force all screens into one large table, and do not add card grids where dense comparison is the main task. Keep the shared visual tokens and scroll contracts consistent across the selected pattern.
+
+## 8. Form pages and result feedback
+
+### Multi-step form
+
+Reference: `src/pages/examples/forms/wizard/`. A full-width page header precedes one bounded card. Its nonshrinking top region contains horizontal, keyboard-focusable steps with a number or completion/error icon, title and textual status. Current markers use brand orange; controls and focus stay slate. Upcoming steps remain focusable but expose `aria-disabled` until reachable.
+
+The middle region owns scrolling. Vertically labelled fields are capped at a readable width inside the card, with per-step validation, preserved values on Back, and a review summary containing edit links. Debounced async field checks have a polite status region and explicit retry. Service conflicts return to the relevant step and focus the inline field error. The fixed footer shows step count, draft status and outlined actions. Per-user drafts store field values only; returning users choose restore or start over. Router and browser leave guards protect input. Success uses the shared Result with detail/continue actions and clears the draft.
+
+### Sectioned long form
+
+Reference: `src/pages/examples/forms/sections/`. A 224px anchor rail (256px at 1280px) and flexible form card share a 20px gap. The anchors are real links with `aria-current="location"`; activating one scrolls the card smoothly (immediately for reduced motion) and focuses its section heading. Passive scroll-spy observes the actual form scroller. No document scroll is introduced.
+
+Sections use 24px padding, 15px headings, compact descriptions and 1px separators. Related short controls share two columns; wide fields span them. Notification preferences use neutral switch rows. The save/reset footer remains outside the scroller and includes a textual dirty marker. Failed validation focuses a named error summary at the top; each error link focuses its labelled field. Inline errors carry `aria-invalid` / `aria-describedby`. Server field errors share the same summary. Save failures preserve input and offer retry; successful stateless submission shows a receipt and clears the dirty marker. Resetting dirty input and leaving the route require confirmation.
+
+### Result and exception gallery
+
+Reference: `src/components/common/Result.tsx`, `src/pages/examples/results/`. Result is content rather than a scroll owner: the host chooses a naturally scrolling error page or a bounded card. It accepts status, title, description, action content and optional details, with a configurable heading level. A 56px bordered icon tile uses the existing Lucide registry; semantic icons and text distinguish success, error, info, warning, 403, 404, 500, network and maintenance. The gallery uses a two-column grid (three at 1536px) inside one scroller, with an independent polite connection retry demo above it. Existing standalone status pages retain their geometry and h1 through the shared Result adapter.

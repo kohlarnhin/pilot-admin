@@ -1,4 +1,7 @@
 export default {
+  "formWizard": "分步表单",
+  "formSections": "分区长表单",
+  "resultPages": "结果与异常页",
   "directoryExample": "树形目录页",
   "crudExample": "标准列表页",
   "auditLogs": "操作日志",

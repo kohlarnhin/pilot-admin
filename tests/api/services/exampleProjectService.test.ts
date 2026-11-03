@@ -32,6 +32,19 @@ const historyEntry = (id: string, overrides: Partial<AuditLog> = {}): AuditLog =
 });
 
 describe('project detail service', () => {
+  it('checks code availability without modifying data and enforces create permission on every call', async () => {
+    await expect(service.checkCode('PRJ-001')).rejects.toMatchObject({ status: 403 });
+    const { saveStoredTokens } = await import('@/api/tokenStorage');
+    saveStoredTokens({ accessToken: `mock.${btoa(JSON.stringify({ sub: 'u-0001' }))}.local`, refreshToken: 'admin' });
+    const previous = structuredClone(db.getMockDb());
+    const stored = localStorage.getItem('pilot-admin:mock-db:v7');
+    expect((await service.checkCode('PRJ-001')).data.available).toBe(false);
+    expect((await service.checkCode('UNIQUE-CODE')).data.available).toBe(true);
+    await expect(service.checkCode('invalid code')).rejects.toMatchObject({ status: 400, code: 40012 });
+    expect(db.getMockDb()).toEqual(previous);
+    expect(localStorage.getItem('pilot-admin:mock-db:v7')).toBe(stored);
+  });
+
   it('returns a record clone and an inline-compatible 404 for an unknown id', async () => {
     const result = await service.getProject('project-001');
     expect(result.data.id).toBe('project-001');
