@@ -7,7 +7,7 @@ export default function CommandsSection({ section }: AssistantSectionProps) {
   useT();
   return <>
     <CardHeader className="shrink-0"><div><CardTitle>{t(section.titleKey)}</CardTitle><CardDescription>{t(section.descriptionKey)}</CardDescription></div></CardHeader>
-    <CardContent className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+    <CardContent role="region" aria-label={t(section.titleKey)} tabIndex={0} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus">
       <ul aria-label={t(section.titleKey)} className="divide-y divide-line-soft">
         {commandCatalog.map((command) => <li key={command.id} className="py-5 first:pt-0 last:pb-0">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

@@ -18,7 +18,7 @@ export default function IdentitySection({ draft, disabled, onDraftChange }: Assi
       {!draft.greeting.trim() ? <p id="assistant-greeting-error" role="alert" className="mt-1 text-xs text-red-600">{t('assistantSettings.greeting.greetingRequired')}</p> : null}
       <p id="assistant-greeting-hint" className="mt-2 text-xs leading-5 text-slate-500">{t('assistantSettings.greeting.placeholder')}</p>
     </div>
-    <div aria-label={t('assistantSettings.greeting.preview')} className="min-w-0 rounded-xl border border-line-soft bg-slate-50/40 px-4 [&>div]:py-5 [&_h3]:break-words [&_p]:break-words [&_button_span]:break-words">
+    <div role="region" aria-label={t('assistantSettings.greeting.preview')} className="min-w-0 rounded-xl border border-line-soft bg-slate-50/40 px-4 [&>div]:py-5 [&_h3]:break-words [&_p]:break-words [&_button_span]:break-words">
       <EmptyState profile={draft} disabled={disabled} onPrompt={() => {}} promptHint={t('assistantSettings.greeting.promptHint')} />
     </div>
   </div>;

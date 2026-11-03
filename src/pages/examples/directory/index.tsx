@@ -100,7 +100,7 @@ export function DirectoryExamplePage() {
       <Card className="h-56 min-h-0 min-w-0 w-full shrink-0 lg:h-auto lg:w-72 xl:w-80" data-slot="directory-tree-card">
         {treeError ? <div className="p-3"><Alert type="error" title={treeError} action={<Button size="xs" onClick={() => setTreeAttempt((value) => value + 1)}>{t('common.actions.retry')}</Button>} /></div>
           : folders ? <FolderTree folders={folders} selectedId={folderId} onSelect={selectFolder} />
-            : <div className="min-h-0 flex-1 overflow-hidden p-3" aria-busy="true" aria-label={t('common.status.loading')}><Skeleton className="mb-6 h-9 w-full" />{Array.from({ length: 10 }, (_, index) => <Skeleton key={index} className="mb-4 h-6 w-3/4" />)}</div>}
+            : <div role="status" className="min-h-0 flex-1 overflow-hidden p-3" aria-busy="true" aria-label={t('common.status.loading')}><Skeleton className="mb-6 h-9 w-full" />{Array.from({ length: 10 }, (_, index) => <Skeleton key={index} className="mb-4 h-6 w-3/4" />)}</div>}
       </Card>
       <Card className="min-h-0 min-w-0 flex-1" data-slot="directory-documents-card">
         <div className="flex min-h-[60px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line-soft px-6 py-3">
@@ -110,7 +110,7 @@ export function DirectoryExamplePage() {
                 {[{ id: undefined, name: t('directory.allDocuments') }, ...path].map((folder, index, crumbs) => <li key={folder.id ?? 'all'} className="flex min-w-0 items-center gap-1">
                   {index ? <Icon icon="chevron-right" size={14} className="text-slate-500" /> : null}
                   {index === crumbs.length - 1 ? <span aria-current="page" className="max-w-40 truncate font-medium text-slate-900" title={folder.name}>{folder.name}</span>
-                    : <button type="button" className="max-w-40 truncate rounded text-slate-600 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400" title={folder.name} onClick={() => selectFolder(folder.id)}>{folder.name}</button>}
+                    : <button type="button" className="max-w-40 truncate rounded text-slate-600 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" title={folder.name} onClick={() => selectFolder(folder.id)}>{folder.name}</button>}
                 </li>)}
               </ol>
             </nav>
@@ -121,6 +121,7 @@ export function DirectoryExamplePage() {
         {tableError ? <Alert type="error" title={tableError} action={<Button size="xs" onClick={retryDocuments}>{t('common.actions.retry')}</Button>} className="mx-4 my-3 shrink-0" /> : null}
         <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col p-0">
           <FixedTable key={scopeKey} columns={columns} dataSource={page.records} rowKey="id" loading={page.loading} refreshing={page.refreshing} loadingMore={page.loadingMore} hasNext={page.hasNext && !tableError} onLoadMore={page.loadMore}
+            totalCount={total} tabIndex={0} aria-label={selected?.name ?? t('directory.allDocuments')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
             locale={{ emptyText: <EmptyState icon="file-text" title={tableError ? t('directory.errors.documents') : queryKeyword ? t('directory.empty.search') : t('directory.empty.folder')} description={tableError ? undefined : queryKeyword ? t('directory.empty.searchHint') : t('directory.empty.folderHint')} /> }} />
         </CardContent>
       </Card>

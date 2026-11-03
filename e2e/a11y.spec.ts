@@ -273,3 +273,168 @@ test('virtual row modal returns to a stable search input when its opener unmount
     await expect(page.getByPlaceholder(placeholder, { exact: true })).toBeFocused();
   }
 });
+
+for (const locale of ['zh-CN', 'en-US'] as const) {
+  test(`axe directory and assistant settings (${locale})`, async ({ page, loginAs }, testInfo) => {
+    test.setTimeout(180_000);
+    await page.addInitScript((value) => localStorage.setItem('pilot-admin:locale:v1', value), locale);
+    await loginAs('admin');
+    const copy = locale === 'zh-CN' ? zh : en;
+    const reports: Array<{ state: string; violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations'] }> = [];
+    const scan = async (state: string) => {
+      await settled(page);
+      const result = await new AxeBuilder({ page }).analyze();
+      reports.push({ state, violations: result.violations });
+    };
+
+    await page.goto('examples/directory');
+    const tree = page.getByRole('tree', { name: copy.directory.treeLabel });
+    const all = tree.getByRole('treeitem', { name: copy.directory.allDocuments, exact: true });
+    await expect(tree.getByRole('treeitem')).toHaveCount(19);
+    const table = page.getByRole('table');
+    await expect(table.locator('[data-row-key]').first()).toBeVisible();
+    await expect(table).toHaveAttribute('aria-rowcount', '301');
+    await all.focus();
+    await all.press('ArrowRight');
+    const parent = tree.locator('[data-folder-id="folder-01"]');
+    await expect(parent).toBeFocused();
+    await expect(parent).toHaveCSS('--tw-ring-color', 'rgb(100 116 139 / 1)');
+    await expect(parent).toHaveAttribute('aria-level', '2');
+    await scan('directory-focused');
+    const nested = tree.locator('[data-folder-id="folder-03"]');
+    await parent.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await expect(nested).toBeFocused();
+    await nested.press('Enter');
+    await expect(nested).toHaveAttribute('aria-selected', 'true');
+    await expect(nested).toHaveAttribute('aria-level', '4');
+    await expect(tree.locator('[tabindex="0"]')).toHaveCount(1);
+    await expect(table).toHaveAttribute('aria-rowcount', '141');
+    await expect(table.locator('[data-row-key="document-001"]')).toBeVisible();
+    await scan('directory-nested');
+    await table.focus();
+    await table.press('PageDown');
+    await expect.poll(() => table.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await expect(async () => {
+      await table.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+      await expect(table.locator('[data-row-key="document-140"]')).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 20_000 });
+    expect(await table.locator('[data-row-key]').count()).toBeLessThan(50);
+    await expect(table.locator('[data-row-key="document-140"]')).toHaveAttribute('aria-rowindex', '141');
+    await scan('directory-appended');
+    await tree.locator('[data-folder-id="folder-12"]').click();
+    await expect(page.getByText(copy.directory.empty.folder, { exact: true })).toBeVisible();
+    await expect(table.locator('[data-row-key]')).toHaveCount(0);
+    await expect(table).toHaveAttribute('aria-rowcount', '1');
+    await scan('directory-empty');
+
+    await page.goto('system/assistant?tab=models');
+    const rail = page.getByRole('tablist', { name: copy.assistantSettings.workspace.sectionLabel });
+    const panel = page.getByRole('tabpanel');
+    await expect(panel.getByRole('table').locator('[data-row-key]').first()).toBeVisible();
+    await scan('assistant-models');
+    const create = panel.getByRole('button', { name: copy.agentConfig.actions.create, exact: true });
+    await create.focus();
+    await create.press('Enter');
+    const dialog = page.getByRole('dialog', { name: copy.agentConfig.form.createTitle, exact: true });
+    await expect(dialog).toBeVisible();
+    await scan('assistant-model-create');
+    await dialog.getByRole('button', { name: copy.common.actions.create, exact: true }).click();
+    await expect(dialog.getByRole('combobox', { name: copy.agentConfig.fields.modelCode, exact: true })).toHaveAttribute('aria-invalid', 'true');
+    await scan('assistant-model-invalid');
+    const modelCode = dialog.getByRole('combobox', { name: copy.agentConfig.fields.modelCode, exact: true });
+    await modelCode.focus();
+    await expect(dialog.getByRole('listbox')).toBeVisible();
+    await scan('assistant-model-picker');
+    await modelCode.press('ArrowDown');
+    await modelCode.press('Enter');
+    await expect(modelCode).toHaveValue('pilot-demo');
+    await dialog.getByRole('button', { name: copy.common.actions.close, exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await expect(create).toBeFocused();
+
+    await page.goto('system/assistant?tab=identity');
+    const name = page.getByRole('textbox', { name: copy.assistantSettings.greeting.name, exact: true });
+    await expect(name).toBeEnabled();
+    await scan('assistant-identity');
+    const draftName = locale === 'zh-CN' ? '未保存的助手' : 'Unsaved assistant';
+    await name.fill(draftName);
+    await expect(rail.locator('#assistant-tab-identity')).toContainText(copy.assistantSettings.workspace.unsaved);
+    await scan('assistant-identity-dirty');
+    await name.fill('');
+    await page.getByRole('textbox', { name: copy.assistantSettings.greeting.introduction, exact: true }).fill('');
+    await expect(name).toHaveAccessibleDescription(copy.assistantSettings.greeting.nameRequired);
+    await scan('assistant-identity-invalid');
+
+    await page.goto('system/assistant?tab=prompts');
+    const firstLabel = page.getByRole('textbox', { name: copy.assistantSettings.shortcuts.label.replace('{index}', '1'), exact: true });
+    await expect(firstLabel).toBeEnabled();
+    await scan('assistant-prompts');
+    await firstLabel.fill(locale === 'zh-CN' ? '未保存的提问' : 'Unsaved prompt');
+    await expect(rail.locator('#assistant-tab-prompts')).toContainText(copy.assistantSettings.workspace.unsaved);
+    await scan('assistant-prompts-dirty');
+    await page.getByRole('button', { name: copy.assistantSettings.shortcuts.add, exact: true }).click();
+    await expect(panel.getByRole('alert')).toHaveCount(2);
+    await scan('assistant-prompts-invalid');
+
+    await page.goto('system/assistant?tab=commands');
+    const commands = page.getByRole('region', { name: copy.assistantSettings.commands.title, exact: true });
+    await expect(commands.getByRole('listitem').first()).toBeVisible();
+    await scan('assistant-commands');
+    await commands.focus();
+    await commands.press('End');
+    await expect.poll(() => commands.evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+    await scan('assistant-commands-bottom');
+
+    await testInfo.attach(`axe-new-pages-${locale}`, { body: JSON.stringify(reports, null, 2), contentType: 'application/json' });
+    const failures = reports.flatMap(({ state, violations }) => violations
+      .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical' || fixedRules.has(violation.id))
+      .map((violation) => ({ state, rule: violation.id, impact: violation.impact, nodes: violation.nodes })));
+    expect(failures, 'New pages retain tree semantics and pass the repaired accessibility rules').toEqual([]);
+  });
+}
+
+for (const [width, height] of [[1440, 900], [1280, 720]]) {
+  test(`directory and assistant keyboard scrolling (${width}x${height})`, async ({ page, loginAs }, testInfo) => {
+    await page.setViewportSize({ width, height });
+    await loginAs('admin');
+    await page.goto('examples/directory?folder=folder-03');
+    const tree = page.getByRole('tree', { name: zh.directory.treeLabel });
+    const nested = tree.locator('[data-folder-id="folder-03"]');
+    await expect(nested).toHaveAttribute('aria-selected', 'true');
+    await nested.focus();
+    await nested.press('ArrowLeft');
+    const parent = tree.locator('[data-folder-id="folder-02"]');
+    await expect(parent).toBeFocused();
+    await parent.press('ArrowLeft');
+    await expect(parent).toHaveAttribute('aria-expanded', 'false');
+    await parent.press('ArrowRight');
+    await expect(parent).toHaveAttribute('aria-expanded', 'true');
+    await parent.press('ArrowRight');
+    await expect(nested).toBeFocused();
+    await nested.press('Space');
+    await expect(tree.locator('[tabindex="0"]')).toHaveCount(1);
+    const table = page.getByRole('table');
+    await expect(table.locator('[data-row-key]').first()).toBeVisible();
+    await table.focus();
+    await table.press('PageDown');
+    await expect.poll(() => table.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await page.screenshot({ path: testInfo.outputPath('directory-table-keyboard.png') });
+    await page.goto('system/assistant?tab=commands');
+    const commands = page.getByRole('region', { name: zh.assistantSettings.commands.title, exact: true });
+    await expect(commands.getByRole('listitem').first()).toBeVisible();
+    await commands.focus();
+    await commands.press('PageDown');
+    await expect.poll(() => commands.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await commands.press('End');
+    await expect.poll(() => commands.evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+    await page.screenshot({ path: testInfo.outputPath('assistant-commands-keyboard.png') });
+    await page.goto('system/assistant?tab=identity');
+    const name = page.getByRole('textbox', { name: zh.assistantSettings.greeting.name, exact: true });
+    await expect(name).toBeEnabled();
+    await name.fill('键盘检查草稿');
+    await expect(page.getByRole('status').filter({ hasText: zh.assistantSettings.workspace.unsaved })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath('assistant-identity-dirty.png') });
+    expect(await page.evaluate(() => ({ x: document.documentElement.scrollWidth - innerWidth, y: document.documentElement.scrollHeight - innerHeight }))).toEqual({ x: 0, y: 0 });
+  });
+}

@@ -139,7 +139,7 @@ export const AgentConfigPanel: React.FC<AssistantSectionProps> = ({ section }) =
             </span>
             <div className="min-w-0">
               <div className="truncate text-13 font-medium text-slate-900" title={record.model_name}>{record.model_name}</div>
-              <div className="truncate font-mono text-xs text-slate-400" title={record.model_code}>{record.model_code}</div>
+              <div className="truncate font-mono text-xs text-slate-500" title={record.model_code}>{record.model_code}</div>
             </div>
           </div>
         ),
@@ -149,7 +149,7 @@ export const AgentConfigPanel: React.FC<AssistantSectionProps> = ({ section }) =
         dataIndex: 'provider',
         width: '28%',
         minWidth: 144,
-        render: (_, record) => <div className="min-w-0"><p className="truncate text-13 text-slate-700" title={record.provider}>{record.provider}</p><p className="truncate font-mono text-[11px] text-slate-400" title={record.base_url}>{record.base_url}</p><p className="mt-1 truncate font-mono text-[11px] text-slate-400" title={record.api_key_masked}>{record.api_key_masked}</p></div>,
+        render: (_, record) => <div className="min-w-0"><p className="truncate text-13 text-slate-700" title={record.provider}>{record.provider}</p><p className="truncate font-mono text-[11px] text-slate-500" title={record.base_url}>{record.base_url}</p><p className="mt-1 truncate font-mono text-[11px] text-slate-500" title={record.api_key_masked}>{record.api_key_masked}</p></div>,
       },
       {
         title: t('common.columns.updated'),

@@ -106,14 +106,14 @@ function AssistantSettingsWorkspace() {
           {sections.map((item) => <button key={item.key} type="button" role="tab" id={`assistant-tab-${item.key}`} aria-selected={section.key === item.key}
             {...getRovingTabProps(section.key === item.key, () => select(item.key), 'vertical')}
             aria-controls={`assistant-panel-${item.key}`} onClick={() => select(item.key)}
-            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400', section.key === item.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', section.key === item.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={item.icon} size={18} /></span>
-            <span className="min-w-0 flex-1"><span className="block text-13 font-medium">{t(item.titleKey)}</span><span className="mt-0.5 block text-[11px] leading-5 text-slate-500">{t(item.descriptionKey)}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-13 font-medium">{t(item.titleKey)}</span><span className={cn('mt-0.5 block text-[11px] leading-5 text-slate-500', section.key === item.key && 'text-slate-600')}>{t(item.descriptionKey)}</span></span>
             {item.kind === 'form' && profile && isSectionDirty(profile, item) ? <span className="shrink-0"><span aria-hidden="true" className="block size-1.5 rounded-full bg-slate-500" /><span className="sr-only">{t('assistantSettings.workspace.unsaved')}</span></span> : null}
           </button>)}
         </div>
       </Card>
-      <Card key={section.key} role="tabpanel" id={`assistant-panel-${section.key}`} aria-labelledby={`assistant-tab-${section.key}`} tabIndex={0} className="min-h-0 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300">
+      <Card key={section.key} role="tabpanel" id={`assistant-panel-${section.key}`} aria-labelledby={`assistant-tab-${section.key}`} tabIndex={0} className="min-h-0 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus">
         {section.kind === 'panel' ? content : <>
           <CardHeader className="shrink-0"><div><CardTitle>{t(section.titleKey)}</CardTitle><CardDescription>{t(section.descriptionKey)}</CardDescription></div></CardHeader>
           <CardContent aria-busy={loading} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">

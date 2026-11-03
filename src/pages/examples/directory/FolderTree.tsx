@@ -46,7 +46,6 @@ export function FolderTree({ folders, selectedId, onSelect }: {
           type="button"
           role="treeitem"
           data-folder-id={node.id}
-          aria-label={node.name}
           aria-description={t('directory.counts', { total: node.documentCount, direct: node.directCount })}
           aria-expanded={node.children.length ? expanded : undefined}
           aria-level={level}
@@ -65,7 +64,7 @@ export function FolderTree({ folders, selectedId, onSelect }: {
             setFocusedId(action.focusId);
             rowRefs.current.get(action.focusId)?.focus();
           }}
-          className={cn('flex h-10 w-full items-center gap-2 rounded-md pr-3 text-left text-13 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400',
+          className={cn('flex h-10 w-full items-center gap-2 rounded-md pr-3 text-left text-13 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus',
             (selectedId ?? ALL_DOCUMENTS_ID) === node.id ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600')}
           style={{ paddingLeft: 10 + (level - 1) * 20 }}
         >
@@ -74,7 +73,7 @@ export function FolderTree({ folders, selectedId, onSelect }: {
           </span>
           <Icon icon={expanded ? 'folder-open' : 'folder'} size={16} className="text-slate-500" />
           <span className="min-w-0 flex-1 truncate" title={node.name}>{node.name}</span>
-          <span aria-hidden="true" className="ml-auto shrink-0 font-mono text-xs font-normal tabular-nums text-slate-500" title={t('directory.counts', { total: node.documentCount, direct: node.directCount })}>{node.documentCount}</span>
+          <span aria-hidden="true" className={cn('ml-auto shrink-0 font-mono text-xs font-normal tabular-nums text-slate-500', (selectedId ?? ALL_DOCUMENTS_ID) === node.id && 'text-slate-600')} title={t('directory.counts', { total: node.documentCount, direct: node.directCount })}>{node.documentCount}</span>
         </button>)}
       </div>
       {filter.trim() && !filteredRoot.children.length ? <EmptyState icon="folder" title={t('directory.empty.tree')} /> : null}

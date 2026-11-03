@@ -69,6 +69,9 @@ export interface DataTableProps<T> {
   estimatedRowHeight?: number;
   skeletonRows?: number;
   className?: string;
+  /** 只读表格没有行内控件时，可让实际滚动容器进入 Tab 顺序。 */
+  tabIndex?: number;
+  "aria-label"?: string;
   onScroll?: React.UIEventHandler<HTMLDivElement>;
   /** 兼容旧调用，以下属性不再生效 */
   pagination?: false;
@@ -189,6 +192,8 @@ export function DataTable<T extends object>({
   estimatedRowHeight = 57,
   skeletonRows = 7,
   className,
+  tabIndex,
+  "aria-label": ariaLabel,
   onScroll,
 }: DataTableProps<T>) {
   useT();
@@ -464,6 +469,8 @@ export function DataTable<T extends object>({
     <div
       ref={scrollRef}
       role="table"
+      tabIndex={tabIndex}
+      aria-label={ariaLabel}
       aria-rowcount={totalCount !== undefined ? totalCount + (showHeader ? 1 : 0) : hasNext ? -1 : rows.length + (showHeader ? 1 : 0)}
       data-record-count={dataSource.length}
       onScroll={onScroll}
