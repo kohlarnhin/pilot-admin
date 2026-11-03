@@ -6,6 +6,22 @@ export { expect, zh, en };
 export type Role = 'admin' | 'operator' | 'viewer';
 type LoginOptions = { entry: 'console' | 'agent'; remember?: boolean };
 
+/** 读取当前最高版本的 Mock DB 原文；DB 升级后测试无需改版本号。 */
+export function readMockDbRaw(page: Page): Promise<string | null> {
+  return page.evaluate(() => {
+    const keys = Object.keys(localStorage).filter((key) => /^pilot-admin:mock-db:v\d+$/.test(key));
+    const latest = keys.sort((a, b) => Number(b.split(':v')[1]) - Number(a.split(':v')[1]))[0];
+    return latest ? localStorage.getItem(latest) : null;
+  });
+}
+
+/** 解析后的最高版本 Mock DB。 */
+export async function readMockDb<T = Record<string, unknown>>(page: Page): Promise<T> {
+  const raw = await readMockDbRaw(page);
+  if (!raw) throw new Error('Mock DB is not persisted yet');
+  return JSON.parse(raw) as T;
+}
+
 export async function signIn(page: Page, role: Role) {
   const copy = await page.locator('html').getAttribute('lang') === 'en-US' ? en : zh;
   await page.getByLabel(copy.common.fields.account, { exact: true }).fill(role);

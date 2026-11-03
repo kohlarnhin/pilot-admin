@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { test, expect, zh } from './fixtures';
+import { test, expect, zh, readMockDb, readMockDbRaw } from './fixtures';
 
 const next = (page: Page) => page.getByRole('button', { name: zh.exampleForms.wizard.next, exact: true });
 async function fillBasics(page: Page, code: string) {
@@ -55,10 +55,11 @@ test('wizard keyboard path validates steps, preserves values, reviews and create
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   });
   await expect(page.getByRole('heading', { name: zh.exampleForms.wizard.success, exact: true })).toBeVisible();
-  const result = await page.evaluate(() => ({
-    draft: localStorage.getItem('pilot-admin:form-draft:u-0001:project-wizard'),
-    count: JSON.parse(localStorage.getItem('pilot-admin:mock-db:v7')!).exampleProjects.filter((item: { code: string }) => item.code === 'E2E-WIZARD').length,
-  }));
+  const db = await readMockDb<{ exampleProjects: { code: string }[] }>(page);
+  const result = {
+    draft: await page.evaluate(() => localStorage.getItem('pilot-admin:form-draft:u-0001:project-wizard')),
+    count: db.exampleProjects.filter((item) => item.code === 'E2E-WIZARD').length,
+  };
   expect(result).toEqual({ draft: null, count: 1 });
   await page.getByRole('link', { name: zh.exampleForms.wizard.view, exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Keyboard project', exact: true })).toBeVisible();
@@ -166,7 +167,7 @@ test('long form scroll-spy, keyboard anchors and local scrolling preserve the st
 test('long form error summary focuses client and server fields, then submits without persistence', async ({ page, loginAs }) => {
   await loginAs('viewer');
   await page.goto('examples/forms/sections');
-  const initial = await page.evaluate(() => localStorage.getItem('pilot-admin:mock-db:v7'));
+  const initial = await readMockDbRaw(page);
   await page.getByLabel(zh.exampleForms.fields.organizationName, { exact: true }).fill('');
   await page.getByLabel(zh.exampleForms.fields.email, { exact: true }).fill('invalid');
   await page.getByRole('button', { name: zh.exampleForms.sections.save, exact: true }).click();
@@ -187,7 +188,7 @@ test('long form error summary focuses client and server fields, then submits wit
   await page.getByRole('button', { name: zh.exampleForms.sections.save, exact: true }).click();
   await expect(page.getByText(zh.exampleForms.sections.success, { exact: true })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: zh.exampleForms.sections.clean })).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('pilot-admin:mock-db:v7'))).toBe(initial);
+  expect(await readMockDbRaw(page)).toBe(initial);
 });
 
 test('viewer has a read-only wizard notice and editable stateless profile; reset and leave are guarded', async ({ page, loginAs }) => {

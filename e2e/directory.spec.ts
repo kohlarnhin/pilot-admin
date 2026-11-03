@@ -1,4 +1,4 @@
-import { test, expect, zh } from './fixtures';
+import { test, expect, zh, readMockDb } from './fixtures';
 import { seedText } from '../src/i18n/locales/zh-CN/seed';
 
 const node = (index: number) => seedText.directory.folderNames[index - 1];
@@ -14,11 +14,9 @@ test('nested folder includes only its subtree and breadcrumb ancestors navigate'
   const table = page.getByRole('table');
   await expect(table.locator('[data-row-key]').first()).toBeVisible();
   const ids = await table.locator('[data-row-key]').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-row-key')));
-  const allowed = await page.evaluate(() => {
-    const db = JSON.parse(localStorage.getItem('pilot-admin:mock-db:v8')!);
-    return db.exampleDocuments.filter((document: { folder_id: string }) => ['folder-02', 'folder-03', 'folder-04'].includes(document.folder_id)).map((document: { id: string }) => document.id);
-  });
-  expect(ids.every((id) => allowed.includes(id))).toBe(true);
+  const db = await readMockDb<{ exampleDocuments: { id: string; folder_id: string }[] }>(page);
+  const allowed = db.exampleDocuments.filter((document) => ['folder-02', 'folder-03', 'folder-04'].includes(document.folder_id)).map((document) => document.id);
+  expect(ids.every((id) => id !== null && allowed.includes(id))).toBe(true);
   await expect(page.getByText(zh.directory.total.replace('{count}', '160'), { exact: true })).toBeVisible();
   await crumbs.getByRole('button', { name: node(1), exact: true }).click();
   await expect(page).toHaveURL(/\?folder=folder-01$/);
