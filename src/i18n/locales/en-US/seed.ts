@@ -81,6 +81,10 @@ export const seedText = {
     "description": "A project for the standard CRUD example",
     "longDescription": "This project demonstrates the complete journey from a list to record details. Name, code, owner and status use the same service boundary, ready to replace with your own entity after forking.\n\nUse this description to record goals, scope, collaboration notes and open questions. Paragraphs retain their line breaks. Long text scrolls within its own region while metadata and lifecycle information remain reachable. Text is selectable and the project code can be copied.\n\nThe lifecycle lists this project's actions in reverse chronological order. Audit entries contain only approved metadata, never the description or raw form values. Available actions depend on each account's grants, and services check permissions again before writing.\n\nResize the window to inspect the layout. At normal heights, description and history scroll independently. A short viewport lets the whole detail column scroll, keeping every section accessible."
   },
+  "directory": {
+    "folderNames": ["Resources", "Guides", "Getting started", "Reference", "Templates", "Archive", "Workspace", "Shared", "Notes", "Checklists", "Drafts", "Empty folder", "Library", "Collections", "Images", "Samples", "History", "Versions"],
+    "documentNames": ["User guide", "Reference notes", "Collaboration record", "Sample checklist", "Content overview", "Working template"]
+  },
   "agentProfile": {
     "name": "Pilot assistant",
     "greeting": "Hello, I’m your work assistant. I can help you view statistics, find users, manage accounts and run audits.",

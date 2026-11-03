@@ -2,6 +2,7 @@ import type source from '../zh-CN/serverErrors';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  directory: { folderNotFound: 'The folder does not exist or has been deleted' },
   "staleBuild": "A newer page has upgraded this data. Reload this page to continue.",
   profile: { invalidName: 'Enter a display name of up to 40 characters' },
   "example": {

@@ -129,7 +129,17 @@ Mock catalog sync is recursive, monotonic and add-only. Only the seeded admin ro
 
 Pages call `src/api/services`; they never access the mock DB directly. For a new collection or incompatible shape, update types, deterministic seeds and full validation; bump `MOCK_DB_VERSION` and the seed/type version, then add each `fromVersion → nextVersion` function in `src/mock/migrations.ts`. Migrations must be pure and deterministic: no clock, randomness, locale, storage, `createId()`, `Date.now()` or `t()`. Derive new fields from old data or fixed anchors, and test preservation with old-version fixtures.
 
-The injected storage core prefers a valid current key. Otherwise it migrates the highest supported lower key, validates, syncs the permission catalog, validates again and persists. Keep the source during this start; only a later start with an already-valid current key removes lower keys. Failed migrations use seed data without touching the source this time; failed persistence retains migrated data in memory. The current version is v6 with v5 as the migration starting point. The first v5 → v6 migration preserves every collection and adds empty `importReceipts`. Older or corrupt data still falls back to seed.
+For v6 → v7, startup injects the active locale's `getSeedText()` into `createMockDbMigrations(seedText)`. Its pure migration calls the deterministic `createDirectorySeed(seedText, users)`, also used by initial seeds and demo reset. New folder/document names use the migration-time locale, while old collections and user edits remain intact. Switching locale does not translate persisted seed text; reset demo data to regenerate it in another language.
+
+The injected storage core prefers a valid current key. Otherwise it migrates the highest supported lower key, validates, syncs the permission catalog, validates again and persists. Keep the source during this start; only a later start with an already-valid current key removes lower keys. Failed migrations use seed data without touching the source this time; failed persistence retains migrated data in memory. The current version is v7 with v5 as the migration starting point. The v5 → v6 migration preserves every collection and adds empty `importReceipts`; v6 → v7 adds `exampleFolders` and `exampleDocuments`. Older or corrupt data still falls back to seed.
+
+### Tree directory reference
+
+Examples → Tree directory (`/examples/directory?folder=folder-03`) is a read-only folder tree plus record table: 18 folders across three levels and 300 metadata-only documents, including an empty folder and a 140-document folder. Selection includes descendants; breadcrumbs navigate ancestors, keyword search matches document names and owners, and the table appends 20-row pages through its own scroller with virtualization. The independently scrolling tree keeps matching ancestors visible and supports WAI-ARIA keyboard navigation. The URL restores deep links and back/forward; unknown folders show all documents with an inline notice.
+
+Copy `src/pages/examples/directory/`, `src/api/services/exampleDirectoryService.ts`, `src/mock/directorySeed.ts`, the entity types and locale messages. Reuse `src/utils/formatBytes.ts`; replace the service for departments/members, categories/products or folders/documents. `folder_path` starts at the selected folder, and its cell is omitted for documents directly in that folder. No content field, file body, write operation, button permission or audit is involved.
+
+Fresh seeds grant this menu to admin, operator and viewer. Existing v5 / v6 databases auto-grant it only to `auto_grant` admins; other roles retain their grants and need a manual grant or demo reset. M9b v6 tabs become read-only after detecting v7 and must reload before writing or resetting.
 
 A higher-version key makes the current build read-only: writes/reset fail with code `40990` and a localized reload message. Higher keys are never deleted. Even after removing a test key, reload to resume writes. Previously deployed builds without this guard cannot be controlled; close or reload those old tabs during upgrades. Use the existing paged response and infinite-list helpers. To connect a backend, replace service function bodies with `http` calls and use `runSseStream` for assistant streaming. Authentication and RBAC must be enforced on the server. [Services and mocks](README.md#添加-service-与-mock), [backend integration](README.md#接真实后端).
 
@@ -208,7 +218,7 @@ Use plural-neutral English such as `Users: {count}`; there is no plural engine. 
 
 Use short semantic keys grouped by purpose, such as `users.toast.created` and `users.deleteDialog.content`, rather than sentence fragments. Each segment must match `/^[a-z][a-zA-Z0-9]*$/` (camelCase) and contain at most 24 characters. Reuse identical shared wording from `common`; keep feature-specific keys when the wording differs. Domain errors live in `serverErrors`, and audit sentences in `audit`. Menu/action IDs stay unchanged; dictionary keys camel-case hyphenated IDs (for example, `user-reset-password` → `button.userResetPassword`).
 
-Locale-specific seed content is a separate `seedText` export in `src/i18n/locales/<locale>/seed.ts`, typed by `SeedText` in `src/i18n/seed.ts`. It supports name arrays and stays outside the `t()` message tree. Initial creation and demo reset use the current locale for role names, user names, site descriptions, model names and example projects. IDs, login names, emails, deterministic ordering stay unchanged; the current DB version is v6. Assistant profile and all 25 conversation seeds use the creation-time locale; the long session retains 60 messages. Switching locale preserves unsaved role permission selections, menu rename input and settings fields while refreshing menu/action names.
+Locale-specific seed content is a separate `seedText` export in `src/i18n/locales/<locale>/seed.ts`, typed by `SeedText` in `src/i18n/seed.ts`. It supports name arrays and stays outside the `t()` message tree. Initial creation and demo reset use the current locale for role names, user names, site descriptions, model names and example projects. IDs, login names, emails, deterministic ordering stay unchanged; the current DB version is v7. Assistant profile and all 25 conversation seeds use the creation-time locale; the long session retains 60 messages. Switching locale preserves unsaved role permission selections, menu rename input and settings fields while refreshing menu/action names.
 
 Tool replies, choices, plans and action cards use the locale at reply time and are stored as content; switching never retranslates earlier messages or card labels. IDs and execution state stay code-based. Unmodified default profiles read the current locale; explicitly saved profiles remain data via the optional internal `agentProfileCustomized` flag. Unmarked profiles are treated as defaults only when they exactly match known seed profiles.
 
@@ -222,13 +232,13 @@ System → Audit Logs provides combined keyword/module/result filters, virtualiz
 
 To add an action, update the typed map, runtime allowlist, both `audit.ts` dictionaries and `src/audit/format.ts`. Wire codes such as `auth.login_failed` map to camelCase message keys such as `audit.action.auth.loginFailed`. Sentences translate at render/export, while recorded names remain data. [Implementation guide](README.md#操作日志).
 
-DB v5 introduces capped `auditLogs` (1000 newest-first entries, 120 historical seed entries) and `exampleProjects` (80 deterministic rows), removes `activities` and resets older demo data once. The CRUD template now uses v6, preserving v5 data through migration. Demo reset records its own action in the same persisted write.
+DB v5 introduces capped `auditLogs` (1000 newest-first entries, 120 historical seed entries) and `exampleProjects` (80 deterministic rows), removes `activities` and resets older demo data once. The template now uses v7, preserving v5 / v6 data through migration. Demo reset records its own action in the same persisted write.
 
 CSV exports the current filters, capped at 5000 service rows (1000 currently stored). `src/utils/csv.ts` quotes every cell, doubles quotes, uses CRLF and includes a UTF-8 BOM. Cells beginning with `=`, `+`, `-`, `@`, Tab or CR, including after leading whitespace, receive an apostrophe prefix so spreadsheets open them as text. This also applies to user-provided names.
 
 ## Start a module from the CRUD template
 
-Examples → Standard List (`/examples/crud`) demonstrates paged virtualized lists, filters, forms with inline duplicate-code errors, selection, atomic batch deletion and safe CSV. Export deliberately requires page access only; Audit Logs demonstrates a dedicated export permission. Existing v5 databases grant the new module automatically to auto-grant admins. Operator create/edit and viewer read-only defaults appear after resetting demo data. The template now uses DB v6; existing v5 data migrates without resetting.
+Examples → Standard List (`/examples/crud`) demonstrates paged virtualized lists, filters, forms with inline duplicate-code errors, selection, atomic batch deletion and safe CSV. Export deliberately requires page access only; Audit Logs demonstrates a dedicated export permission. Existing v5 databases grant the new module automatically to auto-grant admins. Operator create/edit and viewer read-only defaults appear after resetting demo data. The template now uses DB v7; existing v5 / v6 data migrates without resetting.
 
 Follow the ordered [copy checklist](README.md#从模板开始一个新模块): copy entity/status types; add the mock collection, seed text and `isMockDb` validation (bump the version for a new persisted shape); extend audit types, runtime catalog, target validation, format maps and both audit dictionaries; copy the service and server-error namespace; copy the entire page/form folder; copy both locale namespaces and register them; register one `definePage` plus menu/buttons; optionally seed non-admin grants; run all checks and the real-page matrix. Extend the exhaustive module-target map in `auditSeed.ts`; exclude the new module in its action filter if no historical demo entries are needed.
 
@@ -273,12 +283,12 @@ E2E covers authentication, RBAC, navigation, users, CRUD/CSV, assistant plans an
 
 ## Demo storage and reset
 
-Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key is v6 (`pilot-admin:mock-db:v6`) with v5 as the migration starting point; v4 and earlier fall back to seed. Source retention and stale-tab guards follow the migration rules above. Each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
+Use System settings → Demo data → Reset demo data to restore the seed and clear assistant drafts/cache. The current DB key is v7 (`pilot-admin:mock-db:v7`) with v5 as the migration starting point; v4 and earlier fall back to seed. Source retention and stale-tab guards follow the migration rules above. Each user retains up to 60 sessions, each session up to 200 messages, and each message up to 16000 characters. [Storage details](README.md#重置与存储边界).
 
 ## Roadmap
 
 - CSV import with atomic batches, idempotent retry and failed-row downloads.
-- A tree directory with a record table, and an inline-editing workbench with history.
+- An inline-editing workbench with history.
 - Assistant/example module switches and a pruning guide verified by actual removal.
 - Continued accessibility, performance and developer-documentation improvements.
 

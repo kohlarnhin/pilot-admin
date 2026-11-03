@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Search, AppWindow, ArrowRight, ArrowUpRight, ArrowUp, ArrowDown, BellOff, BellRing, Bot, Paperclip, X, Braces, ChartColumn, CheckCheck, ChevronDown, ChevronRight, CircleAlert,
   CircleCheck, CircleHelp, CirclePlus, CircleX, ClipboardCheck, CloudUpload, Copy, Download, Ellipsis, Eye, FileCode, GitCompareArrows,
-  FileText, Flag, Folder, FolderOpen, Globe, History, Import, Inbox, KeyRound, Languages, LayoutDashboard,
+  FileText, Flag, Folder, FolderOpen, Globe, History, Image, Import, Inbox, KeyRound, Languages, LayoutDashboard,
   LayoutGrid, Lightbulb, ListChecks, ListTodo, ListTree, LoaderCircle, LockKeyhole, LogIn, MapPin, Monitor,
   Maximize2, MousePointerClick, Package, Pencil, Plus, RefreshCw, RotateCcw, Send, Settings2, Shield, ShieldCheck,
   SquarePen, SquareTerminal, SquareX, TriangleAlert, Trash2, Type, Upload, User, UserCheck, UserPlus, UserX, Users, UsersRound,
@@ -57,6 +57,7 @@ export const ICONS = {
   globe: Globe,
   'git-compare-arrows': GitCompareArrows,
   history: History,
+  image: Image,
   import: Import,
   inbox: Inbox,
   'key-round': KeyRound,

@@ -1,0 +1,21 @@
+export default {
+  description: '按目录及其子目录浏览文档元数据',
+  allDocuments: '全部文档',
+  treeLabel: '文档目录',
+  treeSearch: '筛选目录',
+  documentSearch: '搜索文档名称或所有者',
+  breadcrumb: '目录路径',
+  total: '共 {count} 份文档',
+  counts: '含子目录 {total} 份，当前目录 {direct} 份',
+  unknownFolder: '目录不存在，已显示全部文档',
+  fields: { name: '文档名称', folder: '所在目录', size: '大小', owner: '所有者' },
+  types: { pdf: 'PDF 文档', docx: 'Word 文档', xlsx: 'Excel 表格', pptx: 'PowerPoint 演示', image: '图片', other: '其他文件' },
+  empty: {
+    folder: '此目录暂无文档',
+    folderHint: '当前目录及其子目录中没有文档',
+    search: '没有匹配的文档',
+    searchHint: '试试其他名称或所有者，或清空搜索',
+    tree: '没有匹配的目录',
+  },
+  errors: { tree: '目录加载失败', documents: '文档加载失败', count: '文档数量加载失败' },
+} as const;

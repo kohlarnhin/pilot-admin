@@ -1,4 +1,5 @@
 export default {
+  directory: { folderNotFound: '目录不存在或已被删除' },
   "staleBuild": "数据已由新版本页面升级，请刷新本页",
   profile: { invalidName: '请输入不超过 40 字的显示姓名' },
   "example": {

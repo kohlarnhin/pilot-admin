@@ -2,6 +2,7 @@ import type source from '../zh-CN/menu';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "directoryExample": "Tree directory",
   "crudExample": "Standard List",
   "auditLogs": "Audit Logs",
   "assistant": "Assistant settings",

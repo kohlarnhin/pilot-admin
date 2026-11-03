@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import source from '../fixtures/mock-db-v5.json';
-import { mockDbMigrations } from '@/mock/migrations';
+import { createMockDbMigrations } from '@/mock/migrations';
+import { seedText } from '@/i18n/locales/zh-CN/seed';
+import { syncPermissionCatalog } from '@/mock/permissionCatalog';
+import type { MockDb } from '@/mock/seed';
+
+const mockDbMigrations = createMockDbMigrations(seedText);
 import { hasNewerMockDb, loadMockDb } from '@/mock/dbStorage';
 
 // 从 ea84584 的实际浏览器种子裁剪数量，保留每个集合及真实 v5 形状。
@@ -14,16 +19,16 @@ describe('real v5 to v6 migration', () => {
     expect(migrated).toEqual({ ...source, version: 6, importReceipts: [] });
     expect(mockDbMigrations[5](structuredClone(source))).toEqual(migrated);
     const { isMockDb } = await import('@/mock/db');
-    expect(isMockDb(migrated)).toBe(true);
+    expect(isMockDb(mockDbMigrations[6](migrated))).toBe(true);
   });
 
-  it('loads and persists v6 while retaining the v5 source until the next start', async () => {
+  it('chains through v6 and persists v7 while retaining the v5 source until the next start', async () => {
     const serialized = JSON.stringify(source);
     localStorage.setItem('pilot-admin:mock-db:v5', serialized);
     const db = await import('@/mock/db');
-    expect(db.getMockDb()).toEqual({ ...source, version: 6, importReceipts: [] });
+    expect(db.getMockDb()).toEqual(syncPermissionCatalog(mockDbMigrations[6](mockDbMigrations[5](source)) as MockDb).db);
     expect(localStorage.getItem('pilot-admin:mock-db:v5')).toBe(serialized);
-    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v6')!)).toEqual(db.getMockDb());
+    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v7')!)).toEqual(db.getMockDb());
     expect(hasNewerMockDb(localStorage, 5)).toBe(true);
     const oldWrite = vi.spyOn(localStorage, 'setItem');
     const oldLoad = loadMockDb({

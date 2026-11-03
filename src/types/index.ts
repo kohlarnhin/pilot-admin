@@ -177,6 +177,23 @@ export interface ProjectImportReceipt {
   create_date: string;
 }
 
+export interface ExampleFolder {
+  id: string;
+  parent_id?: string;
+  name: string;
+  sort_no: number;
+}
+
+/** 目录示例只保存文件元数据，不保存文件正文。 */
+export interface ExampleDocument extends AuditFields {
+  id: string;
+  folder_id: string;
+  name: string;
+  type: 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'image' | 'other';
+  size: number;
+  owner_id: string;
+}
+
 export interface DashboardData {
   totalUsers: number;
   activeUsers: number;

@@ -3,13 +3,14 @@ import { clearQueryCache } from '@/api/queryCache';
 import { createSeed, type MockDb } from './seed';
 import { syncPermissionCatalog } from './permissionCatalog';
 import { hasNewerMockDb, loadMockDb, MOCK_DB_PREFIX } from './dbStorage';
-import { mockDbMigrations } from './migrations';
+import { createMockDbMigrations } from './migrations';
+import { getSeedText } from '@/i18n/seed';
 import { ApiRequestError } from '@/api/errors';
 import { t } from '@/i18n';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 
 export const MOCK_DB_RESET_EVENT = 'pilot-admin:mock-db-reset';
-export const MOCK_DB_VERSION = 6;
+export const MOCK_DB_VERSION = 7;
 export const MOCK_DB_KEY = `${MOCK_DB_PREFIX}${MOCK_DB_VERSION}`;
 export const STALE_BUILD_CODE = 40990;
 
@@ -91,6 +92,17 @@ export function isMockDb(value: unknown): value is MockDb {
     && ['active', 'paused', 'archived'].includes(String(item.status))
     && (item.description === undefined || typeof item.description === 'string'))) return false;
 
+  if (!Array.isArray(value.exampleFolders) || !value.exampleFolders.every((item) => isRecord(item)
+    && typeof item.id === 'string' && typeof item.name === 'string'
+    && (item.parent_id === undefined || typeof item.parent_id === 'string')
+    && typeof item.sort_no === 'number' && Number.isFinite(item.sort_no))) return false;
+
+  if (!Array.isArray(value.exampleDocuments) || !value.exampleDocuments.every((item) => isRecord(item) && hasAudit(item)
+    && ['id', 'folder_id', 'name', 'owner_id'].every((key) => typeof item[key] === 'string')
+    && ['pdf', 'docx', 'xlsx', 'pptx', 'image', 'other'].includes(String(item.type))
+    && Number.isSafeInteger(item.size) && Number(item.size) >= 0
+    && Object.keys(item).every((key) => ['id', 'folder_id', 'name', 'owner_id', 'type', 'size', 'create_by', 'create_date', 'last_update_by', 'last_update_date'].includes(key)))) return false;
+
   if (!Array.isArray(value.importReceipts) || value.importReceipts.length > 5000) return false;
   const receiptKeys = new Set<string>();
   const importIds = new Set<string>();
@@ -145,7 +157,7 @@ function readDb(atStartup = false): MockDb {
     storage,
     version: MOCK_DB_VERSION,
     minMigratableVersion: 5,
-    migrations: mockDbMigrations,
+    migrations: createMockDbMigrations(getSeedText()),
     validate: isMockDb,
     seed: createSeed,
     sync: (db) => syncPermissionCatalog(db).db,

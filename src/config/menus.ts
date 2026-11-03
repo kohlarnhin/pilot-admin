@@ -48,6 +48,7 @@ export const menuConfig: MenuConfig[] = [
       { id: 'example-update', permission: 'example:update' },
       { id: 'example-delete', permission: 'example:delete' },
     ] },
+    { id: 'directory-example', route_path: '/examples/directory', icon: 'folder', sort_no: 3 },
   ] },
 ];
 

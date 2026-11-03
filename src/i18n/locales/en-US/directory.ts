@@ -1,0 +1,21 @@
+export default {
+  description: 'Browse document metadata in a folder and its descendants',
+  allDocuments: 'All documents',
+  treeLabel: 'Document folders',
+  treeSearch: 'Filter folders',
+  documentSearch: 'Search name or owner',
+  breadcrumb: 'Folder path',
+  total: '{count} documents',
+  counts: '{total} in subtree, {direct} directly in this folder',
+  unknownFolder: 'Folder not found. Showing all documents',
+  fields: { name: 'Document name', folder: 'Folder', size: 'Size', owner: 'Owner' },
+  types: { pdf: 'PDF document', docx: 'Word document', xlsx: 'Excel spreadsheet', pptx: 'PowerPoint presentation', image: 'Image', other: 'Other file' },
+  empty: {
+    folder: 'No documents in this folder',
+    folderHint: 'This folder and its descendants contain no documents',
+    search: 'No matching documents',
+    searchHint: 'Try another name or owner, or clear the search',
+    tree: 'No matching folders',
+  },
+  errors: { tree: 'Could not load folders', documents: 'Could not load documents', count: 'Could not load the document count' },
+} as const;

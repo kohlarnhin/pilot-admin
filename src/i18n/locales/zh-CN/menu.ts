@@ -1,4 +1,5 @@
 export default {
+  "directoryExample": "树形目录页",
   "crudExample": "标准列表页",
   "auditLogs": "操作日志",
   "assistant": "助手设置",

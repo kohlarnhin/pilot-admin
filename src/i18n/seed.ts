@@ -14,6 +14,7 @@ export interface SeedText {
   settingsDescription: string;
   model: { provider: string; name: string };
   exampleProjects: { names: string[]; description: string; longDescription: string };
+  directory: { folderNames: readonly string[]; documentNames: readonly string[] };
   agentProfile: AgentProfile;
   agentSessions: {
     checkPrompt: string;

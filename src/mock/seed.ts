@@ -1,4 +1,5 @@
 import { seedAuditLogs } from './auditSeed';
+import { createDirectorySeed } from './directorySeed';
 import { getSeedText } from '@/i18n/seed';
 import defaultText from '@/i18n/locales/zh-CN/common';
 import { appConfig } from '@/config/app';
@@ -7,6 +8,8 @@ import { collectMenuCatalog, type PermissionCatalog } from './permissionCatalog'
 import type {
   AuditLog,
   ExampleProject,
+  ExampleFolder,
+  ExampleDocument,
   ProjectImportReceipt,
   AgentConfig,
   AgentMessage,
@@ -42,7 +45,7 @@ export interface MockDb {
   agentProfile: AgentProfile;
   agentProfileCustomized?: boolean;
   agentConfigs: (AgentConfig & { apiKey: string })[];
-  version: 6;
+  version: 7;
   permissionCatalog: PermissionCatalog;
   users: MockUser[];
   roles: MockRole[];
@@ -52,6 +55,8 @@ export interface MockDb {
   auditLogs: MockAuditLog[];
   exampleProjects: MockExampleProject[];
   importReceipts: ProjectImportReceipt[];
+  exampleFolders: ExampleFolder[];
+  exampleDocuments: ExampleDocument[];
 }
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
@@ -106,7 +111,7 @@ export function createSeed(): MockDb {
       text.roles.operator.name,
       'ROLE_OPERATOR',
       text.roles.operator.description,
-      ['dashboard', 'system', 'users', 'examples', 'components', 'crud-example', 'ai-permissions'],
+      ['dashboard', 'system', 'users', 'examples', 'components', 'crud-example', 'directory-example', 'ai-permissions'],
       ['user-update', 'agent-use', 'example-create', 'example-update'],
     ),
     role(
@@ -114,7 +119,7 @@ export function createSeed(): MockDb {
       text.roles.viewer.name,
       'ROLE_VIEWER',
       text.roles.viewer.description,
-      ['dashboard', 'examples', 'components', 'crud-example'],
+      ['dashboard', 'examples', 'components', 'crud-example', 'directory-example'],
       [],
     ),
   ];
@@ -194,7 +199,7 @@ export function createSeed(): MockDb {
         last_update_date: audit.last_update_date,
       },
     ],
-    version: 6,
+    version: 7,
     permissionCatalog: { menuIds: [...allMenuIds], buttonIds: [...allButtonIds] },
     users,
     roles,
@@ -219,6 +224,7 @@ export function createSeed(): MockDb {
     auditLogs: seedAuditLogs(users, roles, exampleProjects),
     exampleProjects,
     importReceipts: [],
+    ...createDirectorySeed(text, users),
   };
 }
 
