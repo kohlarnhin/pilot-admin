@@ -1,3 +1,4 @@
+import { createNotificationSeed } from './notificationSeed';
 import type { DbMigrations } from './dbStorage';
 import type { User } from '@/types';
 import type { SeedText } from '@/i18n/seed';
@@ -25,6 +26,18 @@ export const createMockDbMigrations = (seedText: SeedText): DbMigrations => ({
       ...data,
       version: 7,
       ...createDirectorySeed(seedText, data.users as Pick<User, 'id'>[]),
+    };
+  },
+  7: (data) => {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || !('version' in data) || data.version !== 7
+      || !('users' in data) || !Array.isArray(data.users)
+      || !data.users.every((user: unknown) => Boolean(user && typeof user === 'object' && 'id' in user && typeof user.id === 'string'))) {
+      throw new TypeError('Invalid v7 mock DB');
+    }
+    return {
+      ...data,
+      version: 8,
+      notifications: createNotificationSeed(seedText.notifications, data.users as Pick<User, 'id'>[]),
     };
   },
 });

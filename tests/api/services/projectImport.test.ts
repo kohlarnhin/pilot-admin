@@ -125,7 +125,7 @@ describe('project import service', () => {
     await expect(service.getImportStatus(createId())).rejects.toMatchObject({ status: 403 });
     expect(db.getMockDb()).toBe(before);
     await switchUser('u-0001');
-    localStorage.setItem('pilot-admin:mock-db:v8', 'newer');
+    localStorage.setItem('pilot-admin:mock-db:v9', 'newer');
     await expect(service.importProjects({ importId: createId(), rows: [{ rowNo: 2, values: values() }] })).rejects.toMatchObject({ code: 40990 });
     expect(db.getMockDb()).toBe(before);
   });

@@ -1,6 +1,8 @@
+import notifications from './notifications';
 import type { SeedText } from '../../seed';
 
 export const seedText = {
+  notifications: notifications.seed,
   "roles": {
     "admin": {
       "name": "超级管理员",

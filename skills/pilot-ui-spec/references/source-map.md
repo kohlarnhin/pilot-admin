@@ -22,6 +22,7 @@ The package separates observable design intent, current implementation variants,
 | Dialogs, drawers, toasts, file drop zone | `src/ui/modal.tsx`, `src/ui/message.tsx`, `src/ui/file-drop-zone.tsx` |
 | Assistant panel, runtime, session history, Agent page | `src/components/assistant/AssistantRuntime.tsx`, `useAssistantChat.ts`, `AssistantUI.tsx`, `MarkdownRenderer.tsx`, `src/agent/AgentPage.tsx`, `src/agent/AgentWorkspace.tsx`, `src/store/assistantStore.ts` |
 | Pages and compositions | `src/pages/users/index.tsx`, `src/pages/roles/index.tsx`, `src/pages/menus/index.tsx`, `src/pages/examples/crud/`, `src/pages/audit-logs/index.tsx`, `src/pages/profile/`, `src/pages/settings/index.tsx`, `src/pages/dashboard/index.tsx`, `src/pages/login/index.tsx` |
+| Notifications and master-detail inbox | `src/components/notifications/`, `src/pages/notifications/`, `src/api/services/notificationService.ts` |
 | Global search | `src/components/search/GlobalSearch.tsx`, `src/components/search/GlobalSearchPalette.tsx` |
 | Permissions and menus | `src/config/menus.ts`, `src/routes/routeModules.ts`, `src/routes/access.ts`, `src/mock/permissionCatalog.ts`, `src/mock/access.ts`, `src/store/authStore.ts` |
 
@@ -128,3 +129,13 @@ The reusable identity is the shared geometry, density, colors, component states,
 `AppLayout` is a cached route-level split so login does not load the console shell. `AssistantRuntimeLayout` and `useAssistantChat` stay eager above the router outlets; neither lazy host creates a provider. `AIAssistant.tsx` keeps panel keyboard control and loading/error feedback eager. `assistantResources.ts` caches the `AssistantUI.tsx` import shared by the panel and `AgentWorkspace`; the admin shell prefetches it on idle and the footer entry on hover/focus. `Markdown.tsx` shows plain text while loading `MarkdownRenderer.tsx` and its parser dependencies. `agentService.ts` imports the mock engine on demand and checks abort signals after loading, before execution. `src/utils/lazyResource.ts` releases failed imports for inline/service retry without the route chunk auto-reload path.
 
 The neutral focus token is defined in `tailwind.config.js` as slate-500 (`#64748B`). `SkipLink.tsx` is shared by the admin and Agent shells. `DataTable` exposes absolute `aria-rowindex` values and an optional server `totalCount` (unknown total: -1 while more pages exist), and keeps append live status outside the table. `e2e/a11y.spec.ts` covers axe scans and keyboard regression on production previews, including CSV import and CRUD detail.
+
+
+| Notification implementation | What it establishes |
+| --- | --- |
+| `src/components/notifications/NotificationEntry.tsx` | Footer badge/dot, six recent summaries, bounded quick popover, explicit retry, keyboard focus return |
+| `src/components/notifications/NotificationSummary.tsx` | Level icon, truncated title, two-line excerpt, relative time and labeled unread marker |
+| `src/pages/notifications/index.tsx` | Authenticated master-detail shell, status/filter counts, URL selection, bulk state and delete confirmation |
+| `src/pages/notifications/NotificationList.tsx` | Independent paged virtual list, 112px rows, ID keys, retained roving-focus row, keyboard open/delete |
+| `src/pages/notifications/NotificationDetail.tsx` | Fixed metadata/actions, independently scrolling plain text, read-on-open, safe links, narrow-screen back |
+| `src/api/services/notificationService.ts`, `src/mock/notificationSeed.ts`, `src/mock/notifications.ts` | User scoping, atomic inbox writes, deterministic v8 seed, account event generation and 300-item cap |

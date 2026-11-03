@@ -1,3 +1,5 @@
+import { createNotificationSeed } from './notificationSeed';
+import type { Notification } from '@/types/notification';
 import { seedAuditLogs } from './auditSeed';
 import { createDirectorySeed } from './directorySeed';
 import { getSeedText } from '@/i18n/seed';
@@ -45,7 +47,8 @@ export interface MockDb {
   agentProfile: AgentProfile;
   agentProfileCustomized?: boolean;
   agentConfigs: (AgentConfig & { apiKey: string })[];
-  version: 7;
+  version: 8;
+  notifications: Notification[];
   permissionCatalog: PermissionCatalog;
   users: MockUser[];
   roles: MockRole[];
@@ -199,7 +202,8 @@ export function createSeed(): MockDb {
         last_update_date: audit.last_update_date,
       },
     ],
-    version: 7,
+    version: 8,
+    notifications: createNotificationSeed(text.notifications, users),
     permissionCatalog: { menuIds: [...allMenuIds], buttonIds: [...allButtonIds] },
     users,
     roles,

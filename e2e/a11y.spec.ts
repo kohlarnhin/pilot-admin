@@ -98,6 +98,15 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
     await scan('components');
     await dialogState('gallery-popover', page.getByRole('button', { name: copy.gallery.overlays.openPopover, exact: true }));
 
+    await page.goto('notifications');
+    await scan('notifications-empty-detail');
+    await page.locator('[data-open-id]').first().click();
+    await expect(page.locator('[data-slot="notification-title"]')).toBeVisible();
+    await scan('notifications-detail');
+    await dialogState('notifications-delete', page.getByRole('button', { name: copy.notifications.delete, exact: true }));
+    await page.locator('[data-slot="notification-entry"]').click();
+    await scan('notifications-popover');
+    await page.keyboard.press('Escape');
     await page.goto('examples/crud');
     await scan('crud');
     await dialogState('crud-create', page.getByRole('button', { name: copy.button.exampleCreate, exact: true }), async (dialog) => {

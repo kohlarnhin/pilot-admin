@@ -50,6 +50,7 @@ export function definePage({ load, access = 'menu', requires = [], ...definition
 }
 
 export const adminPages = [
+  definePage({ path: '/notifications', access: 'authenticated', titleKey: 'notifications.title', searchable: true, load: () => import('../pages/notifications').then((module) => ({ default: module.NotificationsPage })) }),
   definePage({ path: '/profile', access: 'authenticated', titleKey: 'profile.title', searchable: true, load: () => import('../pages/profile').then((module) => ({ default: module.ProfilePage })) }),
   definePage({ path: '/dashboard', load: () => import('../pages/dashboard').then((module) => ({ default: module.DashboardPage })) }),
   definePage({ path: '/system/users', load: () => import('../pages/users').then((module) => ({ default: module.UsersPage })) }),

@@ -1,3 +1,5 @@
+import { notifyAccountChange } from '@/mock/notifications';
+import { triggerDataChangeSideEffects } from './agentEvents';
 import { recordAuditFailure } from '@/mock/auditFailure';
 import { recordAudit } from '@/mock/audit';
 import { t } from '@/i18n';
@@ -144,10 +146,13 @@ export const userService = {
           target.email = data.email;
         }
         if (data.role_ids !== undefined) {
+          const changed = target.role_ids.length !== new Set(data.role_ids).size || target.role_ids.some((id) => !data.role_ids!.includes(id));
+          if (changed) notifyAccountChange(db, userId, actor.id, 'roles');
           target.role_ids = data.role_ids;
         }
         if (data.password) {
           target.password = data.password;
+          notifyAccountChange(db, userId, actor.id, 'password');
         }
         target.last_update_by = actor.id;
         target.last_update_date = new Date().toISOString();
@@ -160,6 +165,7 @@ export const userService = {
           traceId,
         });
       });
+      triggerDataChangeSideEffects();
       return response(publicUser(getMockDb().users.find((item) => item.id === userId)!), traceId);
     } catch (error) {
       recordAuditFailure(error, () => ({
@@ -187,6 +193,7 @@ export const userService = {
       const traceId = createTraceId();
       updateMockDb((db) => {
         db.users.find((item) => item.id === userId)!.status = status;
+        if (user.status !== status) notifyAccountChange(db, userId, actor.id, status === 1 ? 'enabled' : 'disabled');
         recordAudit(db, {
           actor,
           action: 'user.status',
@@ -197,6 +204,7 @@ export const userService = {
           traceId,
         });
       });
+      triggerDataChangeSideEffects();
       return response(undefined, traceId);
     } catch (error) {
       recordAuditFailure(error, () => ({
@@ -223,6 +231,7 @@ export const userService = {
       const traceId = createTraceId();
       updateMockDb((db) => {
         db.users.find((item) => item.id === userId)!.password = password;
+        notifyAccountChange(db, userId, actor.id, 'password');
         recordAudit(db, {
           actor,
           action: 'user.reset_password',
@@ -232,6 +241,7 @@ export const userService = {
           traceId,
         });
       });
+      triggerDataChangeSideEffects();
       return response(undefined, traceId);
     } catch (error) {
       recordAuditFailure(error, () => ({

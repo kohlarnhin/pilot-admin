@@ -19,16 +19,16 @@ describe('real v5 to v6 migration', () => {
     expect(migrated).toEqual({ ...source, version: 6, importReceipts: [] });
     expect(mockDbMigrations[5](structuredClone(source))).toEqual(migrated);
     const { isMockDb } = await import('@/mock/db');
-    expect(isMockDb(mockDbMigrations[6](migrated))).toBe(true);
+    expect(isMockDb(mockDbMigrations[7](mockDbMigrations[6](migrated)))).toBe(true);
   });
 
-  it('chains through v6 and persists v7 while retaining the v5 source until the next start', async () => {
+  it('chains through v6 and persists v8 while retaining the v5 source until the next start', async () => {
     const serialized = JSON.stringify(source);
     localStorage.setItem('pilot-admin:mock-db:v5', serialized);
     const db = await import('@/mock/db');
-    expect(db.getMockDb()).toEqual(syncPermissionCatalog(mockDbMigrations[6](mockDbMigrations[5](source)) as MockDb).db);
+    expect(db.getMockDb()).toEqual(syncPermissionCatalog(mockDbMigrations[7](mockDbMigrations[6](mockDbMigrations[5](source))) as MockDb).db);
     expect(localStorage.getItem('pilot-admin:mock-db:v5')).toBe(serialized);
-    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v7')!)).toEqual(db.getMockDb());
+    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v8')!)).toEqual(db.getMockDb());
     expect(hasNewerMockDb(localStorage, 5)).toBe(true);
     const oldWrite = vi.spyOn(localStorage, 'setItem');
     const oldLoad = loadMockDb({

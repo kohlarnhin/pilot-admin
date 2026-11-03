@@ -10,6 +10,7 @@
 6. Assistant settings and Agent
 7. Choosing a composition
 8. Form pages and result feedback
+9. Master-detail inbox
 
 ## 1. Standard management list
 
@@ -208,3 +209,11 @@ Sections use 24px padding, 15px headings, compact descriptions and 1px separator
 ### Result and exception gallery
 
 Reference: `src/components/common/Result.tsx`, `src/pages/examples/results/`. Result is content rather than a scroll owner: the host chooses a naturally scrolling error page or a bounded card. It accepts status, title, description, action content and optional details, with a configurable heading level. A 56px bordered icon tile uses the existing Lucide registry; semantic icons and text distinguish success, error, info, warning, 403, 404, 500, network and maintenance. The gallery uses a two-column grid (three at 1536px) inside one scroller, with an independent polite connection retry demo above it. Existing standalone status pages retain their geometry and h1 through the shared Result adapter.
+
+## 9. Master-detail inbox
+
+Reference: `src/pages/notifications/`. Use this pattern for an authenticated user’s inbox or another generic collection whose detail should remain beside the list. Keep the page header outside two finite-height cards with a 16-20px gap. At desktop widths the list is 44% of available width; the detail fills the rest. Below 1024px show the list first, then replace it with detail and a back button.
+
+The left card contains status tabs with server counts, a 36px keyword input and category select, loaded-item select-all and optional bulk bar. Its own scroller hosts 112px summary rows with a level icon, truncated title, two-line excerpt, time and an unread marker. Selected records use slate-100. Fetch 20 records per page, deduplicate by ID, guard query generations, virtualize the loaded range and stop on errors until explicit retry. Keep the roving-focus row mounted; arrows and Home/End move focus, Enter opens, and Delete asks for confirmation. Checkbox selection persists through append and locale refresh and clears when filters change; select-all means loaded records.
+
+The right card has a fixed title, category/level/read tags, timestamp and actor; plain text preserves line breaks in a keyboard-focusable independent body scroller. Its action footer remains visible. Selection lives in `?id=` and supports reload and browser history. Opening marks the item read; explicit mark-unread remains unread until opened again. Deletion uses the shared modal and stable search focus fallback. No selection has a centered placeholder; a missing or inaccessible item has an explicit error and retry. Related routes must pass the shared same-site access check.

@@ -3,7 +3,7 @@ import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal, User } from 'lucide-react';
+import { Bell, BookOpen, ChevronsUpDown, KeyRound, LogOut, SquareTerminal, User } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { appConfig } from '@/config/app';
 import { Dropdown, DropdownItem, menuItemClass } from '@/ui/dropdown';
@@ -87,6 +87,7 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
           items: [
             appConfig.helpUrl ? { key: 'help', label: t('layout.help'), icon: <BookOpen />, onClick: () => window.open(appConfig.helpUrl, '_blank', 'noopener,noreferrer') } : null,
             canUseAgent ? { key: 'agent-preferences', label: t('agentEntry.preferences'), icon: <SquareTerminal />, onClick: () => setPreferencesOpen(true) } : null,
+            { key: 'notifications', label: t('notifications.title'), icon: <Bell />, onClick: () => navigate('/notifications') },
             { key: 'password', label: t('auth.changePassword'), icon: <KeyRound />, onClick: () => setPasswordModalOpen(true) },
             { key: 'logout', label: t('layout.logout'), icon: <LogOut />, danger: true, onClick: handleLogout },
           ],

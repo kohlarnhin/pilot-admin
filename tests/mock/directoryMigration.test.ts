@@ -27,18 +27,18 @@ describe('real v6 to v7 directory migration', () => {
     expect(result.exampleFolders).toHaveLength(18);
     expect(result.exampleDocuments).toHaveLength(300);
     const { isMockDb } = await import('@/mock/db');
-    expect(isMockDb(result)).toBe(true);
+    expect(isMockDb(migrations[7](result))).toBe(true);
     expect(result).toMatchObject(createDirectorySeed(zh, result.users));
     expect(createMockDbMigrations(en)[6](source)).toMatchObject(createDirectorySeed(en, result.users));
   });
 
-  it('writes v7, retains the v6 key until the next startup and grants only the auto-grant role', async () => {
+  it('writes v8, retains the v6 key until the next startup and grants only the auto-grant role', async () => {
     const serialized = JSON.stringify(v6);
     localStorage.setItem('pilot-admin:mock-db:v6', serialized);
     const { getMockDb } = await import('@/mock/db');
-    expect(getMockDb()).toEqual(syncPermissionCatalog(migrations[6](v6) as MockDb).db);
+    expect(getMockDb()).toEqual(syncPermissionCatalog(migrations[7](migrations[6](v6)) as MockDb).db);
     expect(localStorage.getItem('pilot-admin:mock-db:v6')).toBe(serialized);
-    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v7')!)).toEqual(getMockDb());
+    expect(JSON.parse(localStorage.getItem('pilot-admin:mock-db:v8')!)).toEqual(getMockDb());
     expect(getMockDb().roles.find((role) => role.id === 'role-admin')!.menuIds).toContain('directory-example');
     for (const id of ['role-operator', 'role-viewer']) expect(getMockDb().roles.find((role) => role.id === id)!.menuIds).not.toContain('directory-example');
     vi.resetModules();
@@ -46,13 +46,13 @@ describe('real v6 to v7 directory migration', () => {
     expect(localStorage.getItem('pilot-admin:mock-db:v6')).toBeNull();
   });
 
-  it('uses the active locale at startup, and reset seeds v7 with default grants for every role', async () => {
+  it('uses the active locale at startup, and reset seeds v8 with default grants for every role', async () => {
     localStorage.setItem('pilot-admin:locale:v1', 'en-US');
     localStorage.setItem('pilot-admin:mock-db:v6', JSON.stringify(v6));
     const { getMockDb, resetMockDb } = await import('@/mock/db');
     expect(getMockDb().exampleFolders[0].name).toBe('Resources');
     resetMockDb();
-    expect(getMockDb().version).toBe(7);
+    expect(getMockDb().version).toBe(8);
     for (const role of getMockDb().roles) expect(role.menuIds).toContain('directory-example');
     expect(getMockDb().exampleDocuments[0].name).toBe('User guide 001.pdf');
   });

@@ -1,3 +1,4 @@
+import { NotificationEntry } from '@/components/notifications/NotificationEntry';
 import { t, useT } from '@/i18n';
 import { GlobalSearchTrigger } from '@/components/search/GlobalSearch';
 import React, { useMemo } from 'react';
@@ -161,6 +162,7 @@ export const Sidebar: React.FC = () => {
 
       {/* 固定底部入口与当前账号 */}
       <div className="shrink-0 border-t border-line-soft p-3">
+        <NotificationEntry collapsed={sidebarCollapsed} />
         <div data-slot="sidebar-assistant-entry">{canUseAgent ? <Tooltip title={sidebarCollapsed ? t('layout.assistantShortcut', { shortcut: shortcut.label }) : undefined} placement="right"><button type="button" aria-label={sidebarCollapsed ? t('layout.assistant') : undefined} aria-controls="ai-assistant-panel" aria-expanded={assistant.panelOpen} aria-keyshortcuts={shortcut.ariaKeyShortcuts} onPointerEnter={preloadAssistantUI} onFocus={preloadAssistantUI} onClick={(event) => assistant.togglePanel(event.currentTarget)} className={cn('group mb-2 flex h-10 w-full items-center rounded-lg text-13 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', sidebarCollapsed ? 'justify-center' : 'gap-3 px-3', assistant.panelOpen && 'bg-slate-100')}>
           <span className="relative flex size-[22px] shrink-0 items-center justify-center"><Sparkles size={18} className="text-slate-500" />{assistant.streaming ? <span role="status" aria-label={t('layout.generating')} className="absolute -right-0.5 -top-0.5 size-1.5 animate-pulse rounded-full bg-brand-500 motion-reduce:animate-none" /> : null}</span>{!sidebarCollapsed ? <><span className="flex-1 text-left">{t('layout.assistant')}</span><Kbd aria-hidden="true" className="!border-slate-200 !bg-white !text-slate-500">{shortcut.label}</Kbd></> : null}
         </button></Tooltip> : null}</div>

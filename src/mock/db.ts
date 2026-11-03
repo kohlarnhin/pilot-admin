@@ -10,7 +10,7 @@ import { t } from '@/i18n';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 
 export const MOCK_DB_RESET_EVENT = 'pilot-admin:mock-db-reset';
-export const MOCK_DB_VERSION = 7;
+export const MOCK_DB_VERSION = 8;
 export const MOCK_DB_KEY = `${MOCK_DB_PREFIX}${MOCK_DB_VERSION}`;
 export const STALE_BUILD_CODE = 40990;
 
@@ -102,6 +102,23 @@ export function isMockDb(value: unknown): value is MockDb {
     && ['pdf', 'docx', 'xlsx', 'pptx', 'image', 'other'].includes(String(item.type))
     && Number.isSafeInteger(item.size) && Number(item.size) >= 0
     && Object.keys(item).every((key) => ['id', 'folder_id', 'name', 'owner_id', 'type', 'size', 'create_by', 'create_date', 'last_update_by', 'last_update_date'].includes(key)))) return false;
+
+  if (!Array.isArray(value.notifications)) return false;
+  const notificationIds = new Set<string>();
+  const recipientCounts = new Map<string, number>();
+  if (!value.notifications.every((item) => {
+    if (!isRecord(item) || !['id', 'recipient_id', 'title', 'body', 'create_date'].every((key) => typeof item[key] === 'string')
+      || !['system', 'account', 'security', 'task'].includes(String(item.category))
+      || !['info', 'success', 'warning', 'error'].includes(String(item.level))
+      || !['link', 'read_at', 'actor_id'].every((key) => item[key] === undefined || typeof item[key] === 'string')
+      || (typeof item.link === 'string' && (!item.link.startsWith('/') || item.link.startsWith('//') || item.link.includes('\\') || Array.from(item.link).some((character) => character.charCodeAt(0) < 32)))
+      || Object.keys(item).some((key) => !['id', 'recipient_id', 'category', 'level', 'title', 'body', 'link', 'read_at', 'actor_id', 'create_date'].includes(key))
+      || notificationIds.has(String(item.id))) return false;
+    notificationIds.add(String(item.id));
+    const count = (recipientCounts.get(String(item.recipient_id)) ?? 0) + 1;
+    recipientCounts.set(String(item.recipient_id), count);
+    return count <= 300;
+  })) return false;
 
   if (!Array.isArray(value.importReceipts) || value.importReceipts.length > 5000) return false;
   const receiptKeys = new Set<string>();

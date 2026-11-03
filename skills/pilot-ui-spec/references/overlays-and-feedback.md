@@ -201,3 +201,10 @@ Do not expose raw stack traces in product copy. Preserve diagnostic information 
 ### Accessibility completions
 
 Use visible focus, semantic labels, error descriptions, `aria-busy` for loading regions, and polite live updates for meaningful changes. Announce a batch append succinctly rather than reading every newly mounted virtual row. Keep status text available when color or animation is not perceived. Dialog titles, icon-only actions, and the assistant panel must all have accessible names.
+
+
+## Notification entry and quick popover
+
+Reference: `src/components/notifications/NotificationEntry.tsx`. Place a 40px bell row in the sidebar footer with the same geometry as the assistant entry. Expanded mode shows a neutral unread count capped visually at 99+; collapsed mode shows the icon with a brand new-content dot. The accessible description exposes the full count. The account menu also links to the full inbox.
+
+Use the shared Radix popover with a named dialog, a fixed title/mark-all-read header, an independently scrolling list of the six latest summaries and a fixed view-all footer. The surface is 380px wide, bounded by viewport width and height. Each summary has a semantic level icon, title, two-line excerpt, relative time with an exact timestamp title, and a labeled unread dot. Show skeletons, true empty state, and explicit load retry; failed writes retain the popover and item. Block duplicate actions. Escape and outside dismissal return focus to the bell. Mark an item read before navigating, and allow related links only through `canNavigateToPage`; otherwise open the full inbox with its ID.

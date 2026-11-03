@@ -15,7 +15,7 @@ test('nested folder includes only its subtree and breadcrumb ancestors navigate'
   await expect(table.locator('[data-row-key]').first()).toBeVisible();
   const ids = await table.locator('[data-row-key]').evaluateAll((rows) => rows.map((row) => row.getAttribute('data-row-key')));
   const allowed = await page.evaluate(() => {
-    const db = JSON.parse(localStorage.getItem('pilot-admin:mock-db:v7')!);
+    const db = JSON.parse(localStorage.getItem('pilot-admin:mock-db:v8')!);
     return db.exampleDocuments.filter((document: { folder_id: string }) => ['folder-02', 'folder-03', 'folder-04'].includes(document.folder_id)).map((document: { id: string }) => document.id);
   });
   expect(ids.every((id) => allowed.includes(id))).toBe(true);
