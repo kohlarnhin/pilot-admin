@@ -92,10 +92,10 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
     return <button key={result.id} id={`search-result-${index}`} data-result-index={index} type="button" role="option"
       aria-selected={selected?.id === result.id} onMouseMove={() => setActiveId(result.id)} onFocus={() => setActiveId(result.id)} onClick={() => openResult(result)}
       onPointerEnter={() => void preloadRoute(routeFor(result))}
-      className={cn('flex w-full gap-3 rounded-lg px-3 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-slate-300', selected?.id === result.id ? 'bg-slate-100' : 'hover:bg-slate-50')}>
+      className={cn('flex w-full gap-3 rounded-lg px-3 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus', selected?.id === result.id ? 'bg-slate-100' : 'hover:bg-slate-50')}>
       <Icon icon={result.kind === 'user' ? 'user' : 'file-text'} size={17} className="mt-0.5 shrink-0 text-slate-400" />
       <span className="min-w-0 flex-1"><span className="block truncate text-13 font-medium text-slate-700" title={title}>{title}</span>
-        <span className="mt-1 block truncate font-mono text-[11px] text-slate-500" title={description}>{description}</span></span>
+        <span className="mt-1 block truncate font-mono text-[11px] text-slate-600" title={description}>{description}</span></span>
       {selected?.id === result.id && <Icon icon="arrow-right" size={14} className="mt-1 shrink-0 text-slate-400" />}
     </button>;
   };
@@ -122,7 +122,7 @@ export default function GlobalSearchPalette({ onClose }: { onClose: () => void }
         <div ref={listRef} id="global-search-results" role="listbox" aria-label={t('search.results')} aria-busy={searchLoading} className="min-h-0 min-w-0 w-[54%] overflow-y-auto overscroll-contain p-2">
           {sections.filter((section) => section.items.length || ['users', 'recent'].includes(section.id)).map((section) => <div key={section.id} role="group" aria-label={section.title} className="mb-3">
             <div className="px-3 pb-1 pt-2 text-[11px] font-medium text-slate-500">{section.title}</div>{section.items.map(row)}
-            {section.id === 'recent' && !section.items.length && <p className="px-3 py-4 text-xs text-slate-400">{t('search.recentEmpty')}</p>}
+            {section.id === 'recent' && !section.items.length && <p className="px-3 py-4 text-xs text-slate-500">{t('search.recentEmpty')}</p>}
             {section.id === 'users' && searchLoading && !userResults.length && <div aria-label={t('search.loading')} className="space-y-5 px-3 py-4">{[0, 1, 2].map((index) => <div key={index} className="space-y-2"><Skeleton className="h-3.5 w-4/5" /><Skeleton className="h-3 w-3/5" /></div>)}</div>}
             {section.id === 'users' && !canSearchUsers && <p className="px-3 py-5 text-xs text-slate-500">{t('search.pagesOnly')}</p>}
             {section.id === 'users' && canSearchUsers && !searchLoading && !userResults.length && !error && <p className="px-3 py-5 text-xs text-slate-500">{t('search.noUsers')}</p>}

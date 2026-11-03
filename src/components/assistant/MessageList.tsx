@@ -92,7 +92,7 @@ export function MessageList({ sessionId, fullScreen = false,
   return (
     <div className="relative min-h-0 flex-1">
       {loadingOlder ? <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center"><span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/95 px-3 py-1 text-[11px] text-slate-500 shadow-xs" role="status"><Spinner size={12} />{t('assistant.messages.loadingOlder')}</span></div> : null}
-      <div ref={scrollRef} onScroll={onScroll} className="ai-assistant-scroll h-full overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300 [overflow-anchor:none]" aria-label={t('assistant.messages.region')} role="region" tabIndex={0}>
+      <div ref={scrollRef} onScroll={onScroll} className="ai-assistant-scroll h-full overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus [overflow-anchor:none]" aria-label={t('assistant.messages.region')} role="region" tabIndex={0}>
         <div ref={contentRef} className={`mx-auto flex min-h-full flex-col ${fullScreen ? 'max-w-[760px]' : 'max-w-[640px]'}`}>
           {loading ? (
             <div className="space-y-6" role="status" aria-label={t('assistant.messages.loading')}>
@@ -103,7 +103,7 @@ export function MessageList({ sessionId, fullScreen = false,
             <EmptyState fullScreen={fullScreen} profile={profile} notConfigured={hasConfig === false} disabled={hasConfig !== true} onPrompt={onPrompt} />
           ) : (
             <div className="flex min-w-0 flex-col gap-5" role="log" aria-label={t('assistant.messages.log')} aria-live="polite" aria-relevant="additions text" aria-busy={sending}>
-              {hasMoreBefore ? <p className="pb-1 text-center text-[11px] text-slate-400">{t('assistant.messages.olderHint')}</p> : null}
+              {hasMoreBefore ? <p className="pb-1 text-center text-[11px] text-slate-500">{t('assistant.messages.olderHint')}</p> : null}
               {items.map(item => {
                 if (item.kind === 'progress') {
                   const expanded = expandedGroups.has(item.id);
@@ -130,7 +130,7 @@ export function MessageList({ sessionId, fullScreen = false,
                               else next.add(item.id);
                               return next;
                             }))}
-                            className="flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-sm text-left text-xs leading-5 text-slate-400 hover:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+                            className="flex w-full min-w-0 cursor-pointer items-start gap-2 rounded-sm text-left text-xs leading-5 text-slate-500 hover:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                           >
                             <Check className="mt-1 size-3 shrink-0" />
                             <span>{t('assistant.messages.stepsCompleted', { count: item.steps.length })}</span>

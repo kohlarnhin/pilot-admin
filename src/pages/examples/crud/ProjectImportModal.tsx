@@ -171,7 +171,7 @@ export function ProjectImportModal({ onClose }: { onClose: () => void }) {
         <div className={`h-full rounded-full transition-[width] duration-300 ${phase === 'complete' ? 'bg-emerald-500' : 'bg-brand-500'}`} style={{ width: `${rows.length && started.current ? processed / rows.length * 100 : 0}%` }} />
       </div>
       <div className="h-9 overflow-y-auto">
-        {error ? <Alert type="error" title={error} className="!px-2 !py-1" /> : <p className="text-[11px] leading-5 text-slate-400">{t(phase === 'complete' ? 'exampleProjects.import.completedHint' : phase === 'parsed' ? 'exampleProjects.import.validHint' : 'exampleProjects.import.recoveryHint')}</p>}
+        {error ? <Alert type="error" title={error} className="!px-2 !py-1" /> : <p className="text-[11px] leading-5 text-slate-500">{t(phase === 'complete' ? 'exampleProjects.import.completedHint' : phase === 'parsed' ? 'exampleProjects.import.validHint' : 'exampleProjects.import.recoveryHint')}</p>}
       </div>
     </div>;
 
@@ -186,7 +186,7 @@ export function ProjectImportModal({ onClose }: { onClose: () => void }) {
       </div>
     </div>}>
     <div className="shrink-0 rounded-xl border border-line bg-slate-50/60 px-3 py-2 text-xs leading-5 text-slate-600">
-      {t('exampleProjects.import.notice')} <button type="button" className="rounded font-medium text-slate-800 underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" onClick={() => downloadCsv('projects-template.csv', toCsv(projectImportColumns, []))}>{t('exampleProjects.import.template')}</button>
+      {t('exampleProjects.import.notice')} <button type="button" className="rounded font-medium text-slate-800 underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" onClick={() => downloadCsv('projects-template.csv', toCsv(projectImportColumns, []))}>{t('exampleProjects.import.template')}</button>
       <p className="text-[11px] text-slate-500">{t('exampleProjects.import.roundTrip')}</p>
     </div>
     <div className="grid min-h-0 min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.8fr)] gap-4">
@@ -200,8 +200,8 @@ export function ProjectImportModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex h-[360px] min-h-0 shrink-0 flex-col overflow-hidden rounded-xl border border-line">
           <h2 id="csv-raw-title" className="shrink-0 border-b border-line-soft px-3 py-2 text-xs font-medium text-slate-600">{t('exampleProjects.import.rawPreview')}</h2>
-          <pre tabIndex={0} role="region" aria-labelledby="csv-raw-title" className="min-h-0 flex-1 overflow-auto bg-slate-50/50 p-3 font-mono text-[11px] leading-5 text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300">{raw.text || t(phase === 'reading' ? 'exampleProjects.import.states.reading' : 'exampleProjects.import.previewPlaceholder')}</pre>
-          <p className="shrink-0 border-t border-line-soft px-3 py-1 text-[11px] text-slate-400">{t(raw.truncated ? 'exampleProjects.import.truncated' : fallback ? 'exampleProjects.import.detectedFallback' : 'exampleProjects.import.localOnly')}</p>
+          <pre tabIndex={0} role="region" aria-labelledby="csv-raw-title" className="min-h-0 flex-1 overflow-auto bg-slate-50/50 p-3 font-mono text-[11px] leading-5 text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus">{raw.text || t(phase === 'reading' ? 'exampleProjects.import.states.reading' : 'exampleProjects.import.previewPlaceholder')}</pre>
+          <p className="shrink-0 border-t border-line-soft px-3 py-1 text-[11px] text-slate-500">{t(raw.truncated ? 'exampleProjects.import.truncated' : fallback ? 'exampleProjects.import.detectedFallback' : 'exampleProjects.import.localOnly')}</p>
         </div>
       </section>
       <section className="flex h-[360px] min-h-0 min-w-0 flex-col self-start overflow-hidden rounded-xl border border-line" aria-label={t('exampleProjects.import.parsedPreview')} aria-busy={phase === 'reading'}>
@@ -210,7 +210,7 @@ export function ProjectImportModal({ onClose }: { onClose: () => void }) {
           <span className="text-slate-500" aria-live="polite">{t('exampleProjects.import.counts', { total: rows.length, valid: validRows.length, invalid: skipped })}</span>
         </div>
         <DataTable columns={columns} dataSource={rows} rowKey="rowNo" fill virtual estimatedRowHeight={45} size="small" loading={phase === 'reading'}
-          locale={{ emptyText: <p className="p-6 text-center text-xs text-slate-400">{t('exampleProjects.import.previewPlaceholder')}</p> }} />
+          locale={{ emptyText: <p className="p-6 text-center text-xs text-slate-500">{t('exampleProjects.import.previewPlaceholder')}</p> }} />
       </section>
     </div>
   </Modal>;

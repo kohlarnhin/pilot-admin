@@ -1,4 +1,7 @@
 export default {
+  "skipToContent": "跳到主要内容",
+  "sidebarNavigation": "工作区导航",
+  "pageNavigation": "页面导航",
   "signedOut": "已退出登录",
   "currentUser": "当前用户",
   "avatarFallback": "平",

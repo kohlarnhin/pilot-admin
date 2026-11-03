@@ -5,16 +5,16 @@ import { cn } from "@/utils";
 
 /**
  * 输入框规范：36px 高、8px 圆角、13px 字号、#E2E8F0 细边框；
- * 悬浮边框略加深，聚焦 slate-400 描边 + 3px 中性光晕；校验失败（aria-invalid）红色描边。
+ * 悬浮边框略加深，聚焦 focus（slate-500）描边 + 3px 中性光晕；校验失败（aria-invalid）红色描边。
  */
 export const controlBase =
-  "w-full rounded-lg border border-line bg-white text-13 text-slate-800 shadow-2xs outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-slate-400 hover:border-slate-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:hover:border-line";
+  "w-full rounded-lg border border-line bg-white text-13 text-slate-800 shadow-2xs outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-slate-500 disabled:placeholder:text-slate-400 hover:border-slate-300 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:hover:border-line";
 export const controlFocus =
-  "focus:border-slate-400 focus:ring-[3px] focus:ring-slate-900/10";
+  "focus:border-focus focus:ring-[3px] focus:ring-focus/10";
 export const controlFocusWithin =
-  "focus-within:border-slate-400 focus-within:ring-[3px] focus-within:ring-slate-900/10";
+  "focus-within:border-focus focus-within:ring-[3px] focus-within:ring-focus/10";
 export const controlInvalid =
-  "aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:ring-red-400/20";
+  "aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-focus aria-[invalid=true]:focus:ring-focus/10";
 
 const SIZE_CLASS = {
   small: "h-8 text-xs",
@@ -119,7 +119,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
           controlBase,
           controlFocusWithin,
           "inline-flex items-center gap-2 px-3",
-          "aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus-within:border-red-400 aria-[invalid=true]:focus-within:ring-red-400/20",
+          "aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus-within:border-focus aria-[invalid=true]:focus-within:ring-focus/10",
           disabled && "cursor-not-allowed bg-slate-50 text-slate-400 hover:border-line",
           SIZE_CLASS[size],
           borderless && "border-transparent shadow-none hover:border-transparent focus-within:ring-0",
@@ -140,7 +140,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
           disabled={disabled}
           value={value}
           aria-invalid={invalid || undefined}
-          className="h-full min-w-0 flex-1 bg-transparent text-inherit outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          className="h-full min-w-0 flex-1 bg-transparent text-inherit outline-none placeholder:text-slate-500 disabled:placeholder:text-slate-400 disabled:cursor-not-allowed"
           onKeyDown={handleKeyDown}
           {...props}
         />
@@ -161,7 +161,7 @@ const InputBase = React.forwardRef<HTMLInputElement, InputProps>(
           </button>
         )}
         {showCount && (
-          <span className="shrink-0 font-mono text-[11px] tabular-nums text-slate-400">
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-slate-500">
             {String(value ?? "").length}
             {props.maxLength ? ` / ${props.maxLength}` : ""}
           </span>
@@ -280,7 +280,7 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     return (
       <div className="relative">
         {textarea}
-        <span className="pointer-events-none mt-1 block text-right font-mono text-[11px] text-slate-400">
+        <span className="pointer-events-none mt-1 block text-right font-mono text-[11px] text-slate-500">
           {length}
           {maxLength ? ` / ${maxLength}` : ""}
         </span>

@@ -14,7 +14,7 @@ export async function signIn(page: Page, role: Role) {
 }
 
 export async function logout(page: Page) {
-  await page.getByRole('button', { name: zh.layout.accountMenu, exact: true }).click();
+  await page.locator('button[data-slot="account-menu-trigger"]').click();
   await page.getByRole('menuitem', { name: zh.layout.logout, exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('button', { name: zh.auth.login, exact: true })).toBeVisible();

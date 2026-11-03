@@ -14,11 +14,11 @@
 ### Expanded sidebar
 
 - Width **224px**; white background; 1px `#E2E8F0` solid right boundary; fixed to the viewport.
-- Brand area: **64px** high, 20px horizontal padding, 32px logo, 12px logo-to-text gap. Product name 15px/600; subtitle 11px slate-400.
+- Brand area: **64px** high, 20px horizontal padding, 32px logo, 12px logo-to-text gap. Product name 15px/600; subtitle 11px slate-500.
 - A 24px circular collapse control straddles the right boundary near the brand area, with a 1px border, white surface, and neutral arrow. It must have an accessible label that changes between expand and collapse.
 - Global search trigger sits directly below the brand area: 36px high, 12px horizontal inset, pale slate fill on hover, 12px label, `⌘K` or `Ctrl K` keycap. It is a button, not a fake input.
 - Menu viewport: 12px horizontal padding, independent vertical scrolling, no horizontal scrolling.
-- Group headings: 12px/500, slate-400, with generous top spacing. A small disclosure arrow appears on hover and rotates when the group is open.
+- Group headings: 12px/500, slate-500, with generous top spacing. A small disclosure arrow appears on hover and rotates when the group is open.
 - Root item: minimum height 40px, 8px radius, 12px horizontal and 8px vertical padding. Icon slot 22px; rendered icon 18px; 12px gap before text.
 - Root text: 13px, slate-600. Items have a 2px vertical gap.
 - Nested item: minimum height 36px, quieter density; optional 16px icon or 6px dot.
@@ -57,7 +57,7 @@ The full-screen Agent page uses a separate shell with a **56px** top bar: a 28px
 
 Title is 15px/600; description is 12px with a 2-4px gap above it. Left text is shrinkable; actions preserve their control dimensions. Let the header wrap at the page's breakpoint rather than clipping actions.
 
-`ListToolbar` is the standard strip for a management list: minimum height **60px**, 24px horizontal padding, 12px vertical padding, search and filters on the left, and a result count on the right in 13px slate-400.
+`ListToolbar` is the standard strip for a management list: minimum height **60px**, 24px horizontal padding, 12px vertical padding, search and filters on the left, and a result count on the right in 13px slate-500.
 
 `CardBar` is the compact card-toolbar variant: minimum height **61px**, 24px horizontal, 12px vertical, breadcrumb or title on the left and actions on the right.
 
@@ -101,10 +101,10 @@ Inline icon/label gap is 6-8px. Labels do not wrap. A loading label must not cau
 
 | Role | Rest | Hover | Focus | Disabled / loading |
 | --- | --- | --- | --- | --- |
-| Default / outline | White, slate-800 text, `#E2E8F0` border, 2xs shadow | slate-50 surface, slate-300 border, slate-900 text | 2px slate-400 ring with 2px offset | Preserve geometry, 50% opacity, block duplicate action |
-| Secondary | slate-50 surface, slate-700 text | slate-100 surface, slate-300 border | 2px slate-400 ring | Reduced opacity |
+| Default / outline | White, slate-800 text, `#E2E8F0` border, 2xs shadow | slate-50 surface, slate-300 border, slate-900 text | 2px focus (slate-500) ring with 2px offset | Preserve geometry, 50% opacity, block duplicate action |
+| Secondary | slate-50 surface, slate-700 text | slate-100 surface, slate-300 border | 2px focus (slate-500) ring | Reduced opacity |
 | Filled primary | slate-900 surface, white text | slate-800 | Visible slate ring | Reduced opacity; no hover transformation |
-| Filled destructive | `#FF5630`, white text | `#E5482A` | Destructive or visible neutral ring | Remains disabled semantically |
+| Filled destructive | red-600, white text | red-700 | Destructive or visible neutral ring | Remains disabled semantically |
 | Ghost / subtle | Transparent, slate-500 text/icon | slate-100 surface, slate-900 text | Visible neutral ring | Quiet, no active hover |
 | Delete ghost | Transparent, slate-500 | `#FEF2F2` with `#DC2626` | Visible destructive focus | Gray, no red hover while disabled |
 | Link | Slate-700, underline on hover, no box | Darker slate | Visible focus | Noninteractive semantics |
@@ -125,11 +125,11 @@ Default and outline are intentionally identical. Create, Save, Search, and Cance
 
 ### Standard input
 
-Height 36px (small 32px, large 40px), radius 8px, white fill, 1px `#E2E8F0` border, 13px text, 12px horizontal padding. Placeholder is slate-400. Prefix/suffix slots are vertically centered and do not increase the control height.
+Height 36px (small 32px, large 40px), radius 8px, white fill, 1px `#E2E8F0` border, 13px text, 12px horizontal padding. Placeholder is slate-500. Prefix/suffix slots are vertically centered and do not increase the control height.
 
-Hover strengthens the border to slate-300. Focus uses a slate-400 border and a 3px `rgba(15,23,42,.1)` ring. Transition is 150ms. Invalid fields use a red-400 border and red ring at 20%. Avoid nested visible borders when a component library wraps an input with prefix/suffix elements.
+Hover strengthens the border to slate-300. Focus uses the shared focus token (slate-500) for its border and a 3px halo at 10% opacity. Transition is 150ms. Invalid fields retain a red-400 border at rest and use the same neutral focus border and halo while focused; red-600 error text and `aria-invalid` continue to convey validation. Avoid nested visible borders when a component library wraps an input with prefix/suffix elements.
 
-Character counters render `12 / 100` (spaces around the slash) in 11px monospace slate-400, right aligned below or inside the control. The clear affordance is a 16px neutral circle with a white cross; it does not change the control width.
+Character counters render `12 / 100` (spaces around the slash) in 11px monospace slate-500, right aligned below or inside the control. The clear affordance is a 16px neutral circle with a white cross; it does not change the control width.
 
 ### Search and select
 
@@ -137,7 +137,7 @@ Character counters render `12 / 100` (spaces around the slash) in 11px monospace
 - Search icon: 15px, quiet slate-400. Clear action does not change width.
 - Selects align with inputs and buttons at 36px. Typical toolbar selects are 112-144px, depending on label length.
 - Dropdown contents have a bounded height (about 256px) and their own scroll. Long options truncate or wrap within a controlled option layout.
-- Option rows are at least 32px high with 6px radius, 13px text, and a 14px check for the selected value. Group labels are 11px slate-400.
+- Option rows are at least 32px high with 6px radius, 13px text, and a 14px check for the selected value. Group labels are 11px slate-500.
 - Placeholder, selection, loading, empty-options, error, and disabled states must all be legible. The empty label is 「暂无匹配选项」 by default.
 - Library portals must avoid clipping under `overflow: hidden` cards while retaining correct overlay stacking.
 
@@ -145,7 +145,7 @@ Character counters render `12 / 100` (spaces around the slash) in 11px monospace
 
 Use vertical labels, 13px/500 label text, and approximately 6px label-to-control spacing. Single-column forms suit short dialogs; related short fields may share a two-column grid. Long text and validation occupy full width.
 
-Required indicators are a small red asterisk after the label. Place stable identifier hints opposite the field label when useful (`labelExtra`). Coding fields use monospace. Help text sits below the field at 12px slate-400; errors replace help without overlapping another control.
+Required indicators are a small red asterisk after the label. Place stable identifier hints opposite the field label when useful (`labelExtra`). Coding fields use monospace. Help text sits below the field at 12px slate-500; errors use red-600 and replace help without overlapping another control.
 
 `Form.Item` wires accessibility automatically: the control receives an `id` of `form_item_<name>`, `aria-required` when required, `aria-invalid` while invalid, and `aria-describedby` pointing at `${controlId}_help` whenever help or a validation error is visible. The error element keeps `role="alert"`. Controls that render a custom trigger (Select) must forward all four attributes.
 
@@ -180,7 +180,7 @@ Checked checkboxes and enabled switches use **slate-900**. The unchecked switch 
 
 Standard badge: inline-flex, 22px high, 12px/500, 8px horizontal and 2px vertical padding, 6px radius, no wrapping, content width, 6px gap, 12px icon. The surface is `slate-50/60` with a `#E2E8F0` border and slate-600 text.
 
-Variants differ mainly by a 6px leading dot: info sky, warning amber, success emerald, error red. `destructive` is the only filled variant (`#FF5630`, white text). Shapes: rounded rectangle by default, pill for selected counts/categories, or a standalone 8px dot. A dot cannot replace a necessary text explanation. Counts and versions may use 10-12px monospace compact variants.
+Variants differ mainly by a 6px leading dot: info sky, warning amber, success emerald, error red. `destructive` is the only filled variant (red-600, white text). Shapes: rounded rectangle by default, pill for selected counts/categories, or a standalone 8px dot. A dot cannot replace a necessary text explanation. Counts and versions may use 10-12px monospace compact variants.
 
 `Tag` mirrors the badge shape and adds a semantic dot plus optional icon, without a filled background. It is the default status token for table cells.
 
@@ -227,3 +227,5 @@ Distinguish no records, no matching results, no selected item, and no permission
 ### Component gallery
 
 The running gallery at `/examples/components` is the executable reference for every primitive on this page: button variants and sizes, inputs and their states, selects, switches, checkboxes, badges, tags, alerts, tabs, popovers, dropdowns, tooltips, modals, the async modal, the drawer, drag-and-drop, tables, skeletons, and empty states. Reuse the existing components instead of creating a similar second button or toast system.
+
+Accessibility contracts: underline tabs have a separate 2px inset focus ring using `focus`; named progress bars accept `aria-label` / `aria-labelledby`. Popover dialogs reference their title via `aria-labelledby`; Select keeps its named listbox and existing combobox keyboard behavior. Modal captures its opener and restores focus on close, using `returnFocusRef` when a virtual row trigger has unmounted. Both expanded and collapsed account controls expose menu state on the actual button. The admin and Agent shells start with a focus-visible skip link to a programmatically focusable main landmark; navigation landmarks have distinct names.

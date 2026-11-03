@@ -50,8 +50,9 @@ export const UsersPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [keyword]);
   const countRequest = useRef(0);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [changingStatusIds, setChangingStatusIds] = useState<Set<string>>(new Set());
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number>();
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -191,13 +192,13 @@ export const UsersPage: React.FC = () => {
                   { label: t('common.fields.password'), value: created.data.initial_password, secret: true },
                 ].map(({ label, value, secret }) => (
                   <div key={label} className="flex items-center gap-3 px-3 py-2">
-                    <span className={`${locale === 'en-US' ? 'w-16' : 'w-8'} shrink-0 text-xs text-slate-400`}>{label}</span>
+                    <span className={`${locale === 'en-US' ? 'w-16' : 'w-8'} shrink-0 text-xs text-slate-500`}>{label}</span>
                     <span className="min-w-0 flex-1 truncate font-mono text-13 text-slate-800">{value}</span>
                     <CopyButton text={value} tip={t('users.createdAccount.copyLabel', { name: label })} secret={secret} />
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-slate-400">{t('users.createdAccount.notice')}</p>
+              <p className="mt-2 text-xs text-slate-500">{t('users.createdAccount.notice')}</p>
             </div>
           ),
         });
@@ -303,7 +304,7 @@ export const UsersPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <span className="text-xs text-slate-400">{t('users.columns.noRole')}</span>
+          <span className="text-xs text-slate-500">{t('users.columns.noRole')}</span>
         ),
     },
     {
@@ -313,7 +314,7 @@ export const UsersPage: React.FC = () => {
       width: '24%',
       render: (email: string) => (
         <span className="block truncate text-13 text-slate-600" title={email || undefined}>
-          {email || <span className="text-slate-300">—</span>}
+          {email || <span className="text-slate-500">—</span>}
         </span>
       ),
     },
@@ -378,8 +379,8 @@ export const UsersPage: React.FC = () => {
         }
       />
       <Card className="min-h-0 flex-1">
-        <ListToolbar extra={<span>{t('users.total', { count: total })}</span>}>
-          <SearchInput className="w-72"
+        <ListToolbar extra={<span>{t('users.total', { count: total ?? 0 })}</span>}>
+          <SearchInput ref={searchInput} className="w-72"
             placeholder={t('users.searchPlaceholder')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -391,6 +392,7 @@ export const UsersPage: React.FC = () => {
           <FixedTable
             columns={columns}
             dataSource={users}
+            totalCount={total}
             rowKey="id"
             loading={loading}
             refreshing={refreshing}
@@ -411,6 +413,7 @@ export const UsersPage: React.FC = () => {
       </Card>
 
       <Modal
+        returnFocusRef={searchInput}
         title={editingUser ? t('button.userUpdate') : t('button.userCreate')}
         icon="user"
         description={editingUser ? `@${editingUser.login_name}` : t('users.createDialog.description')}
@@ -466,7 +469,7 @@ export const UsersPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-      <Modal title={t('button.userResetPassword')} icon="key-round" description={resetTarget ? t('users.resetDialog.description', { account: resetTarget.login_name }) : undefined}
+      <Modal returnFocusRef={searchInput} title={t('button.userResetPassword')} icon="key-round" description={resetTarget ? t('users.resetDialog.description', { account: resetTarget.login_name }) : undefined}
         open={Boolean(resetTarget)} onCancel={() => setResetTarget(null)} onOk={handleResetPassword} okText={t('common.actions.confirmReset')} width={420}>
         <Form form={passwordForm}>
           <Form.Item name="password" label={t('common.fields.newPassword')} rules={[{ required: true, message: t('common.validation.passwordRequired') }]} className="mb-0">

@@ -54,6 +54,7 @@ export default {
     "multilineLabel": "多行文本示例"
   },
   "selection": {
+    "numberLabel": "数字输入示例",
     "searchLabel": "可搜索选择器",
     "title": "选择与开关",
     "description": "单选、多选、复选框和数字输入",
@@ -71,6 +72,9 @@ export default {
     "loadingSwitch": "加载开关"
   },
   "badges": {
+    "activeProgress": "进行中的任务",
+    "completedProgress": "已完成的任务",
+    "failedProgress": "失败的任务",
     "title": "标签、头像与进度",
     "description": "颜色承载状态含义，正文保持中性",
     "round": "圆形标签",

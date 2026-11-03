@@ -36,7 +36,7 @@ export function AssistantHeader({
           <h2 id="ai-assistant-title" className="truncate text-13 font-semibold tracking-tight text-slate-900">
             {name}
           </h2>
-          <p id="ai-assistant-description" className="truncate text-[11px] leading-4 text-slate-400">
+          <p id="ai-assistant-description" className="truncate text-[11px] leading-4 text-slate-500">
             {t('assistant.header.subtitle')}</p>
         </div>
       </div>

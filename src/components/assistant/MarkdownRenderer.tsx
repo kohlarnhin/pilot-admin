@@ -30,7 +30,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
         <span className="truncate font-mono">{language}</span>
         <CopyButton text={textContent(children).replace(/\n$/, '')} tip={t('assistant.markdown.copyCode')} secret className="size-6" />
       </div>
-      <pre className="ai-assistant-scroll max-w-full overflow-x-auto p-3 font-mono text-xs leading-6 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300" tabIndex={0} aria-label={t('assistant.markdown.codeRegion', { language })}>
+      <pre className="ai-assistant-scroll max-w-full overflow-x-auto p-3 font-mono text-xs leading-6 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus" tabIndex={0} aria-label={t('assistant.markdown.codeRegion', { language })}>
         {children}
       </pre>
     </div>
@@ -40,7 +40,7 @@ function CodeBlock({ children }: { children?: ReactNode }) {
 function MarkdownTable({ children }: { children?: ReactNode }) {
   useT();
   return (
-    <div className="ai-assistant-scroll my-3 max-w-full overflow-x-auto rounded-lg border border-line outline-none focus-visible:ring-2 focus-visible:ring-slate-300" role="region" aria-label={t('assistant.markdown.tableRegion')} tabIndex={0}>
+    <div className="ai-assistant-scroll my-3 max-w-full overflow-x-auto rounded-lg border border-line outline-none focus-visible:ring-2 focus-visible:ring-focus" role="region" aria-label={t('assistant.markdown.tableRegion')} tabIndex={0}>
       <table className="w-full border-collapse whitespace-nowrap text-left text-xs leading-5">{children}</table>
     </div>
   );

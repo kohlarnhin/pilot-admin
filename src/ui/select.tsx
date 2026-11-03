@@ -131,6 +131,9 @@ function SelectInner<V = any>(props: SelectProps<V>) {
   const generatedId = React.useId();
   const controlId = id ?? generatedId;
   const listId = `${generatedId}-options`;
+  // 原生 label 也可作为弹层名称；焦点仍留在 combobox，保留现有方向键选择行为。
+  const popupLabelledBy = props['aria-labelledby'] ?? (!props['aria-label'] ? controlId : undefined);
+  const popupLabel = props['aria-label'];
 
   const groupOf = React.useRef(new Map<SelectOption, React.ReactNode>());
   const options = React.useMemo<SelectOption[]>(() => {
@@ -295,9 +298,9 @@ function SelectInner<V = any>(props: SelectProps<V>) {
   const showClear = allowClear && hasValue && !disabled;
 
   const menu = (
-    <div ref={listRef} id={listId} role="listbox" aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto overscroll-contain p-1">
+    <div ref={listRef} id={listId} role="listbox" aria-label={popupLabel} aria-labelledby={popupLabelledBy} aria-multiselectable={multiple || undefined} className="max-h-64 overflow-y-auto overscroll-contain p-1">
       {filtered.length === 0 ? (
-        <div className="px-3 py-6 text-center text-xs text-slate-400">{loading ? t('ui.loadingOptions') : notFoundContent}</div>
+        <div className="px-3 py-6 text-center text-xs text-slate-500">{loading ? t('ui.loadingOptions') : notFoundContent}</div>
       ) : (
         filtered.map((option, index) => {
           const selected = selectedValues.some((item) => sameValue(item, option.value));
@@ -306,7 +309,7 @@ function SelectInner<V = any>(props: SelectProps<V>) {
           return (
             <React.Fragment key={String(option.value)}>
             {showGroup && (
-              <div className="px-2.5 pb-1 pt-2.5 text-[11px] font-medium text-slate-400 first:pt-1.5">{group}</div>
+              <div className="px-2.5 pb-1 pt-2.5 text-[11px] font-medium text-slate-500 first:pt-1.5">{group}</div>
             )}
             <div
               role="option"
@@ -376,8 +379,8 @@ function SelectInner<V = any>(props: SelectProps<V>) {
             controlFocusWithin,
             "group relative flex w-full cursor-pointer items-center gap-1.5 py-1 pl-3 pr-2.5 text-left",
             SIZE_CLASS[size],
-            open && "border-slate-400 ring-[3px] ring-slate-900/10",
-            invalid && "border-red-400 focus-within:border-red-400 focus-within:ring-red-400/20",
+            open && "border-focus ring-[3px] ring-focus/10",
+            invalid && "border-red-400 focus-within:border-focus focus-within:ring-focus/10",
             disabled && "cursor-not-allowed bg-slate-50 text-slate-400 hover:border-line",
             className
           )}
@@ -416,15 +419,15 @@ function SelectInner<V = any>(props: SelectProps<V>) {
                 className={cn(
                   "pointer-events-none min-w-0 truncate",
                   showSearch && "absolute inset-x-0 top-1/2 -translate-y-1/2",
-                  !hasValue && "text-slate-400",
-                  hasValue && open && showSearch && "text-slate-400"
+                  !hasValue && (disabled ? "text-slate-400" : "text-slate-500"),
+                  hasValue && open && showSearch && "text-slate-500"
                 )}
               >
                 {hasValue ? singleLabel : placeholder}
               </span>
             )}
             {multiple && !hasValue && !search && (
-              <span className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 truncate text-slate-400">{placeholder}</span>
+              <span className={cn("pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 truncate", disabled ? "text-slate-400" : "text-slate-500")}>{placeholder}</span>
             )}
 
             {showSearch && (
@@ -480,6 +483,8 @@ function SelectInner<V = any>(props: SelectProps<V>) {
       </PopoverPrimitive.Anchor>
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
+          aria-label={popupLabel}
+          aria-labelledby={popupLabelledBy}
           align="start"
           sideOffset={4}
           collisionPadding={8}

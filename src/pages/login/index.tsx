@@ -69,7 +69,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-slate-900">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-white px-4 py-12 text-slate-900">
       {askEntry ? <AgentEntryDialog onChoose={(agent) => { setAskEntry(false); const state = useAuthStore.getState(); navigate(agent ? '/agent' : getLoginLandingRoute(state.menus, state.permissions, { agent_mode_entry: 'console' }), { replace: true }); }} /> : null}
       <ParticleField clearRef={contentRef} className="pointer-events-none absolute inset-0 h-full w-full" />
       <div ref={contentRef} className="relative w-full max-w-[380px] animate-fade-up">
@@ -100,14 +100,14 @@ export const LoginPage: React.FC = () => {
             {t('auth.login')}{!isBusy && <ArrowRight className="size-4" />}
           </Button>
         </form>
-        <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
           <span className="h-px flex-1 bg-slate-200/80" />{t('auth.demoAccounts')}<span className="h-px flex-1 bg-slate-200/80" />
         </div>
         <div className="grid grid-cols-3 gap-2">
           {DEMO_ACCOUNTS.map((demo) => (
-            <button type="button" key={demo.account} disabled={isBusy} aria-label={t('auth.fillDemo', { role: t(demo.name) })}
+            <button type="button" key={demo.account} disabled={isBusy} aria-description={t('auth.fillDemo', { role: t(demo.name) })}
               onClick={() => { setLoginName(demo.account); setPassword(demo.password); setAccountError(null); setPasswordError(null); passwordRef.current?.focus(); }}
-              className="cursor-pointer rounded-lg border border-line bg-white px-2 py-2.5 text-center transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:opacity-50">
+              className="cursor-pointer rounded-lg border border-line bg-white px-2 py-2.5 text-center transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50">
               <span className="block text-xs font-medium text-slate-700">{t(demo.name)}</span>
               <span className="mt-1 block font-mono text-[11px] text-slate-500">{demo.account}</span>
             </button>
@@ -115,7 +115,7 @@ export const LoginPage: React.FC = () => {
         </div>
         <p className="mt-3 text-center text-[11px] leading-5 text-slate-500">{t('auth.demoNote')}</p>
       </div>
-      <div className="absolute bottom-6 rounded-full bg-white/85 px-2.5 py-0.5 text-xs text-slate-400">© {new Date().getFullYear()} {appConfig.name} · {locale === 'zh-CN' ? appConfig.zhName : appConfig.shortName}</div>
-    </div>
+      <div className="absolute bottom-6 rounded-full bg-white/85 px-2.5 py-0.5 text-xs text-slate-500">© {new Date().getFullYear()} {appConfig.name} · {locale === 'zh-CN' ? appConfig.zhName : appConfig.shortName}</div>
+    </main>
   );
 };

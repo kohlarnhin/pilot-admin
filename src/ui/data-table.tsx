@@ -51,6 +51,8 @@ export interface DataTableProps<T> {
   refreshing?: boolean;
   loadingMore?: boolean;
   hasNext?: boolean;
+  /** 服务端记录总数（不包含表头）；未提供且仍有后续页时行数未知 */
+  totalCount?: number;
   onLoadMore?: () => void | Promise<void>;
   showHeader?: boolean;
   size?: "small" | "middle";
@@ -132,7 +134,7 @@ export function TableSkeleton({ rows = 7, showHeader = true }: { rows?: number; 
   useT();
   const widths = ["24%", "16%", "14%", "12%", "10%"];
   return (
-    <div className="w-full" aria-busy="true" aria-label={t('common.status.loading')}>
+    <div role="status" className="w-full" aria-busy="true" aria-label={t('common.status.loading')}>
       {showHeader && (
         <div className="flex h-11 items-center gap-8 border-b border-line bg-white px-6">
           {widths.map((width, index) => (
@@ -172,6 +174,7 @@ export function DataTable<T extends object>({
   refreshing = false,
   loadingMore = false,
   hasNext = false,
+  totalCount,
   onLoadMore,
   showHeader = true,
   size = "middle",
@@ -356,6 +359,7 @@ export function DataTable<T extends object>({
         data-index={dataIndex}
         data-row-key={row.key}
         role="row"
+        aria-rowindex={row.index + (showHeader ? 2 : 1)}
         aria-selected={rowSelection ? selected : undefined}
         className={cn(
           "grid items-center border-b border-line-row bg-white transition-colors duration-100 hover:bg-slate-50/60",
@@ -407,6 +411,7 @@ export function DataTable<T extends object>({
     <div
       ref={headerRef}
       role="row"
+      aria-rowindex={1}
       className="sticky top-0 z-[2] grid shrink-0 border-b border-line bg-white"
       style={{ gridTemplateColumns: template }}
     >
@@ -455,10 +460,11 @@ export function DataTable<T extends object>({
   }
 
   return (
+    <>
     <div
       ref={scrollRef}
       role="table"
-      aria-rowcount={rows.length + (showHeader ? 1 : 0)}
+      aria-rowcount={totalCount !== undefined ? totalCount + (showHeader ? 1 : 0) : hasNext ? -1 : rows.length + (showHeader ? 1 : 0)}
       data-record-count={dataSource.length}
       onScroll={onScroll}
       data-x-scrollable={scrollableX}
@@ -543,10 +549,11 @@ export function DataTable<T extends object>({
             <div role="rowgroup">{rows.map((row) => renderRow(row))}</div>
           )}
           {onLoadMore && hasNext && <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />}
-          {onLoadMore && loadingMore && <span className="sr-only" role="status">{t('ui.loadingMore')}</span>}
           </>
         )}
       </div>
     </div>
+    {onLoadMore && loadingMore && <span className="sr-only" role="status">{t('ui.loadingMore')}</span>}
+    </>
   );
 }

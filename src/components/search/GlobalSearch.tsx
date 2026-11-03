@@ -12,12 +12,13 @@ const OPEN_EVENT = 'pilot-admin:search:open';
 export function GlobalSearchTrigger({ collapsed = false, workspace = false }: { collapsed?: boolean; workspace?: boolean }) {
   useT();
   const button = <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_EVENT))}
-    aria-label={t('search.shortcut', { shortcut: modKey() })}
-    className={cn('flex h-9 items-center gap-2 rounded-lg text-13 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800',
+    aria-label={collapsed ? t('search.label') : undefined}
+    aria-keyshortcuts="Control+k Meta+k"
+    className={cn('flex h-9 items-center gap-2 rounded-lg text-13 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-focus',
       workspace ? 'px-2' : collapsed ? 'mx-auto w-10 justify-center' : 'mx-3 w-[calc(100%-24px)] border border-line bg-slate-50/50 px-3')}>
     <Icon icon="search" size={16} className="shrink-0" />
-    {!collapsed && <><span className={cn('min-w-0 truncate', workspace ? 'hidden lg:inline' : 'text-xs')}>{t('search.label')}</span>
-      <Kbd className={cn('ml-auto !border-slate-200 !bg-white !text-slate-400', workspace && 'hidden lg:inline-flex')}>{modKey()}K</Kbd></>}
+    {!collapsed && <><span className={cn('min-w-0 truncate', workspace ? 'sr-only lg:not-sr-only' : 'text-xs')}>{t('search.label')}</span>
+      <Kbd aria-hidden="true" className={cn('ml-auto !border-slate-200 !bg-white !text-slate-500', workspace && 'hidden lg:inline-flex')}>{modKey()}K</Kbd></>}
   </button>;
   return collapsed ? <Tooltip title={t('search.shortcut', { shortcut: modKey() })} placement="right">{button}</Tooltip> : button;
 }

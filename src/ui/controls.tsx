@@ -49,7 +49,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           onChange?.(!checked, event);
         }}
         className={cn(
-          "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          "relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           checked ? "bg-slate-900" : "bg-slate-300",
           small ? "h-4 min-w-7" : "h-[22px] min-w-[42px]",
           hasText && (small ? "px-1" : "px-1.5"),
@@ -147,7 +147,7 @@ const CheckboxBase = React.forwardRef<HTMLInputElement, CheckboxProps>(
             aria-hidden="true"
             className={cn(
               "pointer-events-none flex size-4 items-center justify-center rounded border bg-white transition-colors duration-150",
-              "border-slate-300 group-hover/checkbox:border-slate-400 peer-focus-visible:ring-2 peer-focus-visible:ring-slate-400 peer-focus-visible:ring-offset-2",
+              "border-slate-300 group-hover/checkbox:border-slate-400 peer-focus-visible:ring-2 peer-focus-visible:ring-focus peer-focus-visible:ring-offset-2",
               (isChecked || indeterminate) && "border-slate-900 bg-slate-900 group-hover/checkbox:border-slate-900"
             )}
           >
@@ -199,7 +199,7 @@ Checkbox.Group = CheckboxGroup;
 /* InputNumber                                                               */
 /* ------------------------------------------------------------------------ */
 
-export interface InputNumberProps {
+export interface InputNumberProps extends React.AriaAttributes {
   value?: number | null;
   defaultValue?: number;
   onChange?: (value: number | null) => void;
@@ -211,7 +211,6 @@ export interface InputNumberProps {
   disabled?: boolean;
   className?: string;
   id?: string;
-  "aria-invalid"?: boolean;
 }
 
 /** 数字输入：右侧细步进按钮，失焦时按 min / max / precision 规整。 */
@@ -266,13 +265,14 @@ export function InputNumber({
         controlBase,
         controlFocusWithin,
         "group inline-flex h-9 items-center overflow-hidden pl-3",
-        "aria-[invalid=true]:border-red-400",
+        "aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus-within:border-focus",
         disabled && "bg-slate-50 text-slate-400",
         className
       )}
     >
       <input
         id={id}
+        {...rest}
         inputMode="decimal"
         value={draft}
         placeholder={placeholder}
@@ -298,7 +298,7 @@ export function InputNumber({
             stepBy(-1);
           }
         }}
-        className="h-full min-w-0 flex-1 bg-transparent font-mono text-13 tabular-nums outline-none placeholder:font-sans placeholder:text-slate-400 disabled:cursor-not-allowed"
+        className="h-full min-w-0 flex-1 bg-transparent font-mono text-13 tabular-nums outline-none placeholder:font-sans placeholder:text-slate-500 disabled:placeholder:text-slate-400 disabled:cursor-not-allowed"
       />
       {!disabled && (
         <span className="flex h-full shrink-0 flex-col border-l border-line opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -358,6 +358,8 @@ export function Alert({ type = "info", message, title, description, icon, showIc
 /* ------------------------------------------------------------------------ */
 
 export interface ProgressProps {
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   percent?: number;
   showInfo?: boolean;
   /** 纯色或 { '0%': from, '100%': to } 渐变 */
@@ -369,7 +371,7 @@ export interface ProgressProps {
 }
 
 /** 线性进度条：圆角细轨道，宽度 300ms 过渡并限制在 0-100%。 */
-export function Progress({ percent = 0, showInfo = true, strokeColor, status = "normal", size = "default", className }: ProgressProps) {
+export function Progress({ percent = 0, showInfo = true, strokeColor, status = "normal", size = "default", className, ...aria }: ProgressProps) {
   const value = Math.min(100, Math.max(0, Number.isFinite(percent) ? percent : 0));
   const height = typeof size === "number" ? size : size === "small" ? 4 : 6;
   const background = typeof strokeColor === "string"
@@ -386,6 +388,7 @@ export function Progress({ percent = 0, showInfo = true, strokeColor, status = "
     <div className={cn("flex w-full items-center gap-3", className)}>
       <div
         role="progressbar"
+        {...aria}
         aria-valuenow={Math.round(value)}
         aria-valuemin={0}
         aria-valuemax={100}

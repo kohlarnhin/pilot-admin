@@ -144,7 +144,7 @@ export function FieldLabel({
 /** 字段下方说明 / 错误文字 */
 export function FieldHint({ children, error, id }: { children: React.ReactNode; error?: boolean; id?: string }) {
   return (
-    <div id={id} className={cn("mt-1.5 text-xs leading-[18px]", error ? "text-red-500" : "text-slate-400")} role={error ? "alert" : undefined}>
+    <div id={id} className={cn("mt-1.5 text-xs leading-[18px]", error ? "text-red-600" : "text-slate-500")} role={error ? "alert" : undefined}>
       {children}
     </div>
   );

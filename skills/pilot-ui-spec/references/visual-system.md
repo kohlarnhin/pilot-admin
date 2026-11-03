@@ -37,8 +37,8 @@ Orange is used for meaning, not decoration. Do not apply it to ordinary button h
 | --- | --- |
 | Ordinary button rest | White surface, `#E2E8F0` border, slate-800 text |
 | Ordinary button hover | `slate-50` surface, `slate-300` border, slate-900 text |
-| Button focus ring | 2px `slate-400` ring with 2px offset |
-| Input focus | `slate-400` border with a 3px `rgba(15,23,42,.1)` halo |
+| Button focus ring | 2px `focus` (`slate-500`, `#64748B`) ring with 2px offset |
+| Input focus | `focus` (`slate-500`) border with a 3px `focus` halo at 10% opacity |
 | Filled primary | `slate-900` surface, white text, `slate-800` hover |
 | Checkbox / switch checked | `slate-900`; unchecked switch `slate-300` |
 | Selected / current background | `slate-100`, or `slate-50/60` for a hover-like row |
@@ -146,7 +146,7 @@ Table headings are not uppercase. The data table uses normal letter spacing; the
 - Identifiers remain selectable and copyable. Copy controls do not steal the identifier's minimum width.
 - Timestamps display as `YYYY-MM-DD HH:mm`; a `title` may expose seconds. Retain the target product's timezone policy.
 - Apply `user-select: none` to navigation and decoration, not to entire business content panels.
-- Small secondary labels may use `slate-400` (`#94A3B8`) only for non-essential metadata. Important help text, empty-state descriptions, and interactive text use `slate-500` or darker.
+- Meaningful secondary text, including metadata, help, placeholders, counts and empty-state descriptions, uses `slate-500` or darker. Use `slate-600` on tinted surfaces where slate-500 falls below 4.5:1; reserve slate-400 for decoration and disabled controls. Small validation text uses `red-600`.
 
 ## 3. Spacing and dimensions
 
@@ -250,3 +250,5 @@ Motion must not alter final layout dimensions. Do not replay a whole-page entran
 4. Component libraries supply primitives; override their default primary buttons, font sizes, borders, radii, empty states, and pagination behavior.
 5. Scope overrides to the application. Do not apply the authenticated shell's scroll constraints to login, error, help, or document pages.
 6. Keep the 36px control rhythm and the neutral hover layer even when a library ships a denser or more colorful default.
+
+The accessibility revision uses one neutral `focus` token (`#64748B`, slate-500) across buttons, inputs, navigation, footer controls, tabs and switches. Existing ring widths and offsets are retained; underline tabs add a 2px inset focus ring distinct from selection. Filled destructive controls use red-600 with white text (red-700 on hover), replacing the former low-contrast red-orange fill without changing geometry.

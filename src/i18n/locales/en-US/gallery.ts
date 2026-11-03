@@ -57,6 +57,7 @@ export default {
     "multilineLabel": "Multiline input example"
   },
   "selection": {
+    "numberLabel": "Example number input",
     "searchLabel": "Searchable select",
     "title": "Selection and switches",
     "description": "Single and multiple selection, checkboxes and numbers",
@@ -74,6 +75,9 @@ export default {
     "loadingSwitch": "Loading switch"
   },
   "badges": {
+    "activeProgress": "Active task",
+    "completedProgress": "Completed task",
+    "failedProgress": "Failed task",
     "title": "Badges, avatars and progress",
     "description": "Color indicates status; body text stays neutral",
     "round": "Round badge",

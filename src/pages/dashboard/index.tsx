@@ -63,7 +63,7 @@ export const DashboardPage: React.FC = () => {
           <CardContent className="space-y-2 p-4">
             {!stats ? [0, 1, 2, 3].map((index) => <Skeleton key={index} className="h-[76px] rounded-xl" />) : stats.todos.map((todo) => (
               <Link key={todo.id} to={todo.route} onPointerEnter={() => void preloadRoute(todo.route)} onFocus={() => void preloadRoute(todo.route)}
-                className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-4 transition-colors hover:border-line hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+                className="group flex items-center gap-3 rounded-xl border border-transparent px-3 py-4 transition-colors hover:border-line hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={todo.icon} size={18} /></span>
                 <span className="min-w-0 flex-1"><span className="block text-13 font-medium text-slate-800">{t(`dashboard.${todo.code}Title`)}</span><span className="mt-0.5 block text-xs text-slate-500">{t(`dashboard.${todo.code}Description`)}</span></span>
                 <Icon icon="arrow-right" size={16} className="text-slate-400 transition-transform group-hover:translate-x-0.5" />
@@ -72,7 +72,7 @@ export const DashboardPage: React.FC = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><div><CardTitle>{t('dashboard.activitiesTitle')}</CardTitle><CardDescription>{t('dashboard.activitiesDescription')}</CardDescription></div>{canViewAudit ? <Link to="/system/audit-logs" onPointerEnter={() => void preloadRoute('/system/audit-logs')} className="shrink-0 rounded px-1 py-1 text-xs text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">{t('audit.viewAll')}<span aria-hidden="true" className="ml-1">→</span></Link> : <Icon icon="clock" size={18} className="text-slate-400" />}</CardHeader>
+          <CardHeader><div><CardTitle>{t('dashboard.activitiesTitle')}</CardTitle><CardDescription>{t('dashboard.activitiesDescription')}</CardDescription></div>{canViewAudit ? <Link to="/system/audit-logs" onPointerEnter={() => void preloadRoute('/system/audit-logs')} className="shrink-0 rounded px-1 py-1 text-xs text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">{t('audit.viewAll')}<span aria-hidden="true" className="ml-1">→</span></Link> : <Icon icon="clock" size={18} className="text-slate-400" />}</CardHeader>
           <CardContent className="divide-y divide-line-soft px-6 py-1">
             {!stats ? [0, 1, 2, 3, 4].map((index) => <Skeleton key={index} className="my-5 h-12" />) : stats.activities.length ? stats.activities.map((activity) => (
               <div key={activity.id} className="flex items-start gap-3 py-4">

@@ -24,7 +24,7 @@ export const NavSubItem: React.FC<NavItemProps> = (item) => {
   );
 
   const itemClassName = cn(
-    'group flex min-h-[34px] w-full cursor-pointer select-none items-center justify-between rounded-lg px-2.5 py-1.5 text-13 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
+    'group flex min-h-[34px] w-full cursor-pointer select-none items-center justify-between rounded-lg px-2.5 py-1.5 text-13 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
     active ? 'font-medium text-slate-900' : 'text-slate-600 hover:text-slate-900',
     disabled && navItemClasses.disabled
   );

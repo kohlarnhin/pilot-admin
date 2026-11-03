@@ -13,6 +13,7 @@ import { Button } from '@/ui/button';
 import { Tooltip } from '@/ui/tooltip';
 import { getConsoleRoute } from './access';
 import { appConfig } from '@/config/app';
+import { SkipLink } from '@/components/common/SkipLink';
 
 export function AgentWorkspace() {
   useT();
@@ -39,6 +40,7 @@ export function AgentWorkspace() {
     refreshHistory();
   }, [historyOpen, chat.activeSessionId, chat.isSending, chat.loadSessions]);
   return <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-white text-slate-700">
+    <SkipLink targetId="agent-main" />
     <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line px-5">
       <div className="flex min-w-0 items-center gap-4">
         <Link to="/agent" className="flex shrink-0 items-center gap-2.5" aria-label={t('agentMode.homeLabel')}><Logo size={28} disableLink /><h1 className="text-sm font-semibold tracking-tight text-slate-900">{t('agentMode.title')}</h1></Link>
@@ -55,9 +57,9 @@ export function AgentWorkspace() {
         <div className="min-h-0 flex-1"><SessionHistory inline open sessions={chat.sessions} activeSessionId={chat.activeSessionId} loading={chat.isLoadingSessions}
           hasNext={chat.sessionHasNext && !chat.sessionError} error={chat.sessionError} onRetry={chat.retrySessions} busy={busy} onClose={() => setHistoryOpen(false)}
           onSelect={id => setParams({ session: String(id) })} onLoadMore={() => { void chat.loadSessions(chat.sessionPage + 1, true); }} /></div>
-        <p className="shrink-0 border-t border-line-soft px-5 py-4 text-[11px] leading-5 text-slate-400">{t('agentMode.sharedSessions')}<br />{t('agentMode.switchHint')}</p>
+        <p className="shrink-0 border-t border-line-soft px-5 py-4 text-[11px] leading-5 text-slate-500">{t('agentMode.sharedSessions')}<br />{t('agentMode.switchHint')}</p>
       </aside> : null}
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col" aria-label={t('agentMode.workspaceLabel')}>
+      <main id="agent-main" tabIndex={-1} className="flex min-h-0 min-w-0 flex-1 flex-col outline-none" aria-label={t('agentMode.workspaceLabel')}>
         <div className="flex h-12 shrink-0 items-center justify-between px-4">
           <div className="flex items-center gap-1">
             <Tooltip title={historyOpen ? t('agentMode.collapseHistory') : t('agentMode.expandHistory')}><Button variant="ghost" size="icon-xs" aria-label={historyOpen ? t('agentMode.collapseHistory') : t('agentMode.expandHistory')} aria-expanded={historyOpen} onClick={() => setHistoryOpen(value => !value)}><PanelLeft className="size-4" /></Button></Tooltip>

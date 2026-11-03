@@ -56,6 +56,7 @@ export function Popover({
   className,
   children,
 }: PopoverProps) {
+  const titleId = React.useId();
   const [innerOpen, setInnerOpen] = React.useState(false);
   const open = controlledOpen ?? innerOpen;
   const timer = React.useRef<number | undefined>(undefined);
@@ -86,6 +87,7 @@ export function Popover({
         {React.isValidElement(children) ? children : <span className="inline-flex">{children}</span>}
       </PopoverPrimitive.Trigger>
       <PopoverContent
+        aria-labelledby={title ? titleId : undefined}
         {...contentProps}
         side={side}
         align={align}
@@ -96,7 +98,7 @@ export function Popover({
         }}
         {...hoverHandlers}
       >
-        {title && <div className="mb-2 text-13 font-medium text-slate-900">{title}</div>}
+        {title && <div id={titleId} className="mb-2 text-13 font-medium text-slate-900">{title}</div>}
         {content}
       </PopoverContent>
     </PopoverPrimitive.Root>
@@ -138,6 +140,7 @@ export function Popconfirm({
   children,
 }: PopconfirmProps) {
   useT();
+  const titleId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [pending, setPending] = React.useState(false);
   const { side, align } = resolvePlacement(placement);
@@ -168,6 +171,7 @@ export function Popconfirm({
         {trigger}
       </PopoverPrimitive.Trigger>
       <PopoverContent
+        aria-labelledby={titleId}
         side={side}
         align={align}
         className={cn("w-[280px] p-4", className)}
@@ -178,7 +182,7 @@ export function Popconfirm({
             {icon ?? <AlertCircle className="size-4" />}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-13 font-medium text-slate-900">{title}</div>
+            <div id={titleId} className="text-13 font-medium text-slate-900">{title}</div>
             {description && <div className="mt-1 text-xs leading-5 text-slate-500">{description}</div>}
           </div>
         </div>

@@ -47,7 +47,7 @@ export const MessageBubble = memo(function MessageBubble({
   }), [locale]);
   const date = new Date(message.createdAt);
   const time = Number.isNaN(date.getTime()) ? '' : timeFormatter.format(date);
-  const timeElement = time ? <time dateTime={message.createdAt} className="text-[11px] tabular-nums text-slate-400">{time}</time> : null;
+  const timeElement = time ? <time dateTime={message.createdAt} className="text-[11px] tabular-nums text-slate-500">{time}</time> : null;
 
   if (message.kind === 'progress') {
     return <ProgressIndicator message={message.content} active={activeProgress} elapsedSeconds={progressElapsedSeconds ?? message.elapsedSeconds} />;
@@ -56,7 +56,7 @@ export const MessageBubble = memo(function MessageBubble({
   if (message.role === 'user') {
     if (message.selectedChoiceId === 'plan_step') {
       return (
-        <div className="flex items-center gap-3 py-1 text-[11px] text-slate-400" aria-label={t('assistant.messages.continuePlan')}>
+        <div className="flex items-center gap-3 py-1 text-[11px] text-slate-500" aria-label={t('assistant.messages.continuePlan')}>
           <span className="h-px flex-1 bg-slate-100" />
           <span className="rounded-full bg-slate-50 px-2.5 py-1">{t('assistant.messages.continuePlan')}</span>
           <span className="h-px flex-1 bg-slate-100" />
@@ -65,7 +65,7 @@ export const MessageBubble = memo(function MessageBubble({
     }
     if (message.selectedChoiceId === 'auto_continue') {
       return (
-        <div className="flex items-center gap-3 py-1 text-[11px] text-slate-400" aria-label={t('assistant.messages.continueBatch')}>
+        <div className="flex items-center gap-3 py-1 text-[11px] text-slate-500" aria-label={t('assistant.messages.continueBatch')}>
           <span className="h-px flex-1 bg-slate-100" />
           <span className="rounded-full bg-slate-50 px-2.5 py-1">{t('assistant.messages.continueBatch')}</span>
           <span className="h-px flex-1 bg-slate-100" />
@@ -102,7 +102,7 @@ export const MessageBubble = memo(function MessageBubble({
         <Markdown content={message.content} sessionId={sessionId} />
       )}
       {streaming ? <span className="mt-1 inline-block h-3.5 w-1 animate-pulse rounded-full bg-brand-500 motion-reduce:animate-none" aria-label={t('assistant.messages.generating')} /> : null}
-      {message.stopped ? <span className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-400"><Square className="size-2.5" />{t('assistant.messages.stopped')}</span> : null}
+      {message.stopped ? <span className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-slate-500"><Square className="size-2.5" />{t('assistant.messages.stopped')}</span> : null}
       {message.choices?.length ? (
         <ConfirmationActions messageId={message.id} choices={message.choices} selectedChoiceId={selectedChoiceId} active={choicesActive} onChoice={onChoice} />
       ) : null}

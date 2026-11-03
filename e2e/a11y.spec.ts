@@ -1,0 +1,275 @@
+import AxeBuilder from '@axe-core/playwright';
+import type { Locator, Page, TestInfo } from '@playwright/test';
+import { test, expect, zh, en, signIn } from './fixtures';
+
+const fixedRules = new Set([
+  'color-contrast', 'label', 'aria-dialog-name', 'aria-progressbar-name',
+  'scrollable-region-focusable', 'aria-required-children', 'aria-allowed-attr',
+  'label-content-name-mismatch',
+]);
+
+async function settled(page: Page) {
+  await page.evaluate(() => document.fonts.ready);
+  // Scan the rendered state after the existing entrances and mock requests settle.
+  await page.waitForTimeout(700);
+  await page.waitForFunction(() => document.getAnimations().every((animation) =>
+    animation.playState !== 'running' || animation.effect?.getComputedTiming().iterations === Infinity));
+}
+
+for (const locale of ['zh-CN', 'en-US'] as const) {
+  test(`axe production matrix (${locale})`, async ({ page }, testInfo) => {
+    test.setTimeout(240_000);
+    await page.addInitScript((value) => localStorage.setItem('pilot-admin:locale:v1', value), locale);
+    const copy = locale === 'zh-CN' ? zh : en;
+    const reports: Array<{ state: string; violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations'] }> = [];
+    const scan = async (state: string) => {
+      await settled(page);
+      const result = await new AxeBuilder({ page }).analyze();
+      reports.push({ state, violations: result.violations });
+    };
+    const dialogState = async (name: string, trigger: Locator, prepare?: (dialog: Locator) => Promise<void>) => {
+      await trigger.click();
+      const dialog = page.getByRole('dialog').last();
+      await expect(dialog).toBeVisible();
+      if (prepare) await prepare(dialog);
+      await scan(name);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+    };
+
+    await page.goto('login');
+    await scan('login');
+    await page.getByRole('button', { name: copy.auth.login, exact: true }).click();
+    await scan('login-error');
+    await expect(page.locator('[data-slot="input-wrapper"]').filter({ has: page.locator('#login-name') })).toHaveCSS('border-color', 'rgb(100, 116, 139)');
+    await signIn(page, 'admin');
+    await expect(page.getByRole('dialog', { name: copy.agentEntry.title })).toBeVisible();
+    await scan('entry-dialog');
+    await page.getByRole('button', { name: copy.agentEntry.console, exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await scan('dashboard');
+    await page.locator('button[data-slot="account-menu-trigger"]').click();
+    await scan('account-menu-expanded');
+    await page.keyboard.press('Escape');
+
+    await page.goto('system/users');
+    await scan('users');
+    await dialogState('user-create', page.getByRole('button', { name: copy.button.userCreate, exact: true }), async (dialog) => {
+      await dialog.getByRole('button', { name: copy.common.actions.create, exact: true }).click();
+      const invalidInput = dialog.getByRole('textbox', { name: copy.users.fields.loginName, exact: true });
+      await expect(invalidInput).toBeFocused();
+      await expect(invalidInput).toHaveCSS('border-color', 'rgb(100, 116, 139)');
+    });
+    await dialogState('user-roles-select', page.getByRole('button', { name: copy.button.userCreate, exact: true }), async (dialog) => {
+      const select = dialog.getByRole('combobox', { name: copy.users.fields.roles });
+      await select.press('Enter');
+      await scan('user-roles-popup');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('option', { selected: true })).toHaveCount(1);
+      await page.keyboard.press('Escape');
+      await expect(select).toBeFocused();
+    });
+    await dialogState('user-edit', page.getByRole('button', { name: copy.button.userUpdate, exact: true }).first());
+
+    await page.goto('system/roles');
+    await scan('roles');
+    await dialogState('role-permissions', page.getByRole('button', { name: copy.button.rolePermissions, exact: true }).first());
+    await page.goto('system/menus');
+    await scan('menus');
+    await page.goto('system/audit-logs');
+    await scan('audit');
+    await dialogState('audit-detail', page.getByRole('button', { name: copy.audit.viewDetail, exact: true }).first());
+
+    for (const [name, route] of [['settings', 'system/settings'], ['profile', 'profile']] as const) {
+      await page.goto(route);
+      await scan(name);
+      const tabs = page.getByRole('tab');
+      for (let index = 1; index < await tabs.count(); index += 1) {
+        await tabs.nth(index).click();
+        await scan(`${name}-tab-${index}`);
+      }
+    }
+    await page.goto('system/assistant');
+    await scan('assistant-settings');
+    await page.goto('examples/components');
+    await scan('components');
+    await dialogState('gallery-popover', page.getByRole('button', { name: copy.gallery.overlays.openPopover, exact: true }));
+
+    await page.goto('examples/crud');
+    await scan('crud');
+    await dialogState('crud-create', page.getByRole('button', { name: copy.button.exampleCreate, exact: true }), async (dialog) => {
+      await dialog.getByRole('button', { name: copy.common.actions.create, exact: true }).click();
+    });
+    await dialogState('crud-edit', page.getByRole('button', { name: copy.button.exampleUpdate, exact: true }).first());
+    await dialogState('crud-import', page.getByRole('button', { name: copy.exampleProjects.import.title, exact: true }));
+    await dialogState('crud-import-preview', page.getByRole('button', { name: copy.exampleProjects.import.title, exact: true }), async (dialog) => {
+      await dialog.locator('input[type=file]').setInputFiles({ name: 'a11y.csv', mimeType: 'text/csv', buffer: Buffer.from('name,code,owner,status,description\nAudit preview,A11Y-PREVIEW,Admin,active,Example\n') });
+      await expect(dialog.getByRole('cell', { name: 'A11Y-PREVIEW', exact: true })).toBeVisible();
+    });
+    await page.locator('main a[href^="/examples/crud/"]').first().click();
+    await scan('crud-detail');
+    for (const route of ['403', '404', 'agent']) {
+      await page.goto(route);
+      await scan(route);
+      if (route === 'agent') {
+        const session = page.getByRole('button').filter({ has: page.locator('time') }).first();
+        await session.click();
+        await expect(session).toHaveAttribute('aria-current', 'true');
+        await scan('agent-active-session');
+      }
+    }
+    await page.goto('dashboard');
+    await settled(page);
+    await page.keyboard.press('ControlOrMeta+j');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await scan('assistant-panel');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('ControlOrMeta+k');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await scan('search');
+
+    await testInfo.attach(`axe-${locale}`, { body: JSON.stringify(reports, null, 2), contentType: 'application/json' });
+    const failures = reports.flatMap(({ state, violations }) => violations
+      .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical' || fixedRules.has(violation.id))
+      .map((violation) => ({ state, rule: violation.id, impact: violation.impact, nodes: violation.nodes })));
+    expect(failures, 'No serious/critical violations or regressions in the repaired rules').toEqual([]);
+  });
+}
+
+async function closeAndReturn(page: Page, trigger: Locator, closeBy: 'Escape' | 'button') {
+  await trigger.focus();
+  await trigger.press('Enter');
+  const dialog = page.getByRole('dialog').last();
+  await expect(dialog).toBeVisible();
+  for (let index = 0; index < 14; index += 1) {
+    await page.keyboard.press('Tab');
+    await expect.poll(() => dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  }
+  // Leave any focus-triggered tooltip before testing dismissal of the containing modal.
+  const closeButton = dialog.getByRole('button', { name: zh.common.actions.close, exact: true }).first();
+  await closeButton.focus();
+  await expect(page.getByRole('tooltip')).toHaveCount(0);
+  if (closeBy === 'Escape') await page.keyboard.press('Escape');
+  else await dialog.getByRole('button', { name: zh.common.actions.close, exact: true }).first().click();
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+}
+
+for (const [width, height] of [[1440, 900], [1280, 720]]) {
+  test(`keyboard focus, semantics and scrolling (${width}x${height})`, async ({ page, loginAs }, testInfo: TestInfo) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width, height });
+    await loginAs('admin');
+    await page.goto('dashboard');
+    const skip = page.getByRole('link', { name: zh.layout.skipToContent, exact: true });
+    await expect(skip).toBeAttached();
+    await settled(page);
+    await page.keyboard.press('Tab');
+    await expect(skip).toBeFocused();
+    await skip.press('Enter');
+    await expect(page.getByRole('main')).toBeFocused();
+    const group = page.getByRole('button', { name: zh.menu.system, exact: true });
+    await group.focus();
+    await expect(group).toHaveAttribute('aria-expanded', 'true');
+    await group.press('Enter');
+    await expect(group).toHaveAttribute('aria-expanded', 'false');
+    await group.press('Space');
+    await expect(group).toHaveAttribute('aria-expanded', 'true');
+
+    for (const closeBy of ['Escape', 'button'] as const) {
+      await page.goto('system/users');
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.userCreate, exact: true }), closeBy);
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.userUpdate, exact: true }).first(), closeBy);
+      await page.goto('system/roles');
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.roleCreate, exact: true }), closeBy);
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.roleUpdate, exact: true }).first(), closeBy);
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.rolePermissions, exact: true }).first(), closeBy);
+      await page.goto('examples/crud');
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.exampleCreate, exact: true }), closeBy);
+      await closeAndReturn(page, page.getByRole('button', { name: zh.button.exampleUpdate, exact: true }).first(), closeBy);
+      await closeAndReturn(page, page.getByRole('button', { name: zh.exampleProjects.import.title, exact: true }), closeBy);
+    }
+
+    await page.goto('examples/components');
+    const tab = page.getByRole('tab').first();
+    await tab.focus();
+    await tab.press('ArrowRight');
+    const selected = page.getByRole('tab', { selected: true });
+    await expect(selected).toBeFocused();
+    await expect(selected).toHaveCSS('--tw-ring-color', 'rgb(100 116 139 / 1)');
+    await expect(selected).toHaveCSS('border-bottom-color', 'rgb(253, 169, 45)');
+    await page.screenshot({ path: testInfo.outputPath('gallery-tab-keyboard.png') });
+
+    await page.goto('profile?tab=permissions');
+    const permissions = page.getByRole('region', { name: zh.profile.sections.permissions.title, exact: true });
+    await expect(permissions.locator('li code').first()).toBeVisible();
+    await permissions.focus();
+    await permissions.press('PageDown');
+    await expect.poll(() => permissions.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    await permissions.press('End');
+    await expect.poll(() => permissions.evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+
+    await page.getByRole('button', { name: zh.layout.collapseMenu, exact: true }).click();
+    const account = page.getByRole('button', { name: new RegExp(`^${zh.layout.accountMenu}:`) });
+    await expect(account).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(account).toHaveAttribute('aria-expanded', 'false');
+    await account.press('Enter');
+    await expect(account).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('menu')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(account).toBeFocused();
+    // Menu items unmount when opening a modal; return to the persistent account button.
+    for (const name of [zh.auth.changePassword, zh.agentEntry.preferences]) {
+      for (const closeBy of ['Escape', 'button']) {
+        await account.press('Enter');
+        await page.getByRole('menuitem', { name, exact: true }).press('Enter');
+        const dialog = page.getByRole('dialog', { name, exact: true });
+        await expect(dialog).toBeVisible();
+        if (closeBy === 'Escape') await page.keyboard.press('Escape');
+        else await dialog.getByRole('button', { name: zh.common.actions.close, exact: true }).click();
+        await expect(dialog).toBeHidden();
+        await expect(account).toBeFocused();
+      }
+    }
+    await page.goto('agent');
+    await expect(page.getByRole('heading', { name: zh.agentMode.title, exact: true })).toBeVisible();
+    await settled(page);
+    await expect(page.locator('a[href], button, input, textarea, [tabindex="0"]').first()).toHaveAttribute('href', '#agent-main');
+    // Agent retains its existing composer autofocus; reverse-Tab reaches the first tab stop.
+    for (let index = 0; index < 40 && !await skip.evaluate((element) => element === document.activeElement); index += 1) {
+      await page.keyboard.press('Shift+Tab');
+    }
+    await expect(skip).toBeFocused();
+    await skip.press('Enter');
+    await expect(page.getByRole('main')).toBeFocused();
+    expect(await page.evaluate(() => ({ x: document.documentElement.scrollWidth - innerWidth, y: document.documentElement.scrollHeight - innerHeight }))).toEqual({ x: 0, y: 0 });
+  });
+}
+
+test('virtual row modal returns to a stable search input when its opener unmounts', async ({ page, loginAs }) => {
+  await loginAs('admin');
+  for (const [route, action, placeholder, total] of [
+    ['system/users', zh.button.userUpdate, zh.users.searchPlaceholder, '151'],
+    ['examples/crud', zh.button.exampleUpdate, zh.exampleProjects.filters.search, '81'],
+  ] as const) {
+    await page.goto(route);
+    const trigger = page.getByRole('button', { name: action, exact: true }).first();
+    const table = page.getByRole('table', { includeHidden: true });
+    await expect(table).toHaveAttribute('aria-rowcount', total);
+    await expect(table.getByRole('row', { includeHidden: true }).first()).toHaveAttribute('aria-rowindex', '1');
+    await trigger.focus();
+    const opener = await trigger.elementHandle();
+    await trigger.press('Enter');
+    // Scroll the actual virtual list while the modal is open; no synthetic DOM removal.
+    for (let index = 0; index < 5; index += 1) {
+      await table.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+      await page.waitForTimeout(400);
+    }
+    await expect.poll(() => opener!.evaluate((element) => element.isConnected)).toBe(false);
+    await expect.poll(() => table.locator('[data-row-key]').first().getAttribute('aria-rowindex').then(Number)).toBeGreaterThan(2);
+    await expect(table.locator('[role="status"]')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page.getByPlaceholder(placeholder, { exact: true })).toBeFocused();
+  }
+});

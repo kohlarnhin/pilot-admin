@@ -8,7 +8,7 @@ import { cva } from "class-variance-authority";
  * - ghost：透明底灰色图标，悬浮中性灰底；subtle：透明底中性灰悬浮（行内编辑等中性操作）。
  */
 export const buttonVariants = cva(
-  "relative inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap font-medium select-none cursor-pointer transition-[color,background-color,border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:shrink-0",
+  "relative inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap font-medium select-none cursor-pointer transition-[color,background-color,border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -21,7 +21,7 @@ export const buttonVariants = cva(
         primary:
           "border border-transparent bg-slate-900 text-white shadow-xs hover:bg-slate-800 disabled:hover:bg-slate-900",
         destructive:
-          "border border-transparent bg-[#FF5630] text-white shadow-xs hover:bg-[#E5482A] disabled:hover:bg-[#FF5630]",
+          "border border-transparent bg-red-600 text-white shadow-xs hover:bg-red-700 disabled:hover:bg-red-600",
         danger:
           "border border-transparent bg-transparent text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:hover:bg-transparent disabled:hover:text-slate-500",
         ghost:

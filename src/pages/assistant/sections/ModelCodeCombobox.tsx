@@ -66,11 +66,11 @@ export function ModelCodeCombobox({ options, loading, value = '', onChange, ...p
         <Icon icon={loading ? 'loader-circle' : 'chevron-down'} size={14} className={loading ? 'animate-spin' : undefined} />
       </button>
       {open && <div id={listId} role="listbox" aria-label={t('agentConfig.modelPicker.label')} className="absolute z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-pop">
-        {loading ? <p className="px-3 py-2 text-xs text-slate-400">{t('agentConfig.modelPicker.loading')}</p> : matches.length ? matches.map((model, index) => (
+        {loading ? <p className="px-3 py-2 text-xs text-slate-500">{t('agentConfig.modelPicker.loading')}</p> : matches.length ? matches.map((model, index) => (
           <button key={model} id={`${listId}-${index}`} type="button" role="option" tabIndex={-1} aria-selected={value === model}
             className={`block w-full truncate rounded-md px-3 py-2 text-left font-mono text-xs text-slate-700 hover:bg-slate-50 ${highlighted === index ? 'bg-slate-100' : ''}`}
             onMouseDown={event => event.preventDefault()} onClick={() => select(model)}>{model}</button>
-        )) : <p className="px-3 py-2 text-xs text-slate-400">{t('agentConfig.modelPicker.empty')}</p>}
+        )) : <p className="px-3 py-2 text-xs text-slate-500">{t('agentConfig.modelPicker.empty')}</p>}
       </div>}
     </div>
   );

@@ -97,6 +97,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <nav
+      aria-label={t('layout.sidebarNavigation')}
       data-slot="pilot-admin-layout-nav"
       className={cn(
         'scrollbar-hover-zone fixed inset-y-0 left-0 z-30 flex h-full select-none flex-col border-r border-line bg-white transition-[width] duration-300 ease-in-out',
@@ -126,7 +127,7 @@ export const Sidebar: React.FC = () => {
             )}
           >
             <span className="block text-[15px] font-semibold leading-tight tracking-tight text-slate-900" title={siteName}>{siteName}</span>
-            <span className="mt-0.5 block text-[11px] text-slate-400">{locale === 'zh-CN' ? appConfig.zhName : appConfig.shortName}{t('layout.subtitle')}</span>
+            <span className="mt-0.5 block text-[11px] text-slate-500">{locale === 'zh-CN' ? appConfig.zhName : appConfig.shortName}{t('layout.subtitle')}</span>
           </div>
         </Link>
 
@@ -137,7 +138,7 @@ export const Sidebar: React.FC = () => {
             onClick={toggleSidebar}
             aria-label={sidebarCollapsed ? t('layout.expandMenu') : t('layout.collapseMenu')}
             aria-expanded={!sidebarCollapsed}
-            className="absolute right-0 z-10 flex size-6 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-slate-400 shadow-xs transition-[color,transform,border-color] duration-200 hover:scale-110 hover:border-slate-300 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+            className="absolute right-0 z-10 flex size-6 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border border-line bg-white text-slate-400 shadow-xs transition-[color,transform,border-color] duration-200 hover:scale-110 hover:border-slate-300 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             {sidebarCollapsed ? <ChevronsRight className="size-3.5" /> : <ChevronsLeft className="size-3.5" />}
           </button>
@@ -150,9 +151,9 @@ export const Sidebar: React.FC = () => {
       <div className="scrollbar-hover min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 pt-1">
         <div key={sidebarCollapsed ? 'mini' : 'vertical'} className="-mx-3 animate-overlay-in bg-white px-3">
           {navData.length > 0 ? (
-            sidebarCollapsed ? <NavMini data={navData} /> : <NavVertical data={navData} />
+            sidebarCollapsed ? <NavMini data={navData} aria-label={t('layout.pageNavigation')} /> : <NavVertical data={navData} aria-label={t('layout.pageNavigation')} />
           ) : !sidebarCollapsed ? (
-            <div className="mx-2 mt-3 rounded-lg border border-line px-3 py-4 text-center text-xs text-slate-400">
+            <div className="mx-2 mt-3 rounded-lg border border-line px-3 py-4 text-center text-xs text-slate-500">
               {t('layout.noMenus')}</div>
           ) : null}
         </div>
@@ -160,8 +161,8 @@ export const Sidebar: React.FC = () => {
 
       {/* 固定底部入口与当前账号 */}
       <div className="shrink-0 border-t border-line-soft p-3">
-        <div data-slot="sidebar-assistant-entry">{canUseAgent ? <Tooltip title={sidebarCollapsed ? t('layout.assistantShortcut', { shortcut: shortcut.label }) : undefined} placement="right"><button type="button" aria-label={t('layout.assistant')} aria-controls="ai-assistant-panel" aria-expanded={assistant.panelOpen} aria-keyshortcuts={shortcut.ariaKeyShortcuts} onPointerEnter={preloadAssistantUI} onFocus={preloadAssistantUI} onClick={(event) => assistant.togglePanel(event.currentTarget)} className={cn('group mb-2 flex h-10 w-full items-center rounded-lg text-13 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300', sidebarCollapsed ? 'justify-center' : 'gap-3 px-3', assistant.panelOpen && 'bg-slate-100')}>
-          <span className="relative flex size-[22px] shrink-0 items-center justify-center"><Sparkles size={18} className="text-slate-500" />{assistant.streaming ? <span role="status" aria-label={t('layout.generating')} className="absolute -right-0.5 -top-0.5 size-1.5 animate-pulse rounded-full bg-brand-500 motion-reduce:animate-none" /> : null}</span>{!sidebarCollapsed ? <><span className="flex-1 text-left">{t('layout.assistant')}</span><Kbd className="!border-slate-200 !bg-white !text-slate-400">{shortcut.label}</Kbd></> : null}
+        <div data-slot="sidebar-assistant-entry">{canUseAgent ? <Tooltip title={sidebarCollapsed ? t('layout.assistantShortcut', { shortcut: shortcut.label }) : undefined} placement="right"><button type="button" aria-label={sidebarCollapsed ? t('layout.assistant') : undefined} aria-controls="ai-assistant-panel" aria-expanded={assistant.panelOpen} aria-keyshortcuts={shortcut.ariaKeyShortcuts} onPointerEnter={preloadAssistantUI} onFocus={preloadAssistantUI} onClick={(event) => assistant.togglePanel(event.currentTarget)} className={cn('group mb-2 flex h-10 w-full items-center rounded-lg text-13 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', sidebarCollapsed ? 'justify-center' : 'gap-3 px-3', assistant.panelOpen && 'bg-slate-100')}>
+          <span className="relative flex size-[22px] shrink-0 items-center justify-center"><Sparkles size={18} className="text-slate-500" />{assistant.streaming ? <span role="status" aria-label={t('layout.generating')} className="absolute -right-0.5 -top-0.5 size-1.5 animate-pulse rounded-full bg-brand-500 motion-reduce:animate-none" /> : null}</span>{!sidebarCollapsed ? <><span className="flex-1 text-left">{t('layout.assistant')}</span><Kbd aria-hidden="true" className="!border-slate-200 !bg-white !text-slate-500">{shortcut.label}</Kbd></> : null}
         </button></Tooltip> : null}</div>
         {appConfig.helpUrl && (
         <div key={sidebarCollapsed ? 'mini-help' : 'vertical-help'} className="mb-2 animate-overlay-in">
@@ -171,7 +172,7 @@ export const Sidebar: React.FC = () => {
               target="_blank" rel="noreferrer"
               aria-label={t('layout.help')}
               className={cn(
-                'group flex h-10 items-center rounded-lg text-13 text-slate-600 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
+                'group flex h-10 items-center rounded-lg text-13 text-slate-600 transition-colors duration-200 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
                 sidebarCollapsed ? 'justify-center rounded-xl px-1' : 'gap-3 px-3'
               )}
             >

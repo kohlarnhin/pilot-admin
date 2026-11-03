@@ -19,7 +19,7 @@ export const StatusPage: React.FC<StatusPageProps> = ({
       <span className="flex size-14 items-center justify-center rounded-2xl border border-line bg-white text-brand-500 shadow-2xs">
         <Icon icon={icon} size={28} />
       </span>
-      <div className="mt-5 font-mono text-xs font-medium tracking-[0.2em] text-slate-400">{code}</div>
+      <div className="mt-5 font-mono text-xs font-medium tracking-[0.2em] text-slate-500">{code}</div>
       <h1 className="mt-1.5 text-lg font-semibold text-slate-900">{title}</h1>
       <p className="mt-2 max-w-md text-13 leading-6 text-slate-500">{description}</p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">{actions}</div>

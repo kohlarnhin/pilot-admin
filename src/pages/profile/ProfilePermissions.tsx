@@ -30,7 +30,7 @@ function PageTree({ nodes }: { nodes: PageNode[] }) {
       <div className="flex min-h-10 min-w-0 items-center gap-2.5 py-2 text-13">
         <Icon icon={node.icon || (node.children.length ? 'folder' : 'file')} size={16} className="shrink-0 text-slate-400" />
         <span className="min-w-0 flex-1 truncate text-slate-700" title={node.name}>{node.name}</span>
-        {node.route ? <span className="max-w-[55%] truncate font-mono text-[11px] text-slate-400" title={node.route}>{node.route}</span> : null}
+        {node.route ? <span className="max-w-[55%] truncate font-mono text-[11px] text-slate-500" title={node.route}>{node.route}</span> : null}
       </div>
       {node.children.length ? <div className="ml-2 border-l border-line-soft pl-5"><PageTree nodes={node.children} /></div> : null}
     </li>)}
@@ -74,7 +74,7 @@ export function ProfilePermissions() {
   }
   if (canAccessAgent(menus, permissions)) pages.push({ id: '/agent', name: t('agentMode.title'), icon: 'square-terminal', route: '/agent', children: [] });
   const countPages = (nodes: PageNode[]): number => nodes.reduce((count, node) => count + (node.route ? 1 : 0) + countPages(node.children), 0);
-  return <CardContent className="min-h-0 flex-1 space-y-6 overflow-y-auto">
+  return <CardContent role="region" aria-label={t('profile.sections.permissions.title')} tabIndex={0} className="min-h-0 flex-1 space-y-6 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus">
     <section aria-label={t('profile.permissions.roles')}>
       <h3 className="mb-3 text-13 font-medium text-slate-900">{t('profile.permissions.roles')}</h3>
       {roles.length ? <div className="space-y-2">{roles.map((code, index) => <div key={code} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-line px-3 py-2.5">

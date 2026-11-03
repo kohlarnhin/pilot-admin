@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { t, useT } from '@/i18n';
 import { ApiRequestError } from '@/api/errors';
 import { exampleProjectService, PROJECT_CODE_EXISTS, type ProjectInput } from '@/api/services/exampleProjectService';
@@ -9,10 +9,11 @@ import { Select } from '@/ui/select';
 import { Modal } from '@/ui/modal';
 import { message } from '@/ui/message';
 
-export function ProjectFormModal({ project, onClose, onSaved }: {
+export function ProjectFormModal({ project, onClose, onSaved, returnFocusRef }: {
   project: ExampleProject | null;
   onClose: () => void;
   onSaved: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }) {
   useT();
   const [form] = Form.useForm<ProjectInput>();
@@ -43,6 +44,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: {
   };
 
   return <Modal open title={t(project ? 'button.exampleUpdate' : 'button.exampleCreate')} icon="package" width={520}
+    returnFocusRef={returnFocusRef}
     onOk={submit} onCancel={saving ? undefined : onClose} confirmLoading={saving}
     okText={t(project ? 'common.actions.save' : 'common.actions.create')}>
     <Form form={form} initialValues={project || { status: 'active', description: '' }} onFinish={() => void submit()}>

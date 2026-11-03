@@ -31,7 +31,7 @@ export function SelectionCard({ form, active, submittedIds, onSubmit }: Selectio
           {submitted ? <Check className="size-3.5 shrink-0 text-emerald-600" /> : <Rocket className="size-3.5 shrink-0 text-slate-400" />}
           {submitted ? t('assistant.selection.submitted') : form.title}
         </span>
-        <span className="text-[11px] tabular-nums text-slate-400">{t('assistant.selection.count', { count: selected.size, max: form.maxSelected })}</span>
+        <span className="text-[11px] tabular-nums text-slate-500">{t('assistant.selection.count', { count: selected.size, max: form.maxSelected })}</span>
       </div>
       <div className="max-h-[min(320px,42dvh)] min-w-0 divide-y divide-line-row overflow-x-hidden overflow-y-auto overscroll-contain">
         {form.options.map(option => (
@@ -47,7 +47,7 @@ export function SelectionCard({ form, active, submittedIds, onSubmit }: Selectio
             <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 [overflow-wrap:anywhere]">
                 <span className="text-xs font-medium text-slate-700">{option.label}</span>
-                <span className="font-mono text-[11px] text-slate-400">{option.description}</span>
+                <span className="font-mono text-[11px] text-slate-500">{option.description}</span>
               </div>
             </div>
           </div>
@@ -66,7 +66,7 @@ export function SelectionCard({ form, active, submittedIds, onSubmit }: Selectio
               onSubmit(selectedIds);
             }}>{t('assistant.selection.confirm', { count: selected.size })}</Button>
           </>
-        ) : <p className="text-[11px] leading-5 text-slate-400">{submitted ? t('assistant.selection.submittedHint') : t('assistant.selection.inactiveHint')}</p>}
+        ) : <p className="text-[11px] leading-5 text-slate-500">{submitted ? t('assistant.selection.submittedHint') : t('assistant.selection.inactiveHint')}</p>}
       </div>
     </section>
   );

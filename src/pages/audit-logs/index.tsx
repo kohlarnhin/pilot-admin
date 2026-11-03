@@ -122,7 +122,7 @@ export function AuditLogsPage() {
         <Select className="w-36" placeholder={t('audit.filters.allResults')} aria-label={t('audit.filters.result')} value={result} onChange={(value) => setResult(value as AuditResult | '')} options={[{ value: '', label: t('audit.filters.allResults') }, { value: 'success', label: t('audit.result.success') }, { value: 'failure', label: t('audit.result.failure') }]} />
       </ListToolbar>
       <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-        <FixedTable columns={columns} dataSource={page.records} rowKey="id" loading={page.loading} refreshing={page.refreshing} loadingMore={page.loadingMore} hasNext={page.hasNext && !loadError} onLoadMore={page.loadMore} locale={{ emptyText: <EmptyState icon="history" title={loadError ? t('common.errors.loadData') : t('audit.empty.title')} description={loadError ? undefined : t('audit.empty.hint')} /> }} />
+        <FixedTable columns={columns} dataSource={page.records} totalCount={total ?? undefined} rowKey="id" loading={page.loading} refreshing={page.refreshing} loadingMore={page.loadingMore} hasNext={page.hasNext && !loadError} onLoadMore={page.loadMore} locale={{ emptyText: <EmptyState icon="history" title={loadError ? t('common.errors.loadData') : t('audit.empty.title')} description={loadError ? undefined : t('audit.empty.hint')} /> }} />
       </CardContent>
     </Card>
     <Drawer open={detail !== null} onClose={closeDetail} title={t('audit.detail')} width={560} bodyClassName="px-6 py-2">

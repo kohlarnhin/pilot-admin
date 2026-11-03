@@ -14,12 +14,12 @@ const PLAN_STATUS = {
 } as const satisfies Record<AgentExecutionPlan['status'], { label: MessageKey; className: string }>;
 
 const STEP_STATUS = {
-  pending: { label: 'assistant.plan.status.pending', className: 'text-slate-400' },
+  pending: { label: 'assistant.plan.status.pending', className: 'text-slate-500' },
   running: { label: 'common.status.running', className: 'text-brand-600' },
   completed: { label: 'common.status.completed', className: 'text-emerald-600' },
   waiting_user: { label: 'assistant.plan.status.waitingUser', className: 'text-amber-700' },
   failed: { label: 'common.status.failed', className: 'text-red-600' },
-  stopped: { label: 'common.status.stopped', className: 'text-slate-400' },
+  stopped: { label: 'common.status.stopped', className: 'text-slate-500' },
 } as const satisfies Record<AgentPlanStepStatus, { label: MessageKey; className: string }>;
 
 function StepStatus({ status }: { status: AgentPlanStepStatus }) {

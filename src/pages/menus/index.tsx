@@ -125,7 +125,7 @@ export const MenusPage: React.FC = () => {
           {hasChildren ? <ChevronRight className={cn('size-4 shrink-0 text-slate-400', expanded && 'rotate-90')} /> : <span className="size-4 shrink-0" />}
           <Icon icon={getMenuIcon(menu.icon, hasChildren)} size={16} className="shrink-0 text-slate-400" />
           <span className="truncate" title={menu.menu_name}>{menu.menu_name}</span>
-          {menu.visible === 0 && <span className="ml-auto text-xs font-normal text-slate-400">{t('menus.visibility.hidden')}</span>}
+          {menu.visible === 0 && <span className="ml-auto text-xs font-normal text-slate-600">{t('menus.visibility.hidden')}</span>}
         </button>
         {hasChildren && expanded && <div>{menu.children!.map((child) => renderNode(child, depth + 1))}</div>}
       </div>

@@ -55,7 +55,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               type="button"
               onClick={onBack}
               aria-label={backLabel}
-              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-white text-slate-500 shadow-2xs transition-colors hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-white text-slate-500 shadow-2xs transition-colors hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
               <ArrowLeft className="size-[15px]" />
             </button>
@@ -69,12 +69,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                   <button
                     type="button"
                     onClick={crumb.onClick}
-                    className="max-w-[240px] shrink-0 cursor-pointer truncate font-medium text-slate-400 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:text-slate-700"
+                    className="max-w-[240px] shrink-0 cursor-pointer truncate font-medium text-slate-500 transition-colors hover:text-slate-700 focus-visible:outline-none focus-visible:text-slate-700"
                   >
                     {crumb.label}
                   </button>
                 ) : (
-                  <span className="max-w-[240px] shrink-0 truncate font-medium text-slate-400">{crumb.label}</span>
+                  <span className="max-w-[240px] shrink-0 truncate font-medium text-slate-500">{crumb.label}</span>
                 )}
                 <span aria-hidden="true" className="mx-2 shrink-0 font-normal text-slate-300">/</span>
               </React.Fragment>
@@ -82,7 +82,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             <span className="truncate" title={typeof title === 'string' ? title : undefined}>{title}</span>
           </h1>
           {meta !== undefined && meta !== null && (
-            <span className="shrink-0 text-13 tabular-nums text-slate-400">{meta}</span>
+            <span className="shrink-0 text-13 tabular-nums text-slate-500">{meta}</span>
           )}
         </div>
       </div>

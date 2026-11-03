@@ -78,7 +78,7 @@ export function FileDropZone({
       }}
       className={cn(
         "group flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-8 py-8 text-center outline-none transition-colors duration-150",
-        "focus-visible:ring-2 focus-visible:ring-slate-300",
+        "focus-visible:ring-2 focus-visible:ring-focus",
         dragging
           ? "border-slate-400 bg-slate-50"
           : "border-slate-300/80 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-50",
@@ -105,7 +105,7 @@ export function FileDropZone({
             {loading ? <Spinner size={22} /> : <Icon icon={icon} size={26} />}
           </span>
           <div className="text-13 font-medium text-slate-700">{title}</div>
-          {hint && <div className="mt-1.5 text-xs text-slate-400">{hint}</div>}
+          {hint && <div className="mt-1.5 text-xs text-slate-500">{hint}</div>}
         </>
       )}
     </div>

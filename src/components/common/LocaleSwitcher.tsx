@@ -19,7 +19,7 @@ function LocaleOptions() {
 export function LocaleSwitcher() {
   const { t, locale } = useT();
   return <Dropdown placement="bottomRight" popupRender={() => <LocaleOptions />}>
-    <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-normal text-slate-500" aria-label={t('layout.switchLanguage')}>
+    <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs font-normal text-slate-500" aria-label={`${t('layout.switchLanguage')}: ${appConfig.locales.find((item) => item.code === locale)?.label}`}>
       <Languages className="size-4" /><span>{appConfig.locales.find((item) => item.code === locale)?.label}</span>
     </Button>
   </Dropdown>;

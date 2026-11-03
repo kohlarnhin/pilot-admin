@@ -47,16 +47,16 @@ export function ProfilePage() {
           {SECTIONS.map((item) => <button key={item.key} type="button" role="tab" id={`profile-tab-${item.key}`} aria-selected={item.key === section.key} aria-controls={`profile-panel-${item.key}`}
             {...getRovingTabProps(item.key === section.key, () => setParams({ tab: item.key }, { replace: true }), 'vertical')}
             onClick={() => setParams({ tab: item.key }, { replace: true })}
-            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400', item.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', item.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={item.icon} size={18} /></span>
-            <span className="min-w-0"><span className="block text-13 font-medium">{t(item.title)}</span><span className="mt-0.5 block text-[11px] text-slate-500">{t(item.description)}</span></span>
+            <span className="min-w-0"><span className="block text-13 font-medium">{t(item.title)}</span><span className="mt-0.5 block text-[11px] text-slate-600">{t(item.description)}</span></span>
           </button>)}
         </div>
       </Card>
       <Card className="min-h-0 min-w-0 flex-1">
         <CardHeader className="shrink-0"><div><CardTitle>{t(section.title)}</CardTitle><CardDescription>{t(section.description)}</CardDescription></div></CardHeader>
         {/* 保留各分区实例，语言或分区切换不会丢失未保存的资料。 */}
-        {SECTIONS.map((item) => <section key={item.key} role="tabpanel" id={`profile-panel-${item.key}`} aria-labelledby={`profile-tab-${item.key}`} tabIndex={item.key === section.key ? 0 : -1} className={cn('min-h-0 min-w-0 flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300', item.key === section.key ? 'flex' : 'hidden')}>
+        {SECTIONS.map((item) => <section key={item.key} role="tabpanel" id={`profile-panel-${item.key}`} aria-labelledby={`profile-tab-${item.key}`} tabIndex={item.key === section.key ? 0 : -1} className={cn('min-h-0 min-w-0 flex-1 flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus', item.key === section.key ? 'flex' : 'hidden')}>
           {item.key === 'basic' ? <ProfileDetails /> : item.key === 'security' ? <ProfileSecurity /> : item.key === 'preferences' ? <ProfilePreferences /> : <ProfilePermissions />}
         </section>)}
       </Card>

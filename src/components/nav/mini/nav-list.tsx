@@ -66,7 +66,7 @@ function MiniNavGroup({ title, disabled, children, trigger }: {
       },
     }}
   >
-    <button ref={triggerRef} type="button" disabled={disabled} className="w-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+    <button ref={triggerRef} type="button" disabled={disabled} className="w-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
       onKeyDown={(event) => {
         if (!['Enter', ' ', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
@@ -108,7 +108,7 @@ export const NavList: React.FC<NavListProps> = ({ data, depth = 1 }) => {
     if (hasChild) {
       const popoverContent = (
         <div className="flex flex-col gap-0.5">
-          <div className="mb-1 border-b border-line-soft px-2.5 pb-1.5 pt-1 text-xs font-medium text-slate-400">
+          <div className="mb-1 border-b border-line-soft px-2.5 pb-1.5 pt-1 text-xs font-medium text-slate-500">
             {data.title}
           </div>
           {data.children?.map((child, index) => (

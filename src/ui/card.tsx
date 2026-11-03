@@ -134,7 +134,7 @@ function ListToolbar({ children, extra, className }: { children?: React.ReactNod
       className={cn("flex min-h-[60px] shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line-soft px-6 py-3", className)}
     >
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2.5">{children}</div>
-      {extra && <div className="flex shrink-0 items-center gap-3 text-13 text-slate-400">{extra}</div>}
+      {extra && <div className="flex shrink-0 items-center gap-3 text-13 text-slate-500">{extra}</div>}
     </div>
   );
 }

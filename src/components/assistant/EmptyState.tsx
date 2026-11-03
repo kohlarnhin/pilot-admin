@@ -25,6 +25,6 @@ export function EmptyState({ profile = DEFAULT_AGENT_PROFILE(), notConfigured, d
     <div className={`mt-8 grid w-full grid-cols-1 gap-2 ${fullScreen ? 'sm:grid-cols-3' : 'min-[360px]:grid-cols-2'}`}>
       {profile.suggestions.map(({ label, prompt }, index) => <Button key={index} variant="outline" disabled={disabled} onClick={() => onPrompt(prompt)} className="group h-auto min-w-0 justify-start gap-2 rounded-xl px-3 py-3 text-left font-normal shadow-none hover:border-slate-300 hover:bg-slate-50"><span className="min-w-0 flex-1 text-xs">{label}</span><ArrowUpRight className="size-3 text-slate-300 group-hover:text-brand-700" /></Button>)}
     </div>
-    <p className="mt-5 text-[11px] text-slate-400">{promptHint}</p>
+    <p className="mt-5 text-[11px] text-slate-500">{promptHint}</p>
   </div>;
 }

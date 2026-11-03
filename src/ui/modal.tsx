@@ -39,6 +39,8 @@ export interface ModalProps {
   bodyClassName?: string;
   styles?: { body?: React.CSSProperties; content?: React.CSSProperties };
   afterClose?: () => void;
+  /** 打开按钮被虚拟列表卸载时的焦点回退目标 */
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
   zIndex?: number;
   children?: React.ReactNode;
 }
@@ -87,10 +89,12 @@ export function Modal({
   bodyClassName,
   styles,
   afterClose,
+  returnFocusRef,
   zIndex,
   children,
 }: ModalProps) {
   useT();
+  const openerRef = React.useRef<HTMLElement | null>(null);
   const wasOpen = React.useRef(open);
   React.useEffect(() => {
     if (wasOpen.current && !open && afterClose) {
@@ -180,6 +184,7 @@ export function Modal({
           aria-modal={ariaModal}
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => {
+            openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             // 优先聚焦内容区第一个可输入控件，避免关闭按钮获得焦点出现描边
             event.preventDefault();
             const content = event.currentTarget as HTMLElement;
@@ -188,6 +193,18 @@ export function Modal({
             );
             const field = Array.from(fields).find((element) => element.getClientRects().length > 0);
             (field ?? content).focus({ preventScroll: true });
+          }}
+          onCloseAutoFocus={(event) => {
+            const canFocus = (element: HTMLElement | null | undefined): element is HTMLElement =>
+              Boolean(element?.isConnected && element !== document.body && element.getClientRects().length
+                && !element.matches(':disabled')
+                // 退场动画中的菜单项仍在 DOM 中，但很快会卸载；此时直接使用稳定回退目标。
+                && !element.closest('[inert], [hidden], [role="menu"][data-state="closed"], [role="dialog"][data-state="closed"]'));
+            const target = canFocus(openerRef.current) ? openerRef.current : returnFocusRef?.current;
+            if (canFocus(target)) {
+              event.preventDefault();
+              target.focus({ preventScroll: true });
+            }
           }}
           onEscapeKeyDown={(event) => {
             if (closeBlocked || !keyboard) event.preventDefault();

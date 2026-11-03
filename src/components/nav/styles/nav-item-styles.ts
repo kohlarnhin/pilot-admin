@@ -44,7 +44,7 @@ export const navItemStyles: NavItemStyles = {
     textOverflow: 'ellipsis',
     fontSize: '0.75rem',
     fontWeight: 400,
-    color: '#919EAB',
+    color: '#64748B',
     textAlign: 'left',
     lineHeight: '1rem',
   },

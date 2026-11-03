@@ -41,15 +41,15 @@ The package separates observable design intent, current implementation variants,
 | `src/components/common/FixedTable.tsx` | Card-filling table wrapper that enables row windowing and prefetch |
 | `src/ui/card.tsx` | 16px card, 15px/600 title, `CardToolbar`, `ListToolbar`, `CardBar` paddings |
 | `src/ui/button.tsx` | Neutral outlined default, slate-900 primary, filled destructive, ghost/subtle/danger variants, sizes |
-| `src/ui/input.tsx` | 36/32/40px inputs, slate focus halo, clear and count affordances, search prefix |
+| `src/ui/input.tsx` | 36/32/40px inputs, shared focus (slate-500) border and halo, clear and count affordances, search prefix |
 | `src/ui/select.tsx` | 36px combobox, bounded 256px menu, neutral selected state, forwarded ARIA attributes |
 | `src/ui/form.tsx` | Vertical form layout, stable label/control associations, ARIA error wiring, registered-control focus on validation failure |
 | `src/ui/controls.tsx` | Switch, checkbox, number input, alert, progress, tag geometry and states |
 | `src/ui/badge.tsx` | 22px badge and `CodeTag` with automatic title |
-| `src/ui/modal.tsx` | 16px dialog, overlay shadow, async `onOk` pending contract, focus entry, drawer variants |
+| `src/ui/modal.tsx` | 16px dialog, overlay shadow, async `onOk` pending contract, focus entry and opener restoration with caller fallback, drawer variants |
 | `src/ui/table.tsx` | Native table primitives, 44px sticky header, 24px outer cell padding |
 | `src/ui/data-table.tsx` | Grid table, sticky header, measured virtualization, skeleton, empty state, infinite sentinel, fixed-column divider |
-| `src/ui/tabs.tsx`, `src/ui/roving-tabs.ts` | 2px brand underline tabs, `SectionBar`, shared roving focus and automatic activation for horizontal tabs and vertical rails |
+| `src/ui/tabs.tsx`, `src/ui/roving-tabs.ts` | 2px brand underline tabs with a separate inset neutral focus ring, `SectionBar`, shared roving focus and automatic activation for horizontal tabs and vertical rails |
 | `src/ui/row-action.tsx` | 28/32px row icon buttons, tooltip labels, disabled reasons |
 | `src/ui/file-drop-zone.tsx` | Dashed neutral drop zone, keyboard activation, loading/disabled states |
 | `src/ui/message.tsx` | Top-center Sonner toaster, 3s duration, white 12px card |
@@ -120,3 +120,5 @@ The reusable identity is the shared geometry, density, colors, component states,
 ## Assistant loading boundaries
 
 `AppLayout` is a cached route-level split so login does not load the console shell. `AssistantRuntimeLayout` and `useAssistantChat` stay eager above the router outlets; neither lazy host creates a provider. `AIAssistant.tsx` keeps panel keyboard control and loading/error feedback eager. `assistantResources.ts` caches the `AssistantUI.tsx` import shared by the panel and `AgentWorkspace`; the admin shell prefetches it on idle and the footer entry on hover/focus. `Markdown.tsx` shows plain text while loading `MarkdownRenderer.tsx` and its parser dependencies. `agentService.ts` imports the mock engine on demand and checks abort signals after loading, before execution. `src/utils/lazyResource.ts` releases failed imports for inline/service retry without the route chunk auto-reload path.
+
+The neutral focus token is defined in `tailwind.config.js` as slate-500 (`#64748B`). `SkipLink.tsx` is shared by the admin and Agent shells. `DataTable` exposes absolute `aria-rowindex` values and an optional server `totalCount` (unknown total: -1 while more pages exist), and keeps append live status outside the table. `e2e/a11y.spec.ts` covers axe scans and keyboard regression on production previews, including CSV import and CRUD detail.

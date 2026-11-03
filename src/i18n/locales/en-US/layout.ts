@@ -2,6 +2,9 @@ import type source from '../zh-CN/layout';
 import type { LocalizedDictionary } from '../../types';
 
 export default {
+  "skipToContent": "Skip to content",
+  "sidebarNavigation": "Workspace navigation",
+  "pageNavigation": "Page navigation",
   "signedOut": "Signed out",
   "currentUser": "Current user",
   "avatarFallback": "U",

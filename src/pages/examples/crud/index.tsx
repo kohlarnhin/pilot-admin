@@ -47,7 +47,7 @@ export function CrudExamplePage() {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const exportLock = useRef(false);
-  const importTrigger = useRef<HTMLButtonElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const deleteLock = useRef(false);
   const filters = useMemo<ProjectFilters>(() => ({ keyword: queryKeyword || undefined, status: status || undefined }), [queryKeyword, status]);
   const scope = JSON.stringify(filters);
@@ -124,7 +124,7 @@ export function CrudExamplePage() {
   };
   const columns: ColumnsType<ExampleProject> = [
     { title: t('exampleProjects.fields.name'), key: 'name', render: (_, project) => <div className="min-w-0">
-      <Link to={`/examples/crud/${encodeURIComponent(project.id)}`} state={{ listSearch: location.search }} onPointerEnter={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} onFocus={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} className="block truncate rounded text-13 font-medium text-slate-700 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300" title={project.name}>{project.name}</Link>
+      <Link to={`/examples/crud/${encodeURIComponent(project.id)}`} state={{ listSearch: location.search }} onPointerEnter={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} onFocus={() => void preloadRoute(`/examples/crud/${encodeURIComponent(project.id)}`)} className="block truncate rounded text-13 font-medium text-slate-700 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" title={project.name}>{project.name}</Link>
       <div className="flex min-w-0 items-center gap-1"><span className="truncate font-mono text-[11px] text-slate-500" title={project.code}>{project.code}</span><CopyButton text={project.code} /></div>
     </div> },
     { title: t('exampleProjects.fields.owner'), key: 'owner', width: '25%', render: (_, project) => <span className="block truncate text-13 text-slate-600" title={project.owner}>{project.owner}</span> },
@@ -142,13 +142,13 @@ export function CrudExamplePage() {
   return <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
     <PageHeader title={t('menu.crudExample')} description={t('exampleProjects.description')} actions={<>
       <Access permission="example:create"><Button onClick={() => { setEditing(null); setFormOpen(true); }}><Icon icon="plus" size={16} />{t('button.exampleCreate')}</Button></Access>
-      <Access permission="example:create"><Button ref={importTrigger} onClick={() => setImportOpen(true)}><Icon icon="upload" size={16} />{t('exampleProjects.import.title')}</Button></Access>
+      <Access permission="example:create"><Button onClick={() => setImportOpen(true)}><Icon icon="upload" size={16} />{t('exampleProjects.import.title')}</Button></Access>
       <Button loading={exporting} onClick={() => void exportProjects()}><Icon icon="download" size={16} />{t('exampleProjects.actions.export')}</Button>
     </>} />
     {loadError ? <Alert type="error" title={loadError} action={<Button size="xs" onClick={retry}>{t('common.actions.retry')}</Button>} className="mb-4 shrink-0" /> : null}
     <Card className="min-h-0 flex-1">
       <ListToolbar extra={<span aria-live="polite">{t('exampleProjects.total', { count: total ?? '—' })}</span>}>
-        <SearchInput className="w-64" aria-label={t('exampleProjects.filters.search')} placeholder={t('exampleProjects.filters.search')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={search} />
+        <SearchInput ref={searchInput} className="w-64" aria-label={t('exampleProjects.filters.search')} placeholder={t('exampleProjects.filters.search')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={search} />
         <Select className="w-40" aria-label={t('common.columns.status')} placeholder={t('exampleProjects.filters.allStatuses')} value={status} onChange={(value) => setStatus(value as ExampleProjectStatus | '')}
           options={[{ value: '', label: t('exampleProjects.filters.allStatuses') }, ...(['active', 'paused', 'archived'] as const).map((value) => ({ value, label: t(`exampleProjects.status.${value}`) }))]} />
       </ListToolbar>
@@ -158,12 +158,12 @@ export function CrudExamplePage() {
         <Button size="xs" variant="ghost" disabled={deleting} onClick={() => setSelectedIds([])}>{t('exampleProjects.selection.clear')}</Button>
       </div> : null}
       <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-        <FixedTable columns={columns} dataSource={page.records} rowKey="id" loading={page.loading} refreshing={page.refreshing} loadingMore={page.loadingMore} hasNext={page.hasNext && !loadError} onLoadMore={page.loadMore}
+        <FixedTable columns={columns} dataSource={page.records} totalCount={total ?? undefined} rowKey="id" loading={page.loading} refreshing={page.refreshing} loadingMore={page.loadingMore} hasNext={page.hasNext && !loadError} onLoadMore={page.loadMore}
           rowSelection={canDelete ? { selectedRowKeys: selectedIds, onChange: (keys) => setSelectedIds(keys.map(String)), getCheckboxProps: () => ({ disabled: deleting }) } : undefined}
           locale={{ emptyText: <EmptyState icon="package" title={loadError ? t('common.errors.loadData') : t('exampleProjects.empty.title')} description={loadError ? undefined : t('exampleProjects.empty.hint')} /> }} />
       </CardContent>
     </Card>
-    {formOpen ? <ProjectFormModal project={editing} onClose={() => setFormOpen(false)} onSaved={refresh} /> : null}
-    {importOpen ? <ProjectImportModal onClose={() => { setImportOpen(false); window.requestAnimationFrame(() => importTrigger.current?.focus()); }} /> : null}
+    {formOpen ? <ProjectFormModal returnFocusRef={searchInput} project={editing} onClose={() => setFormOpen(false)} onSaved={refresh} /> : null}
+    {importOpen ? <ProjectImportModal onClose={() => setImportOpen(false)} /> : null}
   </div>;
 }

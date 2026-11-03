@@ -63,7 +63,7 @@ export function Composer({ attachment, parsingAttachment, onAttach, onRemoveAtta
         onDragOver={event => { if (!disabled && !sending) event.preventDefault(); }}
         onDrop={event => { event.preventDefault(); if (!disabled && !sending && event.dataTransfer.files[0]) onAttach(event.dataTransfer.files[0]); }}
         onSubmit={event => { event.preventDefault(); if (!sending && !blocked) onSend(); }}
-        className={cn('rounded-xl border border-line bg-slate-50/60 p-2 shadow-2xs transition-colors focus-within:border-slate-400 focus-within:bg-white focus-within:ring-[3px] focus-within:ring-slate-900/10', disabled && 'opacity-60')}
+        className={cn('rounded-xl border border-line bg-slate-50/60 p-2 shadow-2xs transition-colors focus-within:border-focus focus-within:bg-white focus-within:ring-[3px] focus-within:ring-focus/10', disabled && 'opacity-60')}
       >
         <input ref={fileInputRef} type="file"  className="hidden" aria-label={t('assistant.composer.attach')} disabled={disabled || sending || parsingAttachment} onChange={event => { const file = event.target.files?.[0]; if (file) onAttach(file); event.target.value = ''; }} />
         {attachment || parsingAttachment ? <div role="status" className={cn('mb-1 flex items-center gap-2 rounded-lg border border-line bg-white px-2 py-1.5 text-xs text-slate-600', attachment?.error && 'border-red-200 text-red-600')}>
@@ -85,15 +85,15 @@ export function Composer({ attachment, parsingAttachment, onAttach, onRemoveAtta
           onCompositionEnd={() => { composingRef.current = false; }}
           placeholder={disabled ? t('assistant.composer.unavailable') : awaitingChoice ? t('assistant.composer.decision') : t('assistant.composer.placeholder')}
           aria-label={t('assistant.composer.messageLabel')}
-          className="ai-assistant-scroll block min-h-12 w-full resize-none overflow-y-auto bg-transparent px-1.5 py-2 text-13 leading-5 text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+          className="ai-assistant-scroll block min-h-12 w-full resize-none overflow-y-auto bg-transparent px-1.5 py-2 text-13 leading-5 text-slate-800 outline-none placeholder:text-slate-500 disabled:placeholder:text-slate-400 disabled:cursor-not-allowed"
         />
         <div className="mt-1 flex items-center justify-between gap-2 pl-1.5">
           <Tooltip title={t('assistant.composer.attachHint')}>
             <Button type="button" variant="ghost" size="icon-xs" aria-label={t('assistant.composer.attach')} disabled={disabled || sending || parsingAttachment} onClick={() => fileInputRef.current?.click()}><Icon icon="paperclip" size={14} /></Button>
           </Tooltip>
-          <span className="hidden flex-1 text-[11px] text-slate-400 sm:block">{sending ? t('assistant.composer.stopHint') : t('assistant.composer.sendHint')}</span>
+          <span className="hidden flex-1 text-[11px] text-slate-500 sm:block">{sending ? t('assistant.composer.stopHint') : t('assistant.composer.sendHint')}</span>
           <div className="flex shrink-0 items-center gap-2">
-            {draft.length >= MAX_INPUT_LENGTH * 0.8 ? <span className={cn('text-[11px] tabular-nums text-slate-400', draft.length === MAX_INPUT_LENGTH && 'text-amber-600')} aria-live="polite">{draft.length}/{MAX_INPUT_LENGTH}</span> : null}
+            {draft.length >= MAX_INPUT_LENGTH * 0.8 ? <span className={cn('text-[11px] tabular-nums text-slate-500', draft.length === MAX_INPUT_LENGTH && 'text-amber-600')} aria-live="polite">{draft.length}/{MAX_INPUT_LENGTH}</span> : null}
             <Tooltip title={sending ? t('assistant.composer.stop') : t('assistant.composer.send')}>
               <Button
                 type={sending ? 'button' : 'submit'}

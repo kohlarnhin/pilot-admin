@@ -83,9 +83,9 @@ export const SettingsPage: React.FC = () => {
     onOk: async () => { await settingsService.resetDemoData(); window.location.reload(); },
   });
 
-  const settingRow = (title: string, description: string, control: React.ReactNode) => (
+  const settingRow = (title: string, description: string, control: React.ReactNode, htmlFor?: string) => (
     <div className="flex items-center justify-between gap-6 border-b border-line-soft py-5 last:border-0">
-      <div className="min-w-0"><div className="text-13 font-medium text-slate-800">{title}</div><p className="mt-1 text-xs leading-5 text-slate-500">{description}</p></div>{control}
+      <div className="min-w-0"><div className="text-13 font-medium text-slate-800">{htmlFor ? <label htmlFor={htmlFor}>{title}</label> : title}</div><p className="mt-1 text-xs leading-5 text-slate-500">{description}</p></div>{control}
     </div>
   );
 
@@ -99,13 +99,13 @@ export const SettingsPage: React.FC = () => {
             {SECTIONS.map((section) => <button key={section.key} type="button" role="tab" id={`settings-tab-${section.key}`} aria-selected={tab.key === section.key}
               {...getRovingTabProps(tab.key === section.key, () => setParams({ tab: section.key }, { replace: true }), 'vertical')}
               aria-controls={`settings-panel-${section.key}`} onClick={() => setParams({ tab: section.key }, { replace: true })}
-              className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400', tab.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+              className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', tab.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={section.icon} size={18} /></span>
-              <span className="min-w-0"><span className="block text-13 font-medium">{t(section.label)}</span><span className="mt-0.5 block text-[11px] text-slate-500">{t(section.description)}</span></span>
+              <span className="min-w-0"><span className="block text-13 font-medium">{t(section.label)}</span><span className="mt-0.5 block text-[11px] text-slate-600">{t(section.description)}</span></span>
             </button>)}
           </div>
         </Card>
-        <Card role="tabpanel" id={`settings-panel-${tab.key}`} aria-labelledby={`settings-tab-${tab.key}`} tabIndex={0} className="min-h-0 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-300">
+        <Card role="tabpanel" id={`settings-panel-${tab.key}`} aria-labelledby={`settings-tab-${tab.key}`} tabIndex={0} className="min-h-0 min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus">
           <CardHeader className="shrink-0"><div><CardTitle>{t(tab.label)}</CardTitle><CardDescription>{t(tab.description)}</CardDescription></div></CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {!draft ? <div className="space-y-6"><Skeleton className="h-9 w-2/3" /><Skeleton className="h-9" /><Skeleton className="h-24" /></div> : <>
@@ -119,7 +119,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               {tab.key === 'security' && <div>
                 <Alert type="info" title={t('settings.security.title')} description={t('settings.security.policyHint')} className="mb-3" />
-                {settingRow(t('settings.security.minLength'), t('settings.security.lengthHint'), <InputNumber id="password-min-length" min={6} max={32} value={draft.security.passwordMinLength} disabled={!canSave} onChange={(value) => setDraft({ ...draft, security: { ...draft.security, passwordMinLength: value ?? 6 } })} className="w-28" />)}
+                {settingRow(t('settings.security.minLength'), t('settings.security.lengthHint'), <InputNumber id="password-min-length" min={6} max={32} value={draft.security.passwordMinLength} disabled={!canSave} onChange={(value) => setDraft({ ...draft, security: { ...draft.security, passwordMinLength: value ?? 6 } })} className="w-28" />, 'password-min-length')}
                 {settingRow(t('settings.security.requireNumber'), t('settings.security.numberHint'), <Switch aria-label={t('settings.security.requireNumber')} checked={draft.security.requireNumber} disabled={!canSave} onChange={(checked) => setDraft({ ...draft, security: { ...draft.security, requireNumber: checked } })} />)}
                 {settingRow(t('settings.security.requireLetter'), t('settings.security.letterHint'), <Switch aria-label={t('settings.security.requireLetter')} checked={draft.security.requireLetter} disabled={!canSave} onChange={(checked) => setDraft({ ...draft, security: { ...draft.security, requireLetter: checked } })} />)}
               </div>}

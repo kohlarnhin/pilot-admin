@@ -38,7 +38,8 @@ export const RolesPage: React.FC = () => {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [buttons, setButtons] = useState<MenuButton[]>([]);
   const [loadError, setLoadError] = useState('');
-  const [total, setTotal] = useState<number>(0);
+  const [total, setTotal] = useState<number>();
+  const tableFocusRef = useRef<HTMLDivElement>(null);
 
   // Add / Edit Role Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -555,19 +556,20 @@ export const RolesPage: React.FC = () => {
       <PageHeader
         title={t('menu.roles')}
         description={t('roles.description')}
-        meta={t('roles.total', { count: total })}
+        meta={t('roles.total', { count: total ?? 0 })}
         actions={canCreate ?
           <Button onClick={handleOpenAddModal}>
             <Icon icon="plus" size={16} />
             {t('button.roleCreate')}</Button> : undefined
         }
       />
-      <Card className="min-h-0 flex-1">
+      <Card ref={tableFocusRef} tabIndex={-1} className="min-h-0 flex-1 outline-none">
 
         <CardContent className="flex min-h-0 flex-1 flex-col p-0">
           <FixedTable
             columns={columns}
             dataSource={roles}
+            totalCount={total}
             rowKey="id"
             loading={loading}
             refreshing={refreshing}
@@ -589,6 +591,7 @@ export const RolesPage: React.FC = () => {
 
       {/* Add / Edit Role Modal */}
       <Modal
+        returnFocusRef={tableFocusRef}
         title={editingRole ? t('button.roleUpdate') : t('button.roleCreate')}
         icon={editingRole ? 'square-pen' : 'shield-check'}
         description={editingRole ? editingRole.role_code : t('roles.createDialog.description')}
@@ -610,7 +613,7 @@ export const RolesPage: React.FC = () => {
           <Form.Item
             name="role_code"
             label={t('roles.fields.code')}
-            labelExtra={<span className="text-slate-400">{t('common.validation.accountFormat')}</span>}
+            labelExtra={<span className="text-slate-500">{t('common.validation.accountFormat')}</span>}
             rules={[
               { required: true, message: t('roles.validation.codeRequired') },
               { pattern: /^[a-zA-Z0-9_]+$/, message: t('common.validation.accountFormat') },
@@ -627,13 +630,14 @@ export const RolesPage: React.FC = () => {
 
       {/* Permission Assignment Modal */}
       <Modal
+        returnFocusRef={tableFocusRef}
         title={t('roles.permissionDialog.title')}
         icon="shield-check"
         description={
           currentRole ? (
             tNode('roles.permissionDialog.description', {
               role: <span className="font-medium text-slate-700">{currentRole.role_name}</span>,
-              code: <span className="font-mono text-slate-400">({currentRole.role_code})</span>,
+              code: <span className="font-mono text-slate-500">({currentRole.role_code})</span>,
             })
           ) : undefined
         }
@@ -657,12 +661,12 @@ export const RolesPage: React.FC = () => {
               <span className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-slate-900" />
                 {t('roles.permissionDialog.selectedMenus')}<strong className="font-mono text-sm font-semibold text-slate-900">{selectedMenuIds.length}</strong>
-                <span className="font-mono text-slate-300">/{flatMenus.length}</span>
+                <span className="font-mono text-slate-500">/{flatMenus.length}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-emerald-500" />
                 {t('roles.permissionDialog.selectedActions')}<strong className="font-mono text-sm font-semibold text-slate-900">{selectedButtonIds.length}</strong>
-                <span className="font-mono text-slate-300">/{buttons.length}</span>
+                <span className="font-mono text-slate-500">/{buttons.length}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -683,7 +687,7 @@ export const RolesPage: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
               <span className="text-13 font-medium text-slate-800">{t('roles.permissionDialog.pagesTitle')}</span>
-              <span className="text-xs text-slate-400">{t('roles.permissionDialog.pagesHint')}</span>
+              <span className="text-xs text-slate-500">{t('roles.permissionDialog.pagesHint')}</span>
             </div>
 
             <div className="space-y-3">
@@ -722,7 +726,7 @@ export const RolesPage: React.FC = () => {
                                 {moduleMenu.menu_name}
                               </span>
                             </Checkbox>
-                            <span className="text-[11px] font-mono text-slate-300 truncate">
+                            <span className="text-[11px] font-mono text-slate-500 truncate">
                               {moduleMenu.route_path}
                             </span>
                           </div>
@@ -740,7 +744,7 @@ export const RolesPage: React.FC = () => {
                         </div>
 
                         {/* Column Header */}
-                        <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-400">
+                        <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-500">
                           <div className="col-span-3">{t('roles.permissionDialog.pageAccess')}</div>
                           <div className="col-span-7">{t('roles.permissionDialog.actionsTitle')}</div>
                           <div className="col-span-2 text-right">{t('roles.permissionDialog.quickActions')}</div>
@@ -774,7 +778,7 @@ export const RolesPage: React.FC = () => {
                                       {childMenu.menu_name}
                                     </span>
                                   </Checkbox>
-                                  <div className="pl-6 text-[11px] font-mono text-slate-300 truncate" title={childMenu.route_path}>
+                                  <div className="pl-6 text-[11px] font-mono text-slate-500 truncate" title={childMenu.route_path}>
                                     {childMenu.route_path}
                                   </div>
                                 </div>
@@ -806,7 +810,7 @@ export const RolesPage: React.FC = () => {
                                       })}
                                     </div>
                                   ) : (
-                                    <span className="block select-none pt-0.5 text-xs text-slate-400">
+                                    <span className="block select-none pt-0.5 text-xs text-slate-500">
                                       {t('roles.permissionDialog.readOnly')}</span>
                                   )}
                                 </div>
@@ -860,7 +864,7 @@ export const RolesPage: React.FC = () => {
                               {moduleMenu.menu_name}
                             </span>
                           </Checkbox>
-                          <span className="text-[11px] font-mono text-slate-300 truncate">
+                          <span className="text-[11px] font-mono text-slate-500 truncate">
                             {moduleMenu.route_path}
                           </span>
                         </div>
@@ -872,7 +876,7 @@ export const RolesPage: React.FC = () => {
                       </div>
 
                       {/* Column Header */}
-                      <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-400">
+                      <div className="grid grid-cols-12 items-center gap-3 border-b border-line-soft px-4 py-2 text-xs font-medium text-slate-500">
                         <div className="col-span-3">{t('roles.permissionDialog.pageAccess')}</div>
                         <div className="col-span-7">{t('roles.permissionDialog.actionsTitle')}</div>
                         <div className="col-span-2 text-right">{t('roles.permissionDialog.quickActions')}</div>
@@ -890,7 +894,7 @@ export const RolesPage: React.FC = () => {
                               {moduleMenu.menu_name}
                             </span>
                           </Checkbox>
-                          <div className="pl-6 text-[11px] font-mono text-slate-300 truncate" title={moduleMenu.route_path}>
+                          <div className="pl-6 text-[11px] font-mono text-slate-500 truncate" title={moduleMenu.route_path}>
                             {moduleMenu.route_path}
                           </div>
                         </div>
@@ -921,7 +925,7 @@ export const RolesPage: React.FC = () => {
                               })}
                             </div>
                           ) : (
-                            <span className="block select-none pt-0.5 text-xs text-slate-400">
+                            <span className="block select-none pt-0.5 text-xs text-slate-500">
                               {t('roles.permissionDialog.readOnly')}</span>
                           )}
                         </div>

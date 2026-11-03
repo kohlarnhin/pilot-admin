@@ -32,7 +32,7 @@ export function WorkbenchCrumbs({ onBack, backLabel = t('common.actions.back'), 
             type="button"
             onClick={onBack}
             aria-label={backLabel}
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-white text-slate-500 shadow-2xs transition-colors duration-150 hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line bg-white text-slate-500 shadow-2xs transition-colors duration-150 hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             <ArrowLeft className="size-4" />
           </button>

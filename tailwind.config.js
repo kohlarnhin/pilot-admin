@@ -15,6 +15,8 @@ export default {
         '13': ['13px', '20px'],
       },
       colors: {
+        // 统一中性焦点色（slate-500），几何与原有控件保持一致。
+        focus: "#64748B",
         // 小面积品牌信号；交互控件仍使用中性 primary / slate。
         brand: {
           50: "#FFF8EB",

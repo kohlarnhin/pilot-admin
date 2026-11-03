@@ -80,7 +80,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ error, fullScreen = false,
       }
     >
       <details className="mt-8 w-full max-w-xl rounded-xl border border-line bg-white text-left">
-        <summary className="cursor-pointer rounded-xl px-4 py-3 text-xs font-medium text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+        <summary className="cursor-pointer rounded-xl px-4 py-3 text-xs font-medium text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
           {t('errors.details')}</summary>
         <div className="border-t border-line-soft p-4">
           <div className="mb-3 flex justify-end">

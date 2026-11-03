@@ -33,14 +33,14 @@ export function Tabs<K extends string>({ items, value, onChange, className }: Ta
             {...getRovingTabProps(active, () => onChange(item.key))}
             onClick={() => onChange(item.key)}
             className={cn(
-              "relative -mb-px flex h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 text-13 transition-colors duration-150 focus-visible:outline-none focus-visible:text-slate-900",
+              "relative -mb-px flex h-10 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 text-13 transition-colors duration-150 focus-visible:outline-none focus-visible:text-slate-900 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus",
               active ? "border-brand-500 font-medium text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"
             )}
           >
             {item.icon && <span className={cn("flex shrink-0", active ? "text-slate-700" : "text-slate-400")}>{item.icon}</span>}
             {item.label}
             {item.count !== undefined && (
-              <span className={cn("text-xs tabular-nums", active ? "text-slate-500" : "text-slate-400")}>{item.count}</span>
+              <span className={cn("text-xs tabular-nums", active ? "text-slate-500" : "text-slate-500")}>{item.count}</span>
             )}
           </button>
         );
