@@ -25,6 +25,7 @@ import { message } from '@/ui/message';
 import type { ColumnsType } from '@/ui/data-table';
 import { downloadCsv, toCsv } from '@/utils/csv';
 import { ProjectFormModal } from './ProjectFormModal';
+import { ProjectImportModal } from './ProjectImportModal';
 import { preloadRoute } from '@/routes/routeModules';
 
 export function CrudExamplePage() {
@@ -38,6 +39,7 @@ export function CrudExamplePage() {
   const [status, setStatus] = useState<ExampleProjectStatus | ''>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<ExampleProject | null>(null);
   const [loadError, setLoadError] = useState('');
   const [total, setTotal] = useState<number | null>(null);
@@ -45,6 +47,7 @@ export function CrudExamplePage() {
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const exportLock = useRef(false);
+  const importTrigger = useRef<HTMLButtonElement>(null);
   const deleteLock = useRef(false);
   const filters = useMemo<ProjectFilters>(() => ({ keyword: queryKeyword || undefined, status: status || undefined }), [queryKeyword, status]);
   const scope = JSON.stringify(filters);
@@ -139,6 +142,7 @@ export function CrudExamplePage() {
   return <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
     <PageHeader title={t('menu.crudExample')} description={t('exampleProjects.description')} actions={<>
       <Access permission="example:create"><Button onClick={() => { setEditing(null); setFormOpen(true); }}><Icon icon="plus" size={16} />{t('button.exampleCreate')}</Button></Access>
+      <Access permission="example:create"><Button ref={importTrigger} onClick={() => setImportOpen(true)}><Icon icon="upload" size={16} />{t('exampleProjects.import.title')}</Button></Access>
       <Button loading={exporting} onClick={() => void exportProjects()}><Icon icon="download" size={16} />{t('exampleProjects.actions.export')}</Button>
     </>} />
     {loadError ? <Alert type="error" title={loadError} action={<Button size="xs" onClick={retry}>{t('common.actions.retry')}</Button>} className="mb-4 shrink-0" /> : null}
@@ -160,5 +164,6 @@ export function CrudExamplePage() {
       </CardContent>
     </Card>
     {formOpen ? <ProjectFormModal project={editing} onClose={() => setFormOpen(false)} onSaved={refresh} /> : null}
+    {importOpen ? <ProjectImportModal onClose={() => { setImportOpen(false); window.requestAnimationFrame(() => importTrigger.current?.focus()); }} /> : null}
   </div>;
 }

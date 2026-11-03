@@ -61,6 +61,7 @@ export default {
       "create": "Created project “{target}”",
       "update": "Updated project “{target}”",
       "delete": "Deleted project “{target}”",
+      "import": "Projects imported: {count}; failed: {failed}",
       "batchDelete": "Projects deleted: {count}"
     }
   },
@@ -102,6 +103,7 @@ export default {
     "menuCount": "Menu count",
     "buttonCount": "Action count",
     "section": "Settings category",
+    "failed": "Failed",
     "count": "Count",
     "fields": "Changed fields"
   },

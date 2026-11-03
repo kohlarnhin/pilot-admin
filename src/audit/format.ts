@@ -31,6 +31,7 @@ const ACTION_KEYS = {
   'example.update': 'audit.action.example.update',
   'example.delete': 'audit.action.example.delete',
   'example.batch_delete': 'audit.action.example.batchDelete',
+  'example.import': 'audit.action.example.import',
 } as const satisfies Record<AuditAction, MessageKey>;
 const MODULE_KEYS = {
   auth: 'audit.module.auth',
@@ -83,6 +84,7 @@ export function formatAuditAction(entry: Pick<AuditLog, 'action' | 'target_name'
     buttonCount: params.button_count ?? 0,
     section: t(`audit.section.${params.section || 'basic'}`),
     count: params.count ?? 0,
+    failed: params.failed ?? 0,
     fields: formatProfileFields(params.fields),
   });
 }
@@ -94,6 +96,7 @@ export function formatAuditParams(params: AuditDisplayParams = {}): [string, str
   if (params.button_count !== undefined) entries.push([t('audit.params.buttonCount'), String(params.button_count)]);
   if (params.section !== undefined) entries.push([t('audit.params.section'), t(`audit.section.${params.section}`)]);
   if (params.count !== undefined) entries.push([t('audit.params.count'), String(params.count)]);
+  if (params.failed !== undefined) entries.push([t('audit.params.failed'), String(params.failed)]);
   if (params.fields !== undefined) entries.push([t('audit.params.fields'), formatProfileFields(params.fields)]);
   return entries;
 }

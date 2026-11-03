@@ -34,6 +34,7 @@ export const AUDIT_PARAMS = {
   'example.update': [],
   'example.delete': [],
   'example.batch_delete': ['count'],
+  'example.import': ['count', 'failed'],
 } as const satisfies Record<AuditAction, readonly (keyof AuditDisplayParams)[]>;
 
 export const auditModule = (action: AuditAction): AuditModule => action === 'button.rename' ? 'menu' : action.split('.')[0] as AuditModule;
@@ -45,7 +46,7 @@ export function allowAuditParams(action: AuditAction, value: unknown): AuditDisp
     const item = input[key];
     if (key === 'status' && (item === 0 || item === 1)) output.status = item;
     if (key === 'section' && ['basic', 'security', 'notifications'].includes(String(item))) output.section = item as AuditDisplayParams['section'];
-    if ((key === 'count' || key === 'menu_count' || key === 'button_count') && typeof item === 'number' && Number.isSafeInteger(item) && item >= 0) output[key] = item;
+    if ((key === 'count' || key === 'failed' || key === 'menu_count' || key === 'button_count') && typeof item === 'number' && Number.isSafeInteger(item) && item >= 0) output[key] = item;
     if (key === 'fields' && Array.isArray(item)) output.fields = AUDIT_PROFILE_FIELDS.filter((field) => item.includes(field));
   }
   return output;

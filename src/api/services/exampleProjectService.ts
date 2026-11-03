@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 import { ApiRequestError } from '@/api/errors';
-import type { ApiResponse, AuditLog, ExampleProject, ExampleProjectStatus, PageResult } from '@/types';
+import type { ApiResponse, AuditLog, ExampleProject, ExampleProjectStatus, PageResult, ProjectImportReceipt } from '@/types';
 import { getMockDb, updateMockDb } from '@/mock/db';
 import { requireMenu, requirePermission } from '@/mock/access';
 import { recordAudit } from '@/mock/audit';
@@ -8,14 +8,26 @@ import { recordAuditFailure } from '@/mock/auditFailure';
 import { createTraceId, delay, matchesKeyword, pageResult, response } from '@/mock/helpers';
 import { createId } from '@/utils/id';
 import { allowAuditParams } from '@/audit/catalog';
+import { normalizeProjectInput, projectIssueFromCode, PROJECT_CODE_EXISTS, validateProjectInput, type ProjectInput, type ProjectIssue } from './exampleProjectRules';
+import { capImportReceipts } from '@/mock/importReceipts';
 
 // 模板：业务错误码供表单定位字段，不能比较服务端文案。
-export const PROJECT_CODE_EXISTS = 40901;
+export { PROJECT_CODE_EXISTS } from './exampleProjectRules';
+export type { ProjectInput } from './exampleProjectRules';
 export interface ProjectFilters {
   keyword?: string;
   status?: ExampleProjectStatus;
 }
-export type ProjectInput = Pick<ExampleProject, 'name' | 'code' | 'owner' | 'status' | 'description'>;
+export interface ProjectImportRow { rowNo: number; values: ProjectInput }
+export interface ProjectImportResult {
+  rowNo: number;
+  status: 'created' | 'failed';
+  projectId?: string;
+  errorCode?: number;
+  field?: keyof ProjectInput;
+  message: string;
+}
+export type ProjectImportStatus = Pick<ProjectImportResult, 'rowNo' | 'status'>;
 export interface ExampleProjectDetail extends ExampleProject {
   create_by_name: string;
   last_update_by_name: string;
@@ -28,32 +40,26 @@ const filteredProjects = (filters: ProjectFilters) => getMockDb().exampleProject
 ));
 
 function validate(input: ProjectInput, currentId?: string): ProjectInput {
-  if (typeof input.name !== 'string' || !input.name.trim() || input.name.trim().length > 60) {
-    throw new ApiRequestError(t('serverErrors.example.invalidName'), 400);
-  }
-  if (typeof input.code !== 'string' || !/^[A-Z][A-Z0-9-]{1,19}$/.test(input.code)) {
-    throw new ApiRequestError(t('serverErrors.example.invalidCode'), 400);
-  }
-  if (typeof input.owner !== 'string' || !input.owner.trim() || input.owner.trim().length > 40) {
-    throw new ApiRequestError(t('serverErrors.example.invalidOwner'), 400);
-  }
-  if (!['active', 'paused', 'archived'].includes(input.status)) {
-    throw new ApiRequestError(t('serverErrors.example.invalidStatus'), 400);
-  }
-  if (input.description !== undefined && (typeof input.description !== 'string' || input.description.length > 1000)) {
-    throw new ApiRequestError(t('serverErrors.example.invalidDescription'), 400);
-  }
+  const issue = validateProjectInput(input);
+  if (issue) throw new ApiRequestError(t(issue.message), 400, issue.code);
   if (getMockDb().exampleProjects.some((project) => project.code === input.code && project.id !== currentId)) {
     throw new ApiRequestError(t('serverErrors.example.codeExists'), 409, PROJECT_CODE_EXISTS);
   }
-  return {
-    name: input.name.trim(),
-    code: input.code,
-    owner: input.owner.trim(),
-    status: input.status,
-    description: input.description?.trim(),
-  };
+  return normalizeProjectInput(input);
 }
+
+const isImportId = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const importResult = (receipt: ProjectImportReceipt): ProjectImportResult => {
+  const issue = projectIssueFromCode(receipt.error_code);
+  return {
+    rowNo: receipt.row_no,
+    status: receipt.status,
+    ...(receipt.project_id ? { projectId: receipt.project_id } : {}),
+    ...(receipt.error_code ? { errorCode: receipt.error_code } : {}),
+    ...(issue ? { field: issue.field } : {}),
+    message: t(receipt.status === 'created' ? 'exampleProjects.import.created' : issue?.message || 'exampleProjects.import.failed'),
+  };
+};
 
 function findProject(id: string): ExampleProject {
   const project = getMockDb().exampleProjects.find((item) => item.id === id);
@@ -62,6 +68,90 @@ function findProject(id: string): ExampleProject {
 }
 
 export const exampleProjectService = {
+  async importProjects({ importId, rows }: { importId: string; rows: ProjectImportRow[] }): Promise<ApiResponse<ProjectImportResult[]>> {
+    await delay();
+    const actor = requirePermission('example:create');
+    if (!isImportId(importId) || !Array.isArray(rows) || rows.length < 1 || rows.length > 25
+      || rows.some((row) => !Number.isSafeInteger(row.rowNo) || row.rowNo < 1)
+      || new Set(rows.map((row) => row.rowNo)).size !== rows.length) {
+      throw new ApiRequestError(t('serverErrors.example.invalidImport'), 400);
+    }
+    const traceId = createTraceId();
+    const results: ProjectImportResult[] = [];
+    // 整批业务、回执和审计只提交一次；抛错时不另写失败审计，保证零提交。
+    updateMockDb((db) => {
+      const receipts = new Map(db.importReceipts.filter((item) => item.import_id === importId).map((item) => [item.row_no, item]));
+      const codes = new Set(db.exampleProjects.map((project) => project.code));
+      let count = 0;
+      let failed = 0;
+      for (const row of rows) {
+        const previous = receipts.get(row.rowNo);
+        if (previous) {
+          results.push(importResult(previous));
+          continue;
+        }
+        let issue: ProjectIssue | undefined = validateProjectInput(row.values);
+        if (!issue && codes.has(row.values.code)) {
+          issue = {
+            field: 'code',
+            code: PROJECT_CODE_EXISTS,
+            message: 'serverErrors.example.codeExists',
+          };
+        }
+        const date = new Date().toISOString();
+        const receipt: ProjectImportReceipt = {
+          import_id: importId,
+          row_no: row.rowNo,
+          status: issue ? 'failed' : 'created',
+          actor_id: actor.id,
+          create_date: date,
+        };
+        if (issue) {
+          receipt.error_code = issue.code;
+          failed += 1;
+        } else {
+          const project: ExampleProject = {
+            ...normalizeProjectInput(row.values),
+            id: `project-${createId()}`,
+            create_by: actor.id,
+            create_date: date,
+            last_update_by: actor.id,
+            last_update_date: date,
+          };
+          db.exampleProjects.unshift(project);
+          codes.add(project.code);
+          receipt.project_id = project.id;
+          count += 1;
+        }
+        db.importReceipts.unshift(receipt);
+        receipts.set(row.rowNo, receipt);
+        results.push(importResult(receipt));
+      }
+      db.importReceipts = capImportReceipts(db.importReceipts);
+      // 整批都是回执重放时没有新处理的行，不写空审计。
+      if (count + failed > 0) {
+        recordAudit(db, {
+          actor,
+          action: 'example.import',
+          params: {
+            count,
+            failed,
+          },
+          traceId,
+        });
+      }
+    });
+    return response(results, traceId);
+  },
+
+  async getImportStatus(importId: string): Promise<ApiResponse<ProjectImportStatus[]>> {
+    await delay();
+    requirePermission('example:create');
+    if (!isImportId(importId)) throw new ApiRequestError(t('serverErrors.example.invalidImport'), 400);
+    return response(getMockDb().importReceipts.filter((item) => item.import_id === importId)
+      .map((item) => ({ rowNo: item.row_no, status: item.status })));
+  },
+
   async getProject(id: string): Promise<ApiResponse<ExampleProjectDetail>> {
     await delay();
     requireMenu('/examples/crud');

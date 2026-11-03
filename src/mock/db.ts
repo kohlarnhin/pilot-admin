@@ -9,7 +9,7 @@ import { t } from '@/i18n';
 import { triggerDataChangeSideEffects } from '@/api/services/agentEvents';
 
 export const MOCK_DB_RESET_EVENT = 'pilot-admin:mock-db-reset';
-export const MOCK_DB_VERSION = 5;
+export const MOCK_DB_VERSION = 6;
 export const MOCK_DB_KEY = `${MOCK_DB_PREFIX}${MOCK_DB_VERSION}`;
 export const STALE_BUILD_CODE = 40990;
 
@@ -23,7 +23,7 @@ const hasAudit = (value: Record<string, unknown>) => (
 );
 
 // 完整形状校验；迁移后与同步权限目录后都必须通过。
-function isMockDb(value: unknown): value is MockDb {
+export function isMockDb(value: unknown): value is MockDb {
   if (!isRecord(value) || value.version !== MOCK_DB_VERSION || !Array.isArray(value.users) || !Array.isArray(value.roles)
     || !isRecord(value.permissionCatalog) || !isStringArray(value.permissionCatalog.menuIds) || !isStringArray(value.permissionCatalog.buttonIds)
     || !isStringMap(value.menuNames) || !isStringMap(value.buttonNames) || !Array.isArray(value.auditLogs) || !Array.isArray(value.exampleProjects)) {
@@ -90,6 +90,22 @@ function isMockDb(value: unknown): value is MockDb {
     && ['id', 'name', 'code', 'owner'].every((key) => typeof item[key] === 'string')
     && ['active', 'paused', 'archived'].includes(String(item.status))
     && (item.description === undefined || typeof item.description === 'string'))) return false;
+
+  if (!Array.isArray(value.importReceipts) || value.importReceipts.length > 5000) return false;
+  const receiptKeys = new Set<string>();
+  const importIds = new Set<string>();
+  if (!value.importReceipts.every((item) => {
+    if (!isRecord(item) || typeof item.import_id !== 'string' || !Number.isSafeInteger(item.row_no) || Number(item.row_no) < 1
+      || !['created', 'failed'].includes(String(item.status)) || typeof item.actor_id !== 'string' || typeof item.create_date !== 'string'
+      || (item.status === 'created' && (typeof item.project_id !== 'string' || item.error_code !== undefined))
+      || (item.status === 'failed' && (!Number.isSafeInteger(item.error_code) || item.project_id !== undefined))
+      || Object.keys(item).some((key) => !['import_id', 'row_no', 'status', 'project_id', 'error_code', 'actor_id', 'create_date'].includes(key))) return false;
+    const key = `${item.import_id}:${item.row_no}`;
+    if (receiptKeys.has(key)) return false;
+    receiptKeys.add(key);
+    importIds.add(item.import_id);
+    return true;
+  }) || importIds.size > 20) return false;
 
   return value.auditLogs.length <= 1000 && value.auditLogs.every((item) => {
     if (!isRecord(item) || !['id', 'actor_name', 'trace_id', 'create_date'].every((key) => typeof item[key] === 'string')

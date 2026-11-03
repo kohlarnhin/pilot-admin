@@ -61,6 +61,7 @@ export function seedAuditLogs(users: User[], roles: Role[], projects: ExamplePro
       button_count: 2,
       section: (['basic', 'security', 'notifications'] as const)[index % 3],
       count: 3,
+      failed: 1,
       fields: ['user_name', 'email'],
     });
     const failure = index % 7 === 6 || action === 'auth.login_failed';
@@ -70,7 +71,7 @@ export function seedAuditLogs(users: User[], roles: Role[], projects: ExamplePro
       actor_name: actor.user_name,
       module,
       action,
-      ...(action === 'example.batch_delete' ? {} : targets[module]),
+      ...(action === 'example.batch_delete' || action === 'example.import' ? {} : targets[module]),
       ...(Object.keys(params).length ? { params } : {}),
       result: failure ? 'failure' : 'success',
       ...(failure ? { reason: action === 'auth.login_failed' ? 'invalid_credentials' as const : 'forbidden' as const } : {}),

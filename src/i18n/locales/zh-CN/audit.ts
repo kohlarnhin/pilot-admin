@@ -58,6 +58,7 @@ export default {
       "create": "创建了项目「{target}」",
       "update": "更新了项目「{target}」",
       "delete": "删除了项目「{target}」",
+      "import": "导入创建了 {count} 个项目，失败 {failed} 个",
       "batchDelete": "批量删除了 {count} 个项目"
     }
   },
@@ -99,6 +100,7 @@ export default {
     "menuCount": "菜单数",
     "buttonCount": "按钮数",
     "section": "设置分类",
+    "failed": "失败数",
     "count": "数量",
     "fields": "修改字段"
   },

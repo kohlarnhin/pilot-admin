@@ -12,6 +12,7 @@ export default {
     "invalidDescription": "Description must be at most 1000 characters",
     "codeExists": "This project code already exists",
     "notFound": "Project not found or already deleted",
+    "invalidImport": "Invalid import ID or batch (1–25 rows with unique row numbers)",
     "batchLimit": "Select 1–100 projects per batch"
   },
   "audit": { "invalidParams": "Audit parameters do not match the action" },

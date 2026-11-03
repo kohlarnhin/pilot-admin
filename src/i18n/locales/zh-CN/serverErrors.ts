@@ -9,6 +9,7 @@ export default {
     "invalidDescription": "描述不能超过 1000 字",
     "codeExists": "该项目编码已存在",
     "notFound": "项目不存在或已被删除",
+    "invalidImport": "导入标识或批次无效（每批 1–25 行，行号不可重复）",
     "batchLimit": "每次请选择 1–100 个项目"
   },
   "audit": { "invalidParams": "审计参数不符合动作定义" },

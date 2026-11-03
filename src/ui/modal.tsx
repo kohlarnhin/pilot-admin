@@ -183,9 +183,10 @@ export function Modal({
             // 优先聚焦内容区第一个可输入控件，避免关闭按钮获得焦点出现描边
             event.preventDefault();
             const content = event.currentTarget as HTMLElement;
-            const field = content.querySelector<HTMLElement>(
+            const fields = content.querySelectorAll<HTMLElement>(
               '[data-slot="modal-body"] input:not([disabled]):not([type="hidden"]), [data-slot="modal-body"] textarea:not([disabled])'
             );
+            const field = Array.from(fields).find((element) => element.getClientRects().length > 0);
             (field ?? content).focus({ preventScroll: true });
           }}
           onEscapeKeyDown={(event) => {

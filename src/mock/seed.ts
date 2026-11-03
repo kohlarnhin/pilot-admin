@@ -7,6 +7,7 @@ import { collectMenuCatalog, type PermissionCatalog } from './permissionCatalog'
 import type {
   AuditLog,
   ExampleProject,
+  ProjectImportReceipt,
   AgentConfig,
   AgentMessage,
   AgentProfile,
@@ -41,7 +42,7 @@ export interface MockDb {
   agentProfile: AgentProfile;
   agentProfileCustomized?: boolean;
   agentConfigs: (AgentConfig & { apiKey: string })[];
-  version: 5;
+  version: 6;
   permissionCatalog: PermissionCatalog;
   users: MockUser[];
   roles: MockRole[];
@@ -50,6 +51,7 @@ export interface MockDb {
   settings: SystemSettings;
   auditLogs: MockAuditLog[];
   exampleProjects: MockExampleProject[];
+  importReceipts: ProjectImportReceipt[];
 }
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
@@ -192,7 +194,7 @@ export function createSeed(): MockDb {
         last_update_date: audit.last_update_date,
       },
     ],
-    version: 5,
+    version: 6,
     permissionCatalog: { menuIds: [...allMenuIds], buttonIds: [...allButtonIds] },
     users,
     roles,
@@ -216,6 +218,7 @@ export function createSeed(): MockDb {
     },
     auditLogs: seedAuditLogs(users, roles, exampleProjects),
     exampleProjects,
+    importReceipts: [],
   };
 }
 

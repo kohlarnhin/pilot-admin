@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const currentKey = 'pilot-admin:mock-db:v5';
+const currentKey = 'pilot-admin:mock-db:v6';
 
 beforeEach(() => {
   vi.resetModules();
@@ -9,13 +9,13 @@ beforeEach(() => {
 describe('mock DB persistence', () => {
   it.each([
     ['corrupt JSON', '{broken json'],
-    ['old shape', JSON.stringify({ version: 5, users: [], roles: [] })],
+    ['old shape', JSON.stringify({ version: 6, users: [], roles: [] })],
   ])('falls back to a complete seed for %s', async (_name, value) => {
     localStorage.setItem(currentKey, value);
     const { getMockDb, MOCK_DB_KEY } = await import('@/mock/db');
     const db = getMockDb();
     expect(MOCK_DB_KEY).toBe(currentKey);
-    expect(db.version).toBe(5);
+    expect(db.version).toBe(6);
     expect(db.users.find((user) => user.login_name === 'admin')?.role_ids).toEqual(['role-admin']);
     expect(db.exampleProjects).toHaveLength(80);
     expect(db.agentSessions).toHaveLength(25);
@@ -30,7 +30,7 @@ describe('mock DB persistence', () => {
     localStorage.setItem(currentKey, JSON.stringify({ ...stored, version: 4 }));
     vi.resetModules();
     const { getMockDb } = await import('@/mock/db');
-    expect(getMockDb().version).toBe(5);
+    expect(getMockDb().version).toBe(6);
     expect(getMockDb().users[0].user_name).not.toBe('Wrong-version data');
     expect(JSON.parse(localStorage.getItem(currentKey)!)).toEqual(getMockDb());
   });
@@ -54,19 +54,19 @@ describe('mock DB persistence', () => {
     localStorage.setItem(currentKey, JSON.stringify(createSeed()));
     localStorage.setItem('pilot-admin:mock-db:v3', 'old-3');
     localStorage.setItem('pilot-admin:mock-db:v4', 'old-4');
-    localStorage.setItem('pilot-admin:mock-db:v5:backup', 'backup');
+    localStorage.setItem('pilot-admin:mock-db:v6:backup', 'backup');
     localStorage.setItem('other-project:data', 'unrelated');
     expect(Object.keys(localStorage)).toContain('pilot-admin:mock-db:v4');
     await import('@/mock/db');
     expect(localStorage.getItem('pilot-admin:mock-db:v3')).toBeNull();
     expect(localStorage.getItem('pilot-admin:mock-db:v4')).toBeNull();
-    expect(localStorage.getItem('pilot-admin:mock-db:v5:backup')).toBe('backup');
+    expect(localStorage.getItem('pilot-admin:mock-db:v6:backup')).toBe('backup');
     expect(localStorage.getItem('other-project:data')).toBe('unrelated');
   });
 
   it('preserves every version and blocks writes when a future version is present at startup', async () => {
     localStorage.setItem('pilot-admin:mock-db:v4', 'old');
-    localStorage.setItem('pilot-admin:mock-db:v6', 'future');
+    localStorage.setItem('pilot-admin:mock-db:v7', 'future');
     const { getMockDb, updateMockDb, resetMockDb, STALE_BUILD_CODE } = await import('@/mock/db');
     const before = getMockDb();
     const update = vi.fn();
@@ -76,14 +76,14 @@ describe('mock DB persistence', () => {
     expect(getMockDb()).toBe(before);
     expect(localStorage.getItem(currentKey)).toBeNull();
     expect(localStorage.getItem('pilot-admin:mock-db:v4')).toBe('old');
-    expect(localStorage.getItem('pilot-admin:mock-db:v6')).toBe('future');
+    expect(localStorage.getItem('pilot-admin:mock-db:v7')).toBe('future');
   });
 
   it('detects same-tab future writes and remains stale until reload', async () => {
     const { updateMockDb, resetMockDb, STALE_BUILD_CODE } = await import('@/mock/db');
-    localStorage.setItem('pilot-admin:mock-db:v6', 'future');
+    localStorage.setItem('pilot-admin:mock-db:v7', 'future');
     expect(() => updateMockDb(() => {})).toThrow(expect.objectContaining({ code: STALE_BUILD_CODE }));
-    localStorage.removeItem('pilot-admin:mock-db:v6');
+    localStorage.removeItem('pilot-admin:mock-db:v7');
     expect(() => resetMockDb()).toThrow(expect.objectContaining({ code: STALE_BUILD_CODE }));
     vi.resetModules();
     const reloaded = await import('@/mock/db');
@@ -96,7 +96,7 @@ describe('mock DB persistence', () => {
     const event = (key: string) => Object.assign(new Event('storage'), { key });
     window.dispatchEvent(event('pilot-admin:mock-db:v4'));
     expect(getMockDb()).toBe(before);
-    window.dispatchEvent(event('pilot-admin:mock-db:v6'));
+    window.dispatchEvent(event('pilot-admin:mock-db:v7'));
     expect(() => updateMockDb(() => {})).toThrow(expect.objectContaining({ code: STALE_BUILD_CODE }));
   });
 

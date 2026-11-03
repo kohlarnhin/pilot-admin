@@ -96,7 +96,7 @@ src/
     sse.ts            真实后端流式事件解析器（默认不用）
     services/         唯一数据接缝；当前调用 mock
   mock/
-    seed.ts db.ts     确定性数据、v5 存储与重置
+    seed.ts db.ts     确定性数据、v6 存储与重置
     agent/            通用流式引擎、会话与 tools 工具注册表
   hooks/ store/       无限列表、虚拟化、认证、应用和助手状态
   pages/              登录、概览、系统页面、组件示例与错误页
@@ -171,9 +171,9 @@ Mock DB 的权限目录递归覆盖所有层级。种子只有管理员角色设
 
 迁移函数必须纯且确定：不读取时钟、随机数、语言或存储，不调用 `createId()`、`Date.now()`、`t()`；新增 ID、日期和文本从旧数据或固定锚点派生。`src/mock/dbStorage.ts` 注入 Storage、迁移、校验、种子与目录同步：优先读有效当前键；否则取支持范围内最高的旧键，依次迁移，完整校验，补齐权限目录并再次校验，再写当前键。用旧版本 fixture 测试账号、角色、会话、项目和审计均保留，并测试迁移失败、写入失败、并发迁移和未来版本键。
 
-迁移或首次回退的这一轮保留源键；仅下次启动已存在有效当前键时才清理低版本键。迁移异常、缺少迁移或结果无效会回退种子，源键在本轮不动；写入失败保留迁移后的内存数据。当前版本仍为 v5，迁移起点为 v5，映射暂为空；更早或损坏的数据仍回退种子。
+迁移或首次回退的这一轮保留源键；仅下次启动已存在有效当前键时才清理低版本键。迁移异常、缺少迁移或结果无效会回退种子，源键在本轮不动；写入失败保留迁移后的内存数据。当前版本为 v6，迁移起点为 v5；首个 v5 → v6 迁移保留全部集合，添加空的 `importReceipts`。更早或损坏的数据仍回退种子。
 
-只要检测到更高版本键，旧页面仍可读取自己的数据，但不再写入或重置，返回业务码 `40990` 和「数据已由新版本页面升级，请刷新本页」。移除测试用未来键后也需刷新才能继续。已有、未包含此保护的旧部署无法被新页面约束；升级期间应关闭或刷新这些旧标签页。未来版本键始终不删除。
+只要检测到更高版本键，旧页面仍可读取自己的数据，但不再写入或重置，返回业务码 `40990` 和「数据已由新版本页面升级，请刷新本页」。移除测试用未来键后也需刷新才能继续。已有、未包含此保护的旧部署无法被新页面约束；升级期间应关闭或刷新这些旧标签页。未来版本键始终不删除。M9a（DB v5）标签页检测到 v6 后进入只读；刷新即可使用新构建，不能从旧页面继续写入新审计动作。
 
 `createUser()` 统一生成默认 10 位随机密码并返回 `initial_password`。若密码策略要求更长，则使用策略长度。页面只在创建成功弹窗中展示和复制；查询接口不返回密码。助手新增用户使用同一接口，并在本次创建回复中显示账号和初始密码；该回复随会话保留。
 
@@ -270,7 +270,7 @@ export const myTool: AgentTool = {
 
 系统设置 → 演示数据 →「重置演示数据」恢复所有种子，包含 150 用户、3 角色、模型资料和 25 个管理员历史会话，清理助手草稿/对话缓存并重新载入。也可从 service 调用 `settingsService.resetDemoData()`，内部使用 `resetMockDb()`。
 
-DB key 为 `pilot-admin:mock-db:v5`，迁移起点为 v5；v4 及更早数据不在迁移范围，仍回退种子。源键保留及旧标签页写入保护见[迁移说明](#添加-service-与-mock)。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
+DB key 为 `pilot-admin:mock-db:v6`，迁移起点为 v5；v4 及更早数据不在迁移范围，仍回退种子。源键保留及旧标签页写入保护见[迁移说明](#添加-service-与-mock)。每个用户最多保留 60 个会话、每会话 200 条消息；每条正文最多 16000 字符，本地最近对话缓存最多 100 条。附件不缓存正文。浏览器完成通知按用户选择启用，仅对实时完成事件触发；历史恢复不会重复通知。
 
 ## 环境变量
 
@@ -349,7 +349,7 @@ Release 工作流会校验标签必须等于 `v` 加包版本，执行工程检�
 - 默认菜单与按钮名称在 `mockMenus()` 请求时按 `menu.<camelCaseId>` / `button.<camelCaseId>` 本地化（如 `user-reset-password` 对应 `button.userResetPassword`，权限 ID 不变），重命名覆盖在两种语言下都保留；HTTP 与 SSE 传 `Accept-Language`。概览待办返回稳定 code，页面在渲染时翻译；真实后端可按同一边界返回代码或已本地化错误。
 - 切换会更新 html lang / dayjs、清查询缓存、刷新已登录账号的 me，并通过 `useDataChanged` 发出 `locale` 原因。无限列表将 locale 纳入作用域，丢弃旧语言响应，刷新已加载范围并尽量保留滚动位置。路由、助手面板、草稿和已存会话不变；已打开的命令式弹窗 / toast 保留打开时语言。
 - 外壳、管理页面、助手 / Agent 界面、全部 Mock 工具及演示种子已支持双语。服务错误在返回时使用当前语言，审计动作存为稳定代码，在渲染时翻译；用户输入、已存用户/角色名称和会话不随切换重译。
-- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和示例项目；ID、登录名、邮箱及确定性顺序保持一致，当前为 DB v5。助手资料及 25 个历史会话也按种子创建时的语言生成，长会话仍有 60 条消息。
+- 种子文案以单独的 `seedText` 导出保存在 `src/i18n/locales/<locale>/seed.ts`，共享 `src/i18n/seed.ts` 的 `SeedText` 接口，不加入 `t()` 消息树，支持姓名数组。首次创建或重置演示数据时按当前语言生成角色、用户姓名、站点介绍、模型显示名称和示例项目；ID、登录名、邮箱及确定性顺序保持一致，当前为 DB v6。助手资料及 25 个历史会话也按种子创建时的语言生成，长会话仍有 60 条消息。
 - 工具回复、choices、计划与操作卡在回复生成时采用当前语言并存入消息；切换不会重译旧消息、旧卡片标签或计划标题，choice ID、task context、executionId 和状态始终是代码。默认助手资料在读取时随当前语言变化；显式保存后通过 Mock 内部的可选 `agentProfileCustomized` 标记保留为数据（含保存后与默认文字相同的资料），未标记的默认资料仅在精确匹配已知种子时视为未自定义。
 - 在角色权限弹窗切换语言时，重新读取菜单/按钮名称并保留当前勾选；菜单重命名保留输入中的名称，系统设置保留未保存字段。已经持久化的自定义名称在两种语言下都优先于默认名称。
 
@@ -385,22 +385,30 @@ return response(undefined, traceId);
 
 系统管理 → 操作日志支持关键词、模块、结果组合筛选、无限追加、虚拟化、详情抽屉和追踪 ID 复制。关键词匹配操作人、目标、操作代码和追踪 ID。列表/计数要求该菜单，导出额外要求 `audit-log:export`；内置管理员具备，操作员和访客不具备。概览只拿最近 5 条成功记录的受限投影，排除 `auth.login` 和 `auth.logout` 会话事件，不包含操作人/目标 ID、追踪 ID、失败原因或任意原始参数；每行以操作句子为主行、操作人与时间为元信息，只有可访问日志页的账号看到「查看全部」。
 
-DB v5 一次性引入 `auditLogs`（最新在前，上限 1000）与 `exampleProjects`（80 条确定性种子），移除 `activities`。首次升级会重置演示数据一次；模板使用同一 v5 结构。初始审计记录为固定锚点前 30 天的 120 条历史示例。
+DB v5 一次性引入 `auditLogs`（最新在前，上限 1000）与 `exampleProjects`（80 条确定性种子），移除 `activities`。v4 及更早数据首次升级会重置演示数据一次；当前模板使用 v6，并从 v5 保留数据迁移。初始审计记录为固定锚点前 30 天的 120 条历史示例。
 
 CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转义、CRLF 行尾。以 `=`、`+`、`-`、`@`、Tab、CR 开头（含前导空白）的单元格加 `'` 前缀，供电子表格按文本打开；该安全转换也会作用于显示名。导出当前筛选结果，服务最多返回 5000 条（当前存储上限 1000）。
 
 ## 从模板开始一个新模块
 
-示例 → 标准列表页（`/examples/crud`）是完整的 CRUD 参考：分页与虚拟化、组合筛选、内联校验、单条/批量删除和安全 CSV。导出有意只要求页面访问，访客也可导出；需要独立导出权限时参考操作日志页。管理员自动取得新菜单/按钮；已有本地 v5 数据不改写其他角色的授权，运营（新增/编辑）与访客（只读）的默认菜单需在「重置演示数据」后出现。模板沿用 DB v5，不重置已有数据。
+示例 → 标准列表页（`/examples/crud`）是完整的 CRUD 参考：分页与虚拟化、组合筛选、内联校验、单条/批量删除和安全 CSV。导出有意只要求页面访问，访客也可导出；需要独立导出权限时参考操作日志页。管理员自动取得新菜单/按钮；已有本地 v5 数据不改写其他角色的授权，运营（新增/编辑）与访客（只读）的默认菜单需在「重置演示数据」后出现。模板使用 DB v6，v5 数据自动迁移，不重置已有数据。
 
 点击项目名称进入 `/examples/crud/:id`：元数据、可复制编码、最多 1000 字的描述和生命周期历史分别展示。描述与分页虚拟历史独立滚动，短视口改为整列滚动；运营可编辑、管理员可删除，访客只读。历史只返回该记录的安全展示投影，不要求操作日志菜单权限。已有记录的正文不变，前 5 个多段示例只用于首次创建或重置的数据。
+
+CSV 导入是可删除的参考流程：`ProjectImportModal.tsx` 负责本地文件状态、双栏预览与结果；`projectImport.ts` 负责表头映射、预检和每批 25 行的顺序调度；`src/utils/csvImport.ts` 提供纯解码/解析；`exampleProjectRules.ts` 共享字段规则；service 的 `importProjects` / `getImportStatus` 与 `src/mock/importReceipts.ts` 提供原子提交、对账和回执裁剪。fork 不需要导入时，可移除前两个文件及列表入口，再移除对应服务方法、规则外的导入类型/回执集合/审计与文案；普通 CRUD 仍可单独使用。规则模块也供普通新增/编辑服务使用，应保留。
+
+导入只接受逗号 CSV，最多 1 MB / 500 条非空逻辑记录（引号内换行不增加条数）。严格 UTF-8（可带 BOM）失败后尝试 GB18030，并显示编码；可重新解码相同字节。支持首行 `sep=,`；重复列、未知列、缺少 `name,code,owner,status` 为文件错误，`description` 可选，列顺序不限。模板和失败行下载使用稳定机器列名及 `active/paused/archived`；失败行额外包含 `reason`，须修正原因并移除该列后再导入。普通导出保留本地化列名/状态，不能作为导入模板。
+
+预览区虚拟化，原文只显示前 200 行或 20,000 字符。无效行在本地跳过；服务再次校验有效行与 DB 编码冲突。每次调用只写一次 DB，项目、逐行回执和 `example.import` 审计原子提交；审计 `{ count, failed }` 仅统计本次新创建/拒绝的行，重放回执不重复计数；整批都是重放时不写审计。续传先查询同一 `importId` 的回执，再发送未处理行；权限和 stale-build 错误终止，连接/存储错误保留结果并显式继续。回执只存 ID、行号、状态、错误码、操作者与日期，保留最近 20 个导入且最多 5000 行；幂等恢复限于回执仍保留的期间。文件字节、原文与解析行只在弹窗内存中，关闭后释放，不进入助手、请求层或持久化预览。
+
+所有下载继续通过 `toCsv` 防公式执行。导入不执行公式，也不去掉用户已有的前导单引号；因此公式前缀值经过下载添加安全单引号后，不保证完全原样往返。落库沿用普通 CRUD 的名称/负责人/描述首尾空白规范化。
 
 按下面顺序复制，避免只复制页面却遗漏服务、类型或权限。以 `Widget` 为例，统一替换 `ExampleProject` → `Widget`、`ExampleProjectStatus` → `WidgetStatus`、`exampleProjects` → `widgets`、`exampleProjectService` → `widgetService`、`ProjectInput/ProjectFilters` → `WidgetInput/WidgetFilters`、`PROJECT_CODE_EXISTS` → `WIDGET_CODE_EXISTS`、`example:*` → `widget:*`、`example.*` → `widget.*`、`/examples/crud` → `/examples/widgets`；菜单 ID `crud-example` → `widgets`、按钮 ID `example-*` → `widget-*`，字典键相应改为 `menu.widgets` / `button.widgetCreate|Update|Delete`。
 
 1. **类型**：在 `src/types/index.ts` 复制 `ExampleProject` / `ExampleProjectStatus`，保留 `AuditFields`；按实际字段修改。
 2. **Mock 集合**：在 `src/mock/seed.ts` 复制别名 `MockExampleProject`、`MockDb.exampleProjects` 与 80 行种子生成/返回代码；在两种语言的 `seed.ts` 及 `src/i18n/seed.ts` 增加对应种子文本。在 `src/mock/db.ts` 的 `isMockDb` 加入集合数组和逐行形状校验。新增持久化集合/形状时同步提升 `MOCK_DB_VERSION` 与 `MockDb.version`/`createSeed().version`，按[迁移说明](#添加-service-与-mock)添加纯迁移和旧数据保留测试；使用现有模板集合无需提升版本。
 3. **审计目录**：在 `src/types/index.ts` 扩展 `AuditModule`、`AuditParamsMap`、`AuditLog.target_type`；在 `src/audit/catalog.ts` 增加模块与动作白名单（批量删除仅 `{ count }`），在 `src/mock/db.ts` 扩展目标类型校验，在 `src/audit/format.ts` 增加动作/模块/目标映射。两种语言 `audit.ts` 增加句子、模块及目标名称。在 `src/mock/auditSeed.ts` 的模块目标映射中增加新模块目标（该表覆盖所有 `AuditModule`）；若不需要历史演示记录，在动作筛选中排除新模块。不要把原始输入或错误放入日志。
-4. **服务**：复制 `src/api/services/exampleProjectService.ts` 为 `widgetService.ts`，替换集合、类型、路由、权限、审计代码和业务错误常量。两种语言 `serverErrors.ts` 增加 `widget` 分组；保留服务校验、数字重复码、同 draft 审计、失败不覆盖原错，以及批量先验证后一次提交的逻辑。
+4. **服务**：复制 `src/api/services/exampleProjectService.ts` 与 `exampleProjectRules.ts` 为对应 widget 文件，替换集合、类型、路由、权限、审计代码和业务错误常量。两种语言 `serverErrors.ts` 增加 `widget` 分组；保留服务校验、数字重复码、同 draft 审计、失败不覆盖原错，以及批量先验证后一次提交的逻辑。
 5. **页面**：复制整个 `src/pages/examples/crud/` 为 `src/pages/examples/widgets/`，重命名 `ProjectFormModal`、`ProjectDetailPage`、`ProjectHistory` 和 `CrudExamplePage` 的文件、导出与 import，按上面的映射替换类型/服务/权限/字典及列表/详情路径；定制列、筛选、表单规则与 CSV 字段。详情的 `accessPath` 指向新列表，历史使用服务投影而非直接读取日志。`// 模板：…` 标出了需要按产品取舍的位置。页面保持只调用服务。
 6. **文案**：复制两种语言的 `exampleProjects.ts` 为 `widgets.ts`，英文的 source import 也要改名，并在两种语言 `index.ts` 注册；在 `menu.ts` / `button.ts` 添加菜单和按钮键。保留语义 camelCase 命名及占位符一致性。
 7. **注册与授权**：在 `src/routes/routeModules.ts` 增加一个 `definePage`（新的路径、文件与导出名）；在 `src/config/menus.ts` 增加一个菜单项及 create/update/delete 按钮。图标从现有 registry 选择。Mock 的 `auto_grant` 角色会自动取得新权限；如需其他默认角色，在 `src/mock/seed.ts` 配置其菜单/按钮 ID，并重置演示数据验证。真实后端决定实际授权。
@@ -415,7 +423,7 @@ CSV 使用 `src/utils/csv.ts`：UTF-8 BOM、全部字段加引号、双引号转
 - **偏好**：语言与账号菜单使用相同的即时切换机制；有 `agent:use` 时可设置 Agent 入口，与偏好弹窗共用提交逻辑。
 - **我的权限**：只读展示当前有效角色、可访问页面树和按模块分组的操作名称/代码，包含不在侧栏显示的助手权限。访客显示无操作权限状态。
 
-资料保存与 `profile.update` 审计在同一 draft 中提交，`params.fields` 只记录实际改变的 `user_name` / `email` 字段名；无变化时不写 DB、不记审计。沿用 DB v5，无需重置演示数据。
+资料保存与 `profile.update` 审计在同一 draft 中提交，`params.fields` 只记录实际改变的 `user_name` / `email` 字段名；无变化时不写 DB、不记审计。资料字段沿用原有结构，无需重置演示数据。
 
 ## 脚本与验证
 

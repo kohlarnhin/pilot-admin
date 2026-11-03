@@ -1,0 +1,361 @@
+{
+  "agentSessions": [
+    {
+      "id": "demo-session-1",
+      "userId": "u-0001",
+      "title": "账号检查记录 · 长会话示例",
+      "message_count": 60,
+      "context_character_count": 1311,
+      "create_date": "2026-10-29T08:00:00.000Z",
+      "last_message_date": "2026-10-29T08:00:00.000Z",
+      "messages": [
+        {
+          "id": "seed-1-message-1",
+          "sequence_no": 1,
+          "role": "user",
+          "content": "第 1 次账号检查",
+          "data_changed": false,
+          "create_date": "2026-10-29T08:00:00.000Z"
+        },
+        {
+          "id": "seed-1-message-2",
+          "sequence_no": 2,
+          "role": "assistant",
+          "content": "检查已完成，账号状态正常。\n\n- 保持最小权限\n- 定期核对账号状态",
+          "data_changed": false,
+          "create_date": "2026-10-29T08:00:00.000Z"
+        }
+      ]
+    }
+  ],
+  "agentProfile": {
+    "name": "领航助手",
+    "greeting": "你好，我是你的工作助手。可以帮你查看概况、查找用户、维护账号和执行巡检。",
+    "suggestions": [
+      {
+        "label": "概况统计",
+        "prompt": "概况统计"
+      },
+      {
+        "label": "查找用户",
+        "prompt": "查找用户 陈"
+      },
+      {
+        "label": "新增用户",
+        "prompt": "新增用户 林沐晨"
+      },
+      {
+        "label": "账号巡检",
+        "prompt": "账号巡检"
+      }
+    ]
+  },
+  "agentConfigs": [
+    {
+      "id": "model-demo",
+      "provider": "OpenAI 兼容",
+      "base_url": "https://api.example.com/v1",
+      "model_code": "pilot-demo",
+      "model_name": "演示模型",
+      "apiKey": "demo-key",
+      "api_key_masked": "••••••••",
+      "status": 1,
+      "create_date": "2026-01-01T08:00:00+08:00",
+      "last_update_date": "2026-01-01T08:00:00+08:00"
+    }
+  ],
+  "version": 5,
+  "permissionCatalog": {
+    "menuIds": [
+      "dashboard",
+      "system",
+      "users",
+      "roles",
+      "menus",
+      "audit-logs",
+      "assistant",
+      "settings",
+      "ai-permissions",
+      "examples",
+      "components",
+      "crud-example"
+    ],
+    "buttonIds": [
+      "user-create",
+      "user-update",
+      "user-delete",
+      "user-reset-password",
+      "role-create",
+      "role-update",
+      "role-delete",
+      "role-permissions",
+      "menu-update",
+      "audit-log-export",
+      "settings-update",
+      "settings-reset",
+      "agent-use",
+      "agent-config-view",
+      "agent-config-update",
+      "example-create",
+      "example-update",
+      "example-delete"
+    ]
+  },
+  "users": [
+    {
+      "create_by": "system",
+      "create_date": "2026-01-02T01:00:00.000Z",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-02T01:00:00.000Z",
+      "id": "u-0001",
+      "login_name": "admin",
+      "user_name": "林知行",
+      "email": "admin@example.com",
+      "password": "admin123",
+      "role_ids": [
+        "role-admin"
+      ],
+      "status": 1,
+      "preferences": {
+        "agent_mode_entry": "ask"
+      }
+    },
+    {
+      "create_by": "system",
+      "create_date": "2026-01-03T02:01:00.000Z",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-03T02:01:00.000Z",
+      "id": "u-0002",
+      "login_name": "operator",
+      "user_name": "陈思远",
+      "email": "operator@example.com",
+      "password": "operator123",
+      "role_ids": [
+        "role-operator"
+      ],
+      "status": 1,
+      "preferences": {
+        "agent_mode_entry": "ask"
+      }
+    },
+    {
+      "create_by": "system",
+      "create_date": "2026-01-04T03:02:00.000Z",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-04T03:02:00.000Z",
+      "id": "u-0003",
+      "login_name": "viewer",
+      "user_name": "许清和",
+      "email": "viewer@example.com",
+      "password": "viewer123",
+      "role_ids": [
+        "role-viewer"
+      ],
+      "status": 1,
+      "preferences": {
+        "agent_mode_entry": "ask"
+      }
+    },
+    {
+      "create_by": "system",
+      "create_date": "2026-01-05T04:03:00.000Z",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-05T04:03:00.000Z",
+      "id": "u-0004",
+      "login_name": "user_004",
+      "user_name": "刘明轩",
+      "email": "user004@example.com",
+      "password": "pilot123",
+      "role_ids": [
+        "role-operator"
+      ],
+      "status": 1,
+      "preferences": {
+        "agent_mode_entry": "ask"
+      }
+    }
+  ],
+  "roles": [
+    {
+      "create_by": "system",
+      "create_date": "2026-01-01T08:00:00+08:00",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-01T08:00:00+08:00",
+      "id": "role-admin",
+      "role_name": "超级管理员",
+      "role_code": "ROLE_ADMIN",
+      "description": "管理所有菜单、账号与系统配置",
+      "status": 1,
+      "menuIds": [
+        "dashboard",
+        "system",
+        "users",
+        "roles",
+        "menus",
+        "audit-logs",
+        "assistant",
+        "settings",
+        "ai-permissions",
+        "examples",
+        "components",
+        "crud-example"
+      ],
+      "buttonIds": [
+        "user-create",
+        "user-update",
+        "user-delete",
+        "user-reset-password",
+        "role-create",
+        "role-update",
+        "role-delete",
+        "role-permissions",
+        "menu-update",
+        "audit-log-export",
+        "settings-update",
+        "settings-reset",
+        "agent-use",
+        "agent-config-view",
+        "agent-config-update",
+        "example-create",
+        "example-update",
+        "example-delete"
+      ],
+      "auto_grant": true,
+      "menu_count": 12,
+      "button_count": 18
+    },
+    {
+      "create_by": "system",
+      "create_date": "2026-01-01T08:00:00+08:00",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-01T08:00:00+08:00",
+      "id": "role-operator",
+      "role_name": "运营人员",
+      "role_code": "ROLE_OPERATOR",
+      "description": "查看概览，维护用户信息与状态",
+      "status": 1,
+      "menuIds": [
+        "dashboard",
+        "system",
+        "users",
+        "examples",
+        "components",
+        "crud-example",
+        "ai-permissions"
+      ],
+      "buttonIds": [
+        "user-update",
+        "agent-use",
+        "example-create",
+        "example-update"
+      ],
+      "auto_grant": false,
+      "menu_count": 7,
+      "button_count": 4
+    },
+    {
+      "create_by": "system",
+      "create_date": "2026-01-01T08:00:00+08:00",
+      "last_update_by": "system",
+      "last_update_date": "2026-01-01T08:00:00+08:00",
+      "id": "role-viewer",
+      "role_name": "访客",
+      "role_code": "ROLE_VIEWER",
+      "description": "只读浏览概览与组件示例",
+      "status": 1,
+      "menuIds": [
+        "dashboard",
+        "examples",
+        "components",
+        "crud-example"
+      ],
+      "buttonIds": [],
+      "auto_grant": false,
+      "menu_count": 4,
+      "button_count": 0
+    }
+  ],
+  "menuNames": {},
+  "buttonNames": {},
+  "settings": {
+    "basic": {
+      "siteName": "Pilot Admin",
+      "description": "通用管理端，让每个新项目轻装启航"
+    },
+    "security": {
+      "passwordMinLength": 6,
+      "requireNumber": true,
+      "requireLetter": true
+    },
+    "notifications": {
+      "systemNotice": true,
+      "accountChange": true,
+      "weeklySummary": false
+    }
+  },
+  "auditLogs": [
+    {
+      "id": "2d56a7a9-3039-4806-a740-188c24e86c78",
+      "actor_id": "u-0001",
+      "actor_name": "林知行",
+      "module": "auth",
+      "action": "auth.login",
+      "result": "success",
+      "trace_id": "mock-66d46acf-248c-47cb-912c-392af23a2f0b",
+      "create_date": "2026-11-02T10:16:01.570Z"
+    },
+    {
+      "id": "audit-seed-001",
+      "actor_id": "u-0001",
+      "actor_name": "林知行",
+      "module": "auth",
+      "action": "auth.login",
+      "target_type": "user",
+      "target_id": "u-0004",
+      "target_name": "刘明轩",
+      "result": "success",
+      "trace_id": "mock-seed-1",
+      "create_date": "2026-10-27T19:00:00.000Z"
+    },
+    {
+      "id": "audit-seed-002",
+      "actor_id": "u-0002",
+      "actor_name": "陈思远",
+      "module": "auth",
+      "action": "auth.login_failed",
+      "target_type": "user",
+      "target_id": "u-0005",
+      "target_name": "陈若宁",
+      "result": "failure",
+      "reason": "invalid_credentials",
+      "trace_id": "mock-seed-2",
+      "create_date": "2026-10-27T13:00:00.000Z"
+    }
+  ],
+  "exampleProjects": [
+    {
+      "id": "project-001",
+      "name": "示例项目 1",
+      "code": "PRJ-001",
+      "owner": "林知行",
+      "status": "active",
+      "description": "这个示例项目展示从列表进入详情、查看元数据和维护项目资料的完整流程。名称、编码、负责人和状态仍通过同一组服务读写，适合在 fork 后替换成自己的业务实体。\n\n描述可以保存多段文字，换行会原样保留。这里可以记录目标、交付范围、协作约定及需要后续确认的问题。较长的内容在自己的区域内滚动，不会推动页面标题或底部历史。文本保持可选择，编码也可以直接复制。\n\n生命周期按时间倒序展示这个项目的操作记录。编辑时只保存必要的审计信息，不将描述正文或原始表单写进历史。管理员、操作员和只读账号看到的操作入口不同，服务在每次写入时仍会重新校验权限。\n\n调整浏览器窗口高度可以验证详情布局：常规高度下，描述和历史独立滚动；较短窗口下，整列成为滚动区域，元数据和历史依然可以完整访问。",
+      "create_by": "u-0001",
+      "create_date": "2026-10-25T01:00:00.000Z",
+      "last_update_by": "u-0001",
+      "last_update_date": "2026-10-28T01:00:00.000Z"
+    },
+    {
+      "id": "project-002",
+      "name": "工作空间 2",
+      "code": "PRJ-002",
+      "owner": "赵书瑶",
+      "status": "paused",
+      "description": "这个示例项目展示从列表进入详情、查看元数据和维护项目资料的完整流程。名称、编码、负责人和状态仍通过同一组服务读写，适合在 fork 后替换成自己的业务实体。\n\n描述可以保存多段文字，换行会原样保留。这里可以记录目标、交付范围、协作约定及需要后续确认的问题。较长的内容在自己的区域内滚动，不会推动页面标题或底部历史。文本保持可选择，编码也可以直接复制。\n\n生命周期按时间倒序展示这个项目的操作记录。编辑时只保存必要的审计信息，不将描述正文或原始表单写进历史。管理员、操作员和只读账号看到的操作入口不同，服务在每次写入时仍会重新校验权限。\n\n调整浏览器窗口高度可以验证详情布局：常规高度下，描述和历史独立滚动；较短窗口下，整列成为滚动区域，元数据和历史依然可以完整访问。",
+      "create_by": "u-0002",
+      "create_date": "2026-10-24T18:43:00.000Z",
+      "last_update_by": "u-0008",
+      "last_update_date": "2026-10-27T18:43:00.000Z"
+    }
+  ]
+}

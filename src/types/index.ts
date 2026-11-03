@@ -122,6 +122,7 @@ export interface AuditParamsMap {
   'example.update': Record<never, never>;
   'example.delete': Record<never, never>;
   'example.batch_delete': { count: number };
+  'example.import': { count: number; failed: number };
 }
 export type AuditAction = keyof AuditParamsMap;
 export interface AuditDisplayParams {
@@ -130,6 +131,7 @@ export interface AuditDisplayParams {
   button_count?: number;
   section?: AuditSection;
   count?: number;
+  failed?: number;
   fields?: AuditProfileField[];
 }
 export interface AuditLog {
@@ -163,6 +165,16 @@ export interface ExampleProject extends AuditFields {
   owner: string;
   status: ExampleProjectStatus;
   description?: string;
+}
+
+export interface ProjectImportReceipt {
+  import_id: string;
+  row_no: number;
+  status: 'created' | 'failed';
+  project_id?: string;
+  error_code?: number;
+  actor_id: string;
+  create_date: string;
 }
 
 export interface DashboardData {
