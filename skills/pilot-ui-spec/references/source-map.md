@@ -63,8 +63,11 @@ The package separates observable design intent, current implementation variants,
 | `src/pages/profile/`, `src/api/services/profileService.ts` | Settings workspace with authenticated access and no menu grant, persistent section drafts, shared password form and preferences, read-only access tree |
 | `src/pages/menus/index.tsx` | 288/320px tree card, metadata grid, button table, 84px action column, rename dialog |
 | `src/pages/settings/index.tsx` | 256/288px category rail, 20px gap, tab semantics, content scroll, save footer, demo reset |
-| `src/pages/settings/AgentConfigPanel.tsx` | Model table, 460px model dialog, 150-character fields, masked key |
-| `src/pages/assistant/index.tsx` | Section cards, greeting with live preview, maximum six quick prompts, permission gates |
+| `src/pages/assistant/index.tsx`, `drafts.ts` | Full-width settings workspace, 256/288px roving category rail, URL selection, shared profile loading/retry, per-section drafts and dirty markers, scoped save/reset footbar, permission gates |
+| `src/pages/assistant/sections/registry.ts`, `types.ts` | Ordered lazy section registry, localized metadata, extra permission filtering, form field/save/validation declarations |
+| `src/pages/assistant/sections/AgentConfigPanel.tsx`, `ModelCodeCombobox.tsx` | Model table with its own header/create action and scroll region, 460px model dialog, 150-character fields, masked key |
+| `src/pages/assistant/sections/IdentitySection.tsx`, `PromptsSection.tsx` | Identity/greeting form with live preview and character counter; maximum six quick prompts with reorder/remove and inline required-field feedback |
+| `src/pages/assistant/sections/CommandsSection.tsx`, `src/agent/commands.ts` | Read-only command catalog, bilingual dictionary triggers, argument support and permission metadata; tool execution stays unchanged |
 | `src/pages/dashboard/index.tsx` | Main-region scrolling, 2/4-column metrics, 28px values, todo and activity cards |
 | `src/pages/login/index.tsx` | 380px centered form, 40px inputs, slate-900 submit, inline errors, demo accounts |
 | `src/components/search/GlobalSearchPalette.tsx` | 720px global search, 620px height, 54% list, preview pane, per-user recent history |
@@ -105,7 +108,7 @@ The package separates observable design intent, current implementation variants,
 | The Agent page conversation wrapper is 792px with 760px messages | Preserve both widths; the difference is intentional padding |
 | The CRUD template implements list row selection and batch deletion; no list-plus-detail editing workbench exists | Use the CRUD template for batch actions, form/409 errors, permission-gated columns and CSV; the editing workbench remains a future pattern |
 | `FileDropZone` uses a dashed border while all surfaces are solid | The dashed border is the deliberate file-target exception |
-| Assistant settings page caps at 1440px | It is the only settings-like page with a max width; ordinary pages fill the viewport |
+| Assistant settings uses its own registry-driven workspace shell | It follows the shared settings geometry at full available width; System settings keeps its independent behavior |
 | The app renders no help center, only an optional help link | Help-center page patterns are omitted rather than invented |
 
 ## Fidelity boundary

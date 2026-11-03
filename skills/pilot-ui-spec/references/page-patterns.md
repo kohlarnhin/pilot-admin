@@ -197,11 +197,16 @@ Preserve target authentication flows and validation; do not invent providers, cr
 
 ### Assistant settings
 
-Use compact section cards stacked in a scrollable page, each with a 12px radius, 1px border, a header (14px/600 title, 12px description, optional action), and 20px content padding.
+Use the settings workspace from §4: a full-width finite-height page with `PageHeader`, a 256/288px category rail, a 20px gap, and one flexible content card. The card owns its scrolling content; form actions stay in a persistent footbar outside that scroller. Panel sections own their header and actions and have no shared footbar. System settings retains its independent implementation.
+
+`src/pages/assistant/sections/registry.ts` is the ordered extension point. Each entry declares its URL key, icon, localized title/description keys, optional extra permissions, form/panel kind, and lazy component. Only the active section mounts. Form entries also declare their profile fields, save label and validity check, so new sections do not require edits to the page shell.
+
+The vertical rail uses roving focus, automatic activation, and linked tab/panel ARIA attributes. `?tab=` opens a section; unknown or unavailable values fall back to the first visible section. Form drafts live in the page shell, keyed by section, and survive switching. A small slate dot with hidden unsaved text marks dirty sections. Save submits only that section's fields; Reset to saved discards only its draft. Failed saves retain input with visible feedback and allow retry. One shared profile request supplies both forms, with a matching skeleton and explicit load retry; models load within their own section.
 
 - **Model configuration** uses the standard table card: model name/code, provider and base URL, masked key, status, updated time, and row actions. The create/edit dialog is 460px wide; model code and name fields cap at 150 characters; the key is shown masked and is never returned in clear text.
-- **Greeting** pairs a two-field form (assistant name, greeting) with a live preview card. Show a character counter on the long field; disable save when either required value is empty.
+- **Identity & greeting** pairs a two-field form (assistant name, greeting) with a live preview card. Stack the preview when the available width is insufficient for two columns. Show a character counter on the long field; disable save when either required value is empty.
 - **Quick prompts** allows at most six rows, each with a short label and a prompt, plus reorder and remove actions. The add button disables at the limit.
+- **Commands & capabilities** is a read-only panel listing every catalog command, localized names and descriptions, trigger phrases from both dictionaries, prefix/argument support, and declarative permission metadata. Its description identifies this as the future home for tool toggles; it does not change assistant execution.
 - Read-only accounts see disabled controls. Accounts without `agent-config:view` do not render the configuration data at all.
 - When no model is configured, show one clear empty state and disable dependent inputs.
 

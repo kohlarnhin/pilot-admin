@@ -145,6 +145,12 @@ A higher-version key makes the current build read-only: writes/reset fail with c
 
 Mock services and pages import errors from lightweight `src/api/errors.ts`; importing `src/api/http.ts` in a real service loads Axios and still supports the original error imports.
 
+### Add an assistant settings section
+
+1. Create a component in `src/pages/assistant/sections/` implementing `AssistantSectionProps`. A `panel` owns its header, scrolling content and actions; a `form` renders its content while the page supplies its header and persistent save bar.
+2. Add one entry to `assistantSections` in `sections/registry.ts`: URL `key`, icon, `titleKey` / `descriptionKey`, optional extra `requires`, `kind` and a `React.lazy` component. Forms also declare `fields`, `saveKey` and `isValid`; only those assistant profile fields are saved, without changing the page shell.
+3. Add matching copy to `src/i18n/locales/zh-CN/assistantSettings.ts` and `en-US/assistantSettings.ts`. Verify `/system/assistant?tab=<key>`, section drafts, reset and read-only access. Command descriptions come from the read-only catalog in `src/agent/commands.ts` and do not change tool execution.
+
 ### Add an assistant tool
 
 Add trigger phrases to both `agentCommands.ts` dictionaries and use the shared `src/agent/commands.ts` parser for matching and argument extraction. It accepts phrases from both languages, ignores Latin case and enforces command boundaries. `commandPrompt` and stored `prompt:*` choices round-trip while retaining stable choice IDs. Page opening accepts custom names, both default translations and route paths. Implement `AgentTool` under `src/mock/agent/tools/` and register it in the ordered `index.ts` registry, before fallback. The tool owns choices, confirmations, task state and plan steps; writes go through authorized services. Use the action registry for client dialogs. Preserve the shared runtime, cancellation and account isolation; send file metadata only. [Tools](README.md#新增助手能力), [client actions](README.md#添加助手弹窗操作).

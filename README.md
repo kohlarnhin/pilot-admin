@@ -227,6 +227,12 @@ data: {"code":0,"message":"success","data":{"sessionId":"s1","messageId":"m2","m
 
 错误用 `event: error` 和 `{"code":123,"message":"可读错误"}`。兼容源协议的 `done` 终态别名；缺少结果的断流视为错误。配置超时或 AbortSignal 会取消 reader。真实 agentService 在 `data_changed` 后调用 `triggerDataChangeSideEffects()`，通知概览和用户页刷新。模型配置的 API key 由真实后端保存密文，列表只返回掩码；当前演示配置只保存在浏览器且从不调用。
 
+## 添加助手设置分区
+
+1. 在 `src/pages/assistant/sections/` 新建分区组件，实现 `AssistantSectionProps`。`panel` 分区负责自身标题、滚动区和操作；`form` 分区只渲染内容，页面统一提供标题及固定保存栏。
+2. 在 `sections/registry.ts` 的 `assistantSections` 中加入一条注册：URL `key`、图标、`titleKey` / `descriptionKey`、可选额外权限 `requires`、`kind` 与 `React.lazy` 组件。表单另声明 `fields`、`saveKey` 和 `isValid`，仅保存声明的助手资料字段，无需修改页面外壳。
+3. 在 `src/i18n/locales/zh-CN/assistantSettings.ts` 与 `en-US/assistantSettings.ts` 添加对应文案。通过 `/system/assistant?tab=<key>` 验证深链、分区草稿、还原与只读状态；命令说明来自 `src/agent/commands.ts` 的只读目录，不改变工具执行行为。
+
 ## 新增助手能力
 
 每个工具是 `src/mock/agent/tools/` 中的独立模块，实现 `types.ts` 的 `AgentTool`，在 `index.ts` 的有序 `agentTools` 注册表中加入；fallback 始终最后。新增多轮工具无需修改 `engine.ts`。以 `createUser.ts` 为完整参考：

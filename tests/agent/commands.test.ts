@@ -51,3 +51,19 @@ describe('parseCommand', () => {
     }
   });
 });
+
+describe('read-only command catalog', () => {
+  it('covers every dictionary command with unchanged bilingual triggers and prefix semantics', async () => {
+    const chinese = (await import('@/i18n/locales/zh-CN/agentCommands')).default;
+    const english = (await import('@/i18n/locales/en-US/agentCommands')).default;
+    expect(commands.commandCatalog.map((command) => command.id)).toEqual(Object.keys(chinese));
+    for (const command of commands.commandCatalog) {
+      expect(command.phrases['zh-CN']).toEqual(Object.values(chinese[command.id]));
+      expect(command.phrases['en-US']).toEqual(Object.values(english[command.id]));
+      const phrase = english[command.id].primary;
+      expect(commands.parseCommand(`Please ${phrase}`, command.id).matched).toBe(!command.takesArgument);
+    }
+    expect(commands.commandCatalog.find((command) => command.id === 'createUser')?.permissions).toEqual(['user:create']);
+    expect(commands.commandCatalog.find((command) => command.id === 'assignRoles')?.permissions).toEqual(['user:update']);
+  });
+});

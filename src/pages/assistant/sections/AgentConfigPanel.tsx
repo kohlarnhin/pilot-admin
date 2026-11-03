@@ -17,12 +17,12 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FixedTable } from '@/components/common/FixedTable';
 import { Icon } from '@/components/icon';
 import { Button } from '@/ui/button';
-import { Card, CardContent } from '@/ui/card';
-import { SectionBar } from '@/ui/tabs';
+import { CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/card';
 import { RowAction } from '@/ui/row-action';
+import type { AssistantSectionProps } from './types';
 import dayjs from 'dayjs';
 
-export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
+export const AgentConfigPanel: React.FC<AssistantSectionProps> = ({ section }) => {
   const { locale } = useT();
   const requestSequence = useRef(0);
   const initialLoadSettled = useRef(false);
@@ -30,6 +30,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<AgentConfig | null>(null);
   const [saving, setSaving] = useState(false);
@@ -42,18 +43,18 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   const loadConfigs = useCallback(async () => {
     const sequence = ++requestSequence.current;
     const initial = !initialLoadSettled.current;
-    if (!initial) setRefreshing(true);
+    setLoadError('');
+    if (initial) setLoading(true);
+    else setRefreshing(true);
     try {
       const res = await agentConfigService.getConfigs();
       if (sequence !== requestSequence.current) return;
       setConfigs(res);
+      initialLoadSettled.current = true;
     } catch (error) {
-      if (sequence === requestSequence.current && initial) {
-        message.error((error as Error).message || t('agentConfig.errors.load'));
-      }
+      if (sequence === requestSequence.current) setLoadError((error as Error).message || t('agentConfig.errors.load'));
     } finally {
       if (sequence === requestSequence.current) {
-        initialLoadSettled.current = true;
         setLoading(false);
         setRefreshing(false);
       }
@@ -63,10 +64,10 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
   useEffect(() => () => { requestSequence.current += 1; }, []);
 
   useEffect(() => {
-    if (active) void loadConfigs();
-  }, [active, loadConfigs]);
+    void loadConfigs();
+  }, [loadConfigs]);
   useDataChanged((reason) => {
-    if (reason === 'locale' && active) void loadConfigs();
+    if (reason === 'locale') void loadConfigs();
   });
 
   const openCreate = () => {
@@ -130,14 +131,15 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
         title: t('agentConfig.columns.model'),
         dataIndex: 'model_name',
         width: '28%',
+        minWidth: 144,
         render: (_, record) => (
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-line bg-slate-50 text-slate-500">
               <Icon icon="wand-sparkles" size={17} />
             </span>
             <div className="min-w-0">
-              <div className="truncate text-13 font-medium text-slate-900">{record.model_name}</div>
-              <div className="truncate font-mono text-xs text-slate-400">{record.model_code}</div>
+              <div className="truncate text-13 font-medium text-slate-900" title={record.model_name}>{record.model_name}</div>
+              <div className="truncate font-mono text-xs text-slate-400" title={record.model_code}>{record.model_code}</div>
             </div>
           </div>
         ),
@@ -146,12 +148,13 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
         title: t('agentConfig.fields.provider'),
         dataIndex: 'provider',
         width: '28%',
-        render: (_, record) => <div className="min-w-0"><p className="text-13 text-slate-700">{record.provider}</p><p className="truncate font-mono text-[11px] text-slate-400" title={record.base_url}>{record.base_url}</p><p className="mt-1 font-mono text-[11px] text-slate-400">{record.api_key_masked}</p></div>,
+        minWidth: 144,
+        render: (_, record) => <div className="min-w-0"><p className="truncate text-13 text-slate-700" title={record.provider}>{record.provider}</p><p className="truncate font-mono text-[11px] text-slate-400" title={record.base_url}>{record.base_url}</p><p className="mt-1 truncate font-mono text-[11px] text-slate-400" title={record.api_key_masked}>{record.api_key_masked}</p></div>,
       },
       {
         title: t('common.columns.updated'),
         dataIndex: 'last_update_date',
-        width: '20%',
+        width: 176,
         render: (date: string) => (
           <span className="whitespace-nowrap font-mono text-xs text-slate-500">
             {date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '—'}
@@ -161,7 +164,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       {
         title: t('common.columns.status'),
         dataIndex: 'status',
-        width: 88,
+        width: 72,
         align: 'center',
         render: (_, record) => (
           <Switch
@@ -177,7 +180,7 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
       {
         title: t('common.columns.actions'),
         key: 'actions',
-        width: 100,
+        width: 88,
         align: 'center',
         render: (_, record) => (
           <div className="flex items-center justify-center"><RowAction
@@ -196,18 +199,16 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
 
   return (
     <>
-      <SectionBar
-        description={t('agentConfig.description')}
-        actions={
+      <CardHeader className="shrink-0">
+        <div className="min-w-0 flex-1"><CardTitle>{t(section.titleKey)}</CardTitle><CardDescription>{t(section.descriptionKey)}</CardDescription></div>
           <Tooltip title={canAdd ? undefined : t('agentConfig.access.createDenied')}>
             <Button disabled={!canAdd} onClick={openCreate}>
               <Icon icon="plus" size={16} />
               {t('agentConfig.actions.create')}</Button>
           </Tooltip>
-        }
-      />
-      <Card className="min-h-0 flex-1">
-        <CardContent className="flex min-h-0 flex-1 flex-col p-0">
+      </CardHeader>
+        <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col p-0">
+          {loadError ? <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-6 py-3" role="alert"><span className="text-xs text-red-600">{loadError}</span><Button size="xs" onClick={() => void loadConfigs()}>{t('common.actions.retry')}</Button></div> : null}
           <FixedTable<AgentConfig>
             rowKey="id"
             columns={columns}
@@ -218,15 +219,14 @@ export const AgentConfigPanel: React.FC<{ active: boolean }> = ({ active }) => {
               emptyText: (
                 <EmptyState
                   icon="wand-sparkles"
-                  title={t('agentConfig.empty.title')}
-                  description={t('agentConfig.empty.description')}
-                  action={canAdd ? <Button onClick={openCreate}>{t('agentConfig.actions.create')}</Button> : undefined}
+                  title={loadError ? t('agentConfig.errors.load') : t('agentConfig.empty.title')}
+                  description={loadError ? undefined : t('agentConfig.empty.description')}
+                  action={!loadError && canAdd ? <Button onClick={openCreate}>{t('agentConfig.actions.create')}</Button> : undefined}
                 />
               ),
             }}
           />
         </CardContent>
-      </Card>
       <Modal
         title={editingConfig ? t('agentConfig.form.editTitle') : t('agentConfig.form.createTitle')}
         icon="wand-sparkles"

@@ -1,10 +1,41 @@
 import chinese from '@/i18n/locales/zh-CN/agentCommands';
 import english from '@/i18n/locales/en-US/agentCommands';
 import { getLocale } from '@/i18n';
+import type { MessageKey, MessageParams } from '@/i18n/types';
 
 export type CommandId = keyof typeof chinese;
 
 const prefixCommands = new Set<CommandId>(['createUser', 'findUsers', 'disableUsers', 'openPage']);
+
+type CommandMessageKey = { [K in MessageKey]: [MessageParams<K>] extends [never] ? K : never }[MessageKey];
+
+interface CommandMetadata {
+  descriptionKey: CommandMessageKey;
+  permissions?: string[];
+  accessKey?: CommandMessageKey;
+}
+
+/** 只读能力说明；执行权限仍由工具和 service 校验。所有命令都需要 agent:use。 */
+const commandMetadata: Record<CommandId, CommandMetadata> = {
+  createUser: { descriptionKey: 'assistantSettings.commands.items.createUser', permissions: ['user:create'] },
+  findUsers: { descriptionKey: 'assistantSettings.commands.items.findUsers', accessKey: 'assistantSettings.commands.access.users' },
+  disableUsers: { descriptionKey: 'assistantSettings.commands.items.disableUsers', permissions: ['user:update'], accessKey: 'assistantSettings.commands.access.users' },
+  openPage: { descriptionKey: 'agentTools.openPage.description', accessKey: 'assistantSettings.commands.access.destination' },
+  help: { descriptionKey: 'assistantSettings.commands.items.help' },
+  overview: { descriptionKey: 'assistantSettings.commands.items.overview', accessKey: 'assistantSettings.commands.access.users' },
+  accountAudit: { descriptionKey: 'assistantSettings.commands.items.accountAudit', accessKey: 'assistantSettings.commands.access.audit' },
+  assignRoles: { descriptionKey: 'agentTools.assignRoles.description', permissions: ['user:update'], accessKey: 'assistantSettings.commands.access.users' },
+  simulateError: { descriptionKey: 'assistantSettings.commands.items.simulateError' },
+};
+
+export const commandCatalog = (Object.keys(chinese) as CommandId[]).map((id) => ({
+  id,
+  titleKey: `agentCommands.${id}.primary` as const,
+  ...commandMetadata[id],
+  takesArgument: prefixCommands.has(id),
+  phrases: { 'zh-CN': Object.values(chinese[id]), 'en-US': Object.values(english[id]) },
+}));
+
 const cjk = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 const separator = /[\s:\uFF1A]/u;
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
