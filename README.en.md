@@ -262,7 +262,7 @@ Profile changes and audit share one draft. `profile.update` records only changed
 | `pnpm test` | Run Vitest logic unit tests once |
 | `pnpm test:watch` | Watch and rerun tests |
 | `pnpm exec playwright install chromium` | Install Chromium before the first E2E run |
-| `pnpm test:e2e` | Build and start production previews on 3320/3321, then run browser regressions |
+| `pnpm test:e2e` | Build and start production previews on 3320/3321 (override with `E2E_PORT` / `E2E_SUBPATH_PORT`), then run browser regressions |
 | `pnpm test:e2e:ui` | Debug tests and inspect steps in Playwright UI |
 | `pnpm build` | Typecheck and production build |
 | `pnpm preview` | Serve the production build locally |

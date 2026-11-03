@@ -436,7 +436,7 @@ CSV 导入是可删除的参考流程：`ProjectImportModal.tsx` 负责本地文
 | `pnpm test` | Vitest 纯逻辑单元测试（单次运行） |
 | `pnpm test:watch` | 监听变更并重跑测试 |
 | `pnpm exec playwright install chromium` | 首次安装 E2E 使用的 Chromium |
-| `pnpm test:e2e` | 自动构建并启动 3320 / 3321 生产预览，运行真实浏览器回归 |
+| `pnpm test:e2e` | 自动构建并启动 3320 / 3321 生产预览（可用 `E2E_PORT` / `E2E_SUBPATH_PORT` 覆盖），运行真实浏览器回归 |
 | `pnpm test:e2e:ui` | Playwright UI 调试，可选择测试与查看步骤 |
 | `pnpm build` | `tsc -b && vite build` |
 | `pnpm preview` | 本地预览生产构建，可加 `--port 3300` |

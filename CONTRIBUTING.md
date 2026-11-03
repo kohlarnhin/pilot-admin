@@ -87,7 +87,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-测试位于 `e2e/`，配置自动构建并在 3320 启动根路径生产预览、在 3321 启动 `/pilot-admin/` 子路径预览（独立 `dist-subpath/`），无需运行 `pnpm dev`。本地可复用这两个端口的现有预览；应用或配置有变化时先停止旧预览，避免验证旧产物。仅 Chromium；每个测试使用独立 context 和真实 UI 登录，不共享认证存储。fixtures 会拒绝外部/后端请求，并将控制台 error 和 pageerror 视为失败。优先使用 role/label 定位器，系统文案从双语字典导入；使用 web-first assertions，不加固定等待。
+测试位于 `e2e/`，配置自动构建并在 3320 启动根路径生产预览、在 3321 启动 `/pilot-admin/` 子路径预览（独立 `dist-subpath/`），无需运行 `pnpm dev`。本地可复用这两个端口的现有预览；应用或配置有变化时先停止旧预览，避免验证旧产物。多个工作树并行时用 `E2E_PORT` / `E2E_SUBPATH_PORT` 指定其他端口，避免复用别的工作树的预览。仅 Chromium；每个测试使用独立 context 和真实 UI 登录，不共享认证存储。fixtures 会拒绝外部/后端请求，并将控制台 error 和 pageerror 视为失败。优先使用 role/label 定位器，系统文案从双语字典导入；使用 web-first assertions，不加固定等待。
 
 使用 `pnpm test:e2e:ui` 查看步骤并重跑，`pnpm test:e2e e2e/users.spec.ts --project=root` 聚焦旅程。CI 仅在失败时重试一次并记录 trace；本地可运行 `pnpm test:e2e --trace on` 主动录制，再用 `pnpm exec playwright show-trace test-results/<测试目录>/trace.zip` 查看。CI 工程检查通过后执行 E2E，包括 fork PR；失败时上传 `playwright-report/` 和 `test-results/`，下载后用 `pnpm exec playwright show-report playwright-report` 查看 HTML 报告。Pages/Release 不重复运行 E2E。
 
