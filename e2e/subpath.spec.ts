@@ -11,6 +11,12 @@ test('prefixed cold deep link, login, navigation, assets and logout', async ({ p
   });
   await page.goto('system/users');
   await expect(page).toHaveURL(at('login'));
+  const fontPreloads = page.locator('link[rel="preload"][as="font"]');
+  await expect(fontPreloads).toHaveCount(2);
+  for (const href of await fontPreloads.evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href))) {
+    expect(href.startsWith(new URL('assets/', baseURL).href)).toBe(true);
+    expect(href).toMatch(/\/(open-sans-latin-wght|jetbrains-mono-latin-400)-normal-[^/]+\.woff2$/);
+  }
   await signIn(page, 'admin');
   await page.getByRole('dialog', { name: zh.agentEntry.title }).getByRole('button', { name: zh.agentEntry.console, exact: true }).click();
   await expect(page).toHaveURL(at('dashboard'));

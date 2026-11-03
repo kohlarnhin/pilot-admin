@@ -21,10 +21,14 @@ const FLOW = 1500;
 interface Dot {
   x: number;
   y: number;
-  /** 呼吸相位：以随机为主，各点明灭错开 */
-  phase: number;
-  /** 漂移的随机种子 */
-  seed: number;
+  /** 固定随机相位的三角值；每帧用和角公式保持相同漂移与呼吸。 */
+  sinPhase: number;
+  cosPhase: number;
+  sinSeed: number;
+  cosSeed: number;
+  sinSeedY: number;
+  cosSeedY: number;
+  featherOffset: number;
 }
 
 interface ParticleFieldProps {
@@ -48,11 +52,17 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return undefined;
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let reduceMotion = motion.matches;
     let width = 0;
     let height = 0;
     let dots: Dot[] = [];
     let frame = 0;
+    let pixelRatio = 0;
+    let origin = { left: 0, top: 0 };
+    const target = clearRef?.current;
+    // 入场动画改变位移但不触发 ResizeObserver；只在动画期间追踪位置。
+    let geometryAnimating = target?.getAnimations().some((animation) => animation.playState === 'running') ?? false;
     /** 点的补入半径：以登录区为中心、覆盖整个屏幕的外圆，补入发生在屏幕之外 */
     let spawnRadius = 0;
 
@@ -69,30 +79,36 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
 
     const mouse = { tx: 0, ty: 0, x: 0, y: 0, inside: false, presence: 0 };
     /** 登录区：中心与半宽半高（画布坐标） */
-    let clear: { cx: number; cy: number; hw: number; hh: number } | null = null;
+    let clear: { cx: number; cy: number; innerWidth: number; innerHeight: number; radius: number } | null = null;
     const measureClear = () => {
+      origin = canvas.getBoundingClientRect();
       const target = clearRef?.current;
       if (!target) {
         clear = null;
         return;
       }
       const box = target.getBoundingClientRect();
-      const origin = canvas.getBoundingClientRect();
+      const hw = box.width / 2;
+      const hh = box.height / 2;
+      const radius = Math.min(CLEAR_RADIUS, hw, hh);
       clear = {
         cx: box.left - origin.left + box.width / 2,
         cy: box.top - origin.top + box.height / 2,
-        hw: box.width / 2,
-        hh: box.height / 2,
+        innerWidth: hw - radius,
+        innerHeight: hh - radius,
+        radius,
       };
+      spawnRadius = Math.hypot(Math.max(clear.cx, width - clear.cx), Math.max(clear.cy, height - clear.cy)) + GAP * 2;
     };
 
     /** 到登录区（圆角矩形）边缘的距离：外部为正、内部为负 */
     const distanceToClear = (x: number, y: number) => {
       if (!clear) return Infinity;
-      const r = Math.min(CLEAR_RADIUS, clear.hw, clear.hh);
-      const qx = Math.abs(x - clear.cx) - (clear.hw - r);
-      const qy = Math.abs(y - clear.cy) - (clear.hh - r);
-      return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
+      const qx = Math.abs(x - clear.cx) - clear.innerWidth;
+      const qy = Math.abs(y - clear.cy) - clear.innerHeight;
+      const dx = Math.max(qx, 0);
+      const dy = Math.max(qy, 0);
+      return Math.sqrt(dx * dx + dy * dy) + Math.min(Math.max(qx, qy), 0) - clear.radius;
     };
 
     /** 消失的点从外圆上的随机方向补入（位于屏幕之外，不会凭空闪现） */
@@ -106,6 +122,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
 
     const build = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      pixelRatio = dpr;
       width = canvas.clientWidth;
       height = canvas.clientHeight;
       canvas.width = Math.round(width * dpr);
@@ -125,7 +142,15 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
           const x = gx + GAP * (0.2 + Math.random() * 0.6);
           const y = gy + GAP * (0.2 + Math.random() * 0.6);
           if (Math.hypot(x - cx, y - cy) > spawnRadius) continue;
-          dots.push({ x, y, phase: Math.random() * Math.PI * 2, seed: Math.random() * Math.PI * 2 });
+          const phase = Math.random() * Math.PI * 2;
+          const seed = Math.random() * Math.PI * 2;
+          dots.push({
+            x, y,
+            sinPhase: Math.sin(phase), cosPhase: Math.cos(phase),
+            sinSeed: Math.sin(seed), cosSeed: Math.cos(seed),
+            sinSeedY: Math.sin(seed * 1.3), cosSeedY: Math.cos(seed * 1.3),
+            featherOffset: Math.sin(seed * 5) * 12,
+          });
         }
       }
     };
@@ -133,13 +158,19 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
     const draw = (now: number, dt: number) => {
       const t = reduceMotion ? 0 : now / 1000;
       ctx.clearRect(0, 0, width, height);
-      // 每帧测量：登录步骤切换导致内容高度变化时，靠拢目标随之更新
-      measureClear();
+      if (geometryAnimating) measureClear();
 
       mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 7);
       mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 7);
       mouse.presence += ((mouse.inside ? 1 : 0) - mouse.presence) * Math.min(1, dt * 4);
       const twoSigma2 = 2 * LENS_SIGMA * LENS_SIGMA;
+      const sinX = Math.sin(t * 0.21);
+      const cosX = Math.cos(t * 0.21);
+      const sinY = Math.sin(t * 0.17);
+      const cosY = Math.cos(t * 0.17);
+      const sinBreath = Math.sin(t * 0.8);
+      const cosBreath = Math.cos(t * 0.8);
+      const flow = FLOW * dt;
 
       for (const dot of dots) {
         // 缓慢向登录区中心靠拢；到达边缘后在远处重生
@@ -148,13 +179,13 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
           if (!reduceMotion) {
             const dx = clear.cx - dot.x;
             const dy = clear.cy - dot.y;
-            const r = Math.max(Math.hypot(dx, dy), 120);
-            const speed = FLOW / r;
-            dot.x += (dx / r) * speed * dt;
-            dot.y += (dy / r) * speed * dt;
+            // 原式 dx/r * (FLOW/r) * dt，合并为平方距离，保持相同流速。
+            const scale = flow / Math.max(dx * dx + dy * dy, 120 * 120);
+            dot.x += dx * scale;
+            dot.y += dy * scale;
           }
           // 越靠近越淡：每个点的消失位置略有随机，边缘自然不成规整的形状
-          const d = (distanceToClear(dot.x, dot.y) + Math.sin(dot.seed * 5) * 12) / FEATHER;
+          const d = (distanceToClear(dot.x, dot.y) + dot.featherOffset) / FEATHER;
           fade = d <= 0 ? 0 : d >= 1 ? 1 : d * d * (3 - 2 * d);
           if (fade <= 0.02) {
             if (!reduceMotion) respawn(dot);
@@ -163,8 +194,8 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
         }
 
         // 各自漂移：方向与节奏随机，整体像悬浮的微尘
-        let x = dot.x + Math.sin(t * 0.21 + dot.seed) * 9;
-        let y = dot.y + Math.cos(t * 0.17 + dot.seed * 1.3) * 9;
+        let x = dot.x + (sinX * dot.cosSeed + cosX * dot.sinSeed) * 9;
+        let y = dot.y + (cosY * dot.cosSeedY - sinY * dot.sinSeedY) * 9;
 
         // 鼠标处凸起：以鼠标为中心的高斯放大，越近越「贴近」用户
         let lift = 0;
@@ -179,7 +210,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
         if (x < -4 || y < -4 || x > width + 4 || y > height + 4) continue;
 
         // 呼吸：大部分时间保持饱满清晰，周期里只有一小段缩小、变淡直至消失（鼠标附近同样如此，只是略微放大）
-        const breath = reduceMotion ? 1 : 0.5 + 0.5 * Math.sin(t * 0.8 + dot.phase);
+        const breath = reduceMotion ? 1 : 0.5 + 0.5 * (sinBreath * dot.cosPhase + cosBreath * dot.sinPhase);
         const pulse = 1 - (1 - breath) ** 3;
         const size = DOT_SIZE * (0.2 + 0.8 * pulse) * (0.5 + 0.5 * fade) * (1 + lift * 0.5);
         ctx.globalAlpha = (0.08 + 0.87 * pulse) * fade;
@@ -197,9 +228,8 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
     };
 
     const handleMove = (event: PointerEvent) => {
-      const box = canvas.getBoundingClientRect();
-      mouse.tx = event.clientX - box.left;
-      mouse.ty = event.clientY - box.top;
+      mouse.tx = event.clientX - origin.left;
+      mouse.ty = event.clientY - origin.top;
       if (!mouse.inside && mouse.presence < 0.05) {
         // 从外部进入时直接定位，避免凸起从上一个位置滑过来
         mouse.x = mouse.tx;
@@ -211,25 +241,49 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({ clearRef, classNam
       mouse.inside = false;
     };
     const handleResize = () => {
-      build();
+      if (canvas.clientWidth !== width || canvas.clientHeight !== height || Math.min(window.devicePixelRatio || 1, 2) !== pixelRatio) build();
+      else measureClear();
       if (reduceMotion) draw(0, 0);
+    };
+    const handleAnimationStart = () => { geometryAnimating = true; };
+    const handleAnimationEnd = () => { geometryAnimating = false; handleResize(); };
+    const handleMotionChange = () => {
+      reduceMotion = motion.matches;
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pointermove', handleMove);
+      document.documentElement.removeEventListener('pointerleave', handleLeave);
+      if (reduceMotion) draw(0, 0);
+      else {
+        last = performance.now();
+        frame = requestAnimationFrame(loop);
+        window.addEventListener('pointermove', handleMove, { passive: true });
+        document.documentElement.addEventListener('pointerleave', handleLeave);
+      }
     };
 
     build();
-    if (reduceMotion) {
-      draw(0, 0);
-    } else {
-      frame = requestAnimationFrame(loop);
-      window.addEventListener('pointermove', handleMove, { passive: true });
-      document.documentElement.addEventListener('pointerleave', handleLeave);
-    }
+    handleMotionChange();
+    const observer = new ResizeObserver(handleResize);
+    observer.observe(canvas);
+    if (target) observer.observe(target);
+    target?.addEventListener('animationstart', handleAnimationStart);
+    target?.addEventListener('animationend', handleAnimationEnd);
+    target?.addEventListener('animationcancel', handleAnimationEnd);
+    motion.addEventListener('change', handleMotionChange);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, { passive: true });
 
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', handleMove);
       document.documentElement.removeEventListener('pointerleave', handleLeave);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+      observer.disconnect();
+      target?.removeEventListener('animationstart', handleAnimationStart);
+      target?.removeEventListener('animationend', handleAnimationEnd);
+      target?.removeEventListener('animationcancel', handleAnimationEnd);
+      motion.removeEventListener('change', handleMotionChange);
     };
   }, [clearRef]);
 

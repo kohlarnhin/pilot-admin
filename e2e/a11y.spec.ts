@@ -9,6 +9,9 @@ const fixedRules = new Set([
 ]);
 
 async function settled(page: Page) {
+  // Auth restoration can start another lazy chunk after the document loads.
+  // Wait for that chain before checking fonts, mock requests and entrances.
+  await page.waitForLoadState('networkidle');
   await page.evaluate(() => document.fonts.ready);
   // Scan the rendered state after the existing entrances and mock requests settle.
   await page.waitForTimeout(700);
@@ -460,9 +463,22 @@ for (const [width, height] of [[1440, 900], [1280, 720]]) {
     await page.goto('system/assistant?tab=commands');
     const commands = page.getByRole('region', { name: zh.assistantSettings.commands.title, exact: true });
     await expect(commands.getByRole('listitem').first()).toBeVisible();
+    await settled(page);
     await commands.focus();
     await commands.press('PageDown');
     await expect.poll(() => commands.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    // Chromium can ignore End during its native PageDown animation. Observe
+    // the completed scroll before testing the next independent key action.
+    await commands.evaluate(async (element) => {
+      let previous = element.scrollTop;
+      let stableFrames = 0;
+      while (stableFrames < 3) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const next = element.scrollTop;
+        stableFrames = next === previous ? stableFrames + 1 : 0;
+        previous = next;
+      }
+    });
     await commands.press('End');
     await expect.poll(() => commands.evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
     await page.screenshot({ path: testInfo.outputPath('assistant-commands-keyboard.png') });

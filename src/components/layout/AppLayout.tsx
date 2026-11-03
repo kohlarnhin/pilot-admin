@@ -14,6 +14,9 @@ import { SkipLink } from '../common/SkipLink';
 import { canAccessPage } from '@/routes/access';
 import { usePermission } from '@/hooks/usePermission';
 import { isKnownPageRoute, preloadRoute } from '@/routes/routeModules';
+import { createLazyResource } from '@/utils/lazyResource';
+
+const tableVirtualizer = createLazyResource(() => import('@tanstack/react-virtual'));
 
 export const AppLayout: React.FC = () => {
   useT();
@@ -30,6 +33,12 @@ export const AppLayout: React.FC = () => {
   const forbidden = isKnownPageRoute(pathname) && !canAccessPage(pathname, { menus, permissions });
 
   useEffect(() => { void initAuth(); }, [initAuth]);
+
+  // 虚拟化留在认证之后加载，并与首页并行预热，列表跳转不再增加一次等待。
+  useEffect(() => {
+    if (!isAuthenticated || isInitializing || forbidden) return;
+    void tableVirtualizer.load().catch(() => undefined);
+  }, [isAuthenticated, isInitializing, forbidden]);
 
   // 深层地址的分包预取与会话恢复并行。
   useEffect(() => {

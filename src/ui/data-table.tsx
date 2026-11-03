@@ -132,6 +132,43 @@ function buildTemplate<T>(columns: ColumnsType<T>, selectionWidth?: number) {
   return { template: tracks.join(" "), minimum };
 }
 
+function fixedCellClass<T>(column: ColumnType<T>, scrollableX: boolean) {
+  if (!column.fixed) return "";
+  const isRight = column.fixed === "right";
+  return cn(
+    "sticky z-[1] flex self-stretch items-center bg-inherit",
+    isRight ? "right-0" : "left-0",
+    scrollableX && (isRight ? "shadow-[-1px_0_0_0_#EDF1F5]" : "shadow-[1px_0_0_0_#EDF1F5]")
+  );
+}
+
+/** 定位更新留在行容器；稳定记录不重复创建单元格、操作按钮和 Tooltip 树。 */
+const RowCells = React.memo(function RowCells<T extends object>({
+  record, index, columns, cellPadding, selection, scrollableX,
+}: { record: T; index: number; columns: ColumnsType<T>; cellPadding: string; selection: boolean; scrollableX: boolean }) {
+  useT();
+  return columns.map((column, columnIndex) => {
+    const value = column.dataIndex !== undefined ? (record as Record<string, unknown>)[column.dataIndex as string] : undefined;
+    const content = column.render ? column.render(value, record, index) : (value as React.ReactNode) ?? null;
+    const align = column.align ?? "left";
+    return <div
+      key={column.key ?? String(column.dataIndex ?? columnIndex)}
+      role="cell"
+      data-cell
+      className={cn(
+        "min-w-0 text-13 text-slate-800",
+        cellPadding,
+        "first:pl-6 last:pr-6",
+        selection && columnIndex === 0 && "!pl-1",
+        ALIGN_CLASS[align],
+        column.fixed && cn(fixedCellClass(column, scrollableX), FIXED_JUSTIFY[align]),
+        column.ellipsis && "truncate",
+        column.className
+      )}
+    >{content}</div>;
+  });
+}) as <T extends object>(props: { record: T; index: number; columns: ColumnsType<T>; cellPadding: string; selection: boolean; scrollableX: boolean }) => React.ReactNode;
+
 /** 首次加载骨架：表头 + 若干数据行，尺寸与真实表格一致，避免替换时跳动。 */
 export function TableSkeleton({ rows = 7, showHeader = true }: { rows?: number; showHeader?: boolean }) {
   useT();
@@ -341,13 +378,7 @@ export function DataTable<T extends object>({
   const edgePadding = "first:pl-6 last:pr-6";
 
   const fixedClass = (column: ColumnType<T>) => {
-    if (!column.fixed) return "";
-    const isRight = column.fixed === "right";
-    return cn(
-      "sticky z-[1] flex self-stretch items-center bg-inherit",
-      isRight ? "right-0" : "left-0",
-      scrollableX && (isRight ? "shadow-[-1px_0_0_0_#EDF1F5]" : "shadow-[1px_0_0_0_#EDF1F5]")
-    );
+    return fixedCellClass(column, scrollableX);
   };
 
   const renderRow = (row: FlatRow<T>, style?: React.CSSProperties, measureRef?: (node: HTMLElement | null) => void, dataIndex?: number) => {
@@ -384,30 +415,7 @@ export function DataTable<T extends object>({
             />
           </div>
         )}
-        {columns.map((column, columnIndex) => {
-          const value = column.dataIndex !== undefined ? (row.record as Record<string, unknown>)[column.dataIndex as string] : undefined;
-          const content = column.render ? column.render(value, row.record, row.index) : (value as React.ReactNode) ?? null;
-          const align = column.align ?? "left";
-          return (
-            <div
-              key={column.key ?? String(column.dataIndex ?? columnIndex)}
-              role="cell"
-              data-cell
-              className={cn(
-                "min-w-0 text-13 text-slate-800",
-                cellPadding,
-                edgePadding,
-                rowSelection && columnIndex === 0 && "!pl-1",
-                ALIGN_CLASS[align],
-                column.fixed && cn(fixedClass(column), FIXED_JUSTIFY[align]),
-                column.ellipsis && "truncate",
-                column.className
-              )}
-            >
-              {content}
-            </div>
-          );
-        })}
+        <RowCells record={row.record} index={row.index} columns={columns} cellPadding={cellPadding} selection={Boolean(rowSelection)} scrollableX={scrollableX} />
       </div>
     );
   };

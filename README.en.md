@@ -195,6 +195,12 @@ Mount the contents of `dist/` at the configured URL prefix. Rewrite missing **pa
 
 localStorage is shared by origin, not deployment path. Keys use the `pilot-admin:` prefix and do not clear unrelated applications' storage. Multiple copies of Pilot Admin on one origin still share those keys; change the namespace consistently in a fork or use separate origins when isolation is needed.
 
+### Brotli and gzip
+
+For hosts you control, enable Brotli (`br`) for HTML, JS and CSS, with gzip as a fallback. Alternatively, generate `.br` and `.gz` sidecars after building and configure the server/CDN to negotiate them using `Accept-Encoding`; keep the original files for clients accepting neither encoding. Serve the original asset URL and MIME type with `Content-Encoding: br` or `gzip` only when the body uses that encoding, and include `Vary: Accept-Encoding` on all variants (including the uncompressed response). Ensure CDN caches distinguish the variants and do not compress an already compressed response again. Existing WOFF2 font files are already compressed.
+
+The build does not generate precompressed files. Uploading sidecars alone to GitHub Pages does not enable this negotiation or provide a Brotli benefit: Pages manages response headers and compression, so this guidance requires a configurable host/CDN.
+
 ### GitHub Pages
 
 `.github/workflows/deploy-pages.yml` runs on pushes to `main` and manual dispatch. It performs frozen installation, lint, i18n and type checks, builds and deploys `dist/`. Under **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**; this repository is already configured. The workflow builds project sites at `/<repository-name>/`. For a user/organization root site or a custom root domain, change its `VITE_BASE_PATH` to `/`.

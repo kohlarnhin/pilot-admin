@@ -1,7 +1,6 @@
 import { t, useT } from '@/i18n';
-import { usePermission } from '@/hooks/usePermission';
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '@/store/authStore';
 import { agentProfileService, DEFAULT_AGENT_PROFILE, AGENT_CONFIG_CHANGED_EVENT } from '@/api/services/agentProfileService';
 import type { AgentChatResult } from '@/types';
@@ -103,20 +102,7 @@ function useRuntime(userId: string) {
 
 export type AssistantRuntime = ReturnType<typeof useRuntime>;
 
-function AssistantProvider({ userId, children }: { userId: string; children: ReactNode }) {
+export function AssistantProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const runtime = useRuntime(userId);
   return <AssistantContext.Provider value={runtime}>{children}</AssistantContext.Provider>;
-}
-
-/** 只有一个聊天实例；控制台面板和独立 Agent 页面在同一实例上切换。 */
-export function AssistantRuntimeLayout() {
-  const location = useLocation();
-  const { user, isAuthenticated, initAuth } = useAuthStore();
-  useEffect(() => { void initAuth(); }, [initAuth]);
-  // 登录页保持原挂载位置，认证成功时不重挂登录表单或丢失本次选择弹窗。
-  const canUseAgent = usePermission('agent:use');
-  const enabled = location.pathname.replace(/\/+$/, '') !== '/login' && isAuthenticated && user && canUseAgent;
-  return enabled
-    ? <AssistantProvider key={user.id} userId={user.id}><Outlet /></AssistantProvider>
-    : <Outlet />;
 }

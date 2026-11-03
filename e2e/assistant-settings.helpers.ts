@@ -25,6 +25,7 @@ export async function grantAssistantReadOnly(page: Page, copy: typeof zh | typeo
   await operator.getByRole('button', { name: copy.button.userUpdate, exact: true }).click();
   const edit = page.getByRole('dialog', { name: copy.button.userUpdate, exact: true });
   await edit.getByRole('combobox', { name: copy.users.fields.roles }).click();
+  await expect(page.getByRole('option', { name: /ROLE_OPERATOR/, selected: true })).toBeVisible();
   await page.getByRole('option', { name: /ROLE_ASSISTANT_READER/ }).click();
   await page.keyboard.press('Escape');
   await edit.getByRole('button', { name: copy.common.actions.save, exact: true }).click();

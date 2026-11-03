@@ -1,6 +1,25 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+
+/** 只预载登录页实际使用的西文字体，文件名由构建产物解析，兼容部署前缀。 */
+function loginFontPreloads(base: string): Plugin {
+  return {
+    name: 'login-font-preloads',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, { bundle }) {
+        if (!bundle) return;
+        const fonts = [/\/open-sans-latin-wght-normal-[^/]+\.woff2$/, /\/jetbrains-mono-latin-400-normal-[^/]+\.woff2$/];
+        return fonts.map((pattern) => {
+          const font = Object.values(bundle).find((asset) => asset.type === 'asset' && pattern.test(asset.fileName));
+          if (!font) throw new Error(`Missing login font: ${pattern}`);
+          return { tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `${base}${font.fileName}` }, injectTo: 'head' };
+        });
+      },
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -16,7 +35,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
-    plugins: [react()],
+    plugins: [react(), loginFontPreloads(base)],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -27,17 +46,14 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1500,
       rollupOptions: {
         output: {
-          experimentalMinChunkSize: 5_000,
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router'],
-            'vendor-ui': [
-              '@radix-ui/react-dialog',
-              '@radix-ui/react-popover',
-              '@radix-ui/react-tooltip',
-              '@radix-ui/react-dropdown-menu',
-              '@tanstack/react-virtual',
-            ],
-            'vendor-utils': ['dayjs', 'zustand', 'sonner', 'lucide-react', 'clsx', 'tailwind-merge'],
+          // 保留动态导入边界；自动合并小分包会把认证后的页面与加载态提升到入口。
+          manualChunks(id) {
+            // 包内子路径与 CommonJS 代理一起归组，避免 jsx-runtime 落入 UI 分包形成环。
+            const module = id.replaceAll('\\', '/');
+            if (module.includes('commonjsHelpers') || /\/node_modules\/(react|react-dom|react-router|scheduler)\//.test(module)) return 'vendor-react';
+            if (/\/node_modules\/@tanstack\/(react-virtual|virtual-core)\//.test(module)) return 'vendor-virtual';
+            if (/\/node_modules\/(@radix-ui|@floating-ui)\//.test(module)) return 'vendor-ui';
+            if (/\/node_modules\/(dayjs|zustand|sonner|lucide-react|clsx|tailwind-merge)\//.test(module)) return 'vendor-utils';
           },
         },
       },

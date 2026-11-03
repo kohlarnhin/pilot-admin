@@ -146,17 +146,18 @@ export const UsersPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (user: User) => {
+  const handleOpenEditModal = useCallback((user: User) => {
     setEditingUser(user);
     form.resetFields();
     form.setFieldsValue({
       login_name: user.login_name,
       user_name: user.user_name,
       email: user.email,
-      role_ids: user.roles?.map(r => r.id) || [],
+      // 角色元数据可能仍在加载；编辑必须保留记录本身的授权 ID。
+      role_ids: user.role_ids,
     });
     setIsModalOpen(true);
-  };
+  }, [form]);
 
   const handleModalSubmit = async () => {
     try {
@@ -210,7 +211,7 @@ export const UsersPage: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = async (user: User, checked: boolean) => {
+  const handleToggleStatus = useCallback(async (user: User, checked: boolean) => {
     if (changingStatusIds.has(user.id)) return;
     const isSelf = Boolean(
       currentUser && (user.id === currentUser.id || user.login_name === currentUser.login_name)
@@ -239,13 +240,13 @@ export const UsersPage: React.FC = () => {
     } finally {
       setChangingStatusIds((current) => { const next = new Set(current); next.delete(user.id); return next; });
     }
-  };
+  }, [changingStatusIds, currentUser, setRawUsers]);
 
-  const isSelfUser = (record: User) => Boolean(
+  const isSelfUser = useCallback((record: User) => Boolean(
     currentUser && (record.id === currentUser.id || record.login_name === currentUser.login_name)
-  );
+  ), [currentUser]);
 
-  const handleDelete = (user: User) => {
+  const handleDelete = useCallback((user: User) => {
     Modal.confirm({
       title: t('button.userDelete'), content: t('users.deleteDialog.content', { name: user.user_name }), okText: t('common.actions.confirmDelete'), okType: 'danger',
       onOk: async () => {
@@ -253,7 +254,7 @@ export const UsersPage: React.FC = () => {
         message.success(t('users.toast.deleted')); refreshUsers();
       },
     });
-  };
+  }, [refreshUsers]);
 
   const handleResetPassword = async () => {
     if (!resetTarget) return;
@@ -266,7 +267,7 @@ export const UsersPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<User> = [
+  const columns = useMemo<ColumnsType<User>>(() => [
     {
       title: t('users.columns.user'),
       dataIndex: 'user_name',
@@ -344,7 +345,7 @@ export const UsersPage: React.FC = () => {
       width: 156,
       render: (date: string) => (
         <span className="whitespace-nowrap font-mono text-xs text-slate-500">
-          {dayjs(date).format('YYYY-MM-DD HH:mm')}
+          {dayjs(date).locale(locale === 'zh-CN' ? 'zh-cn' : 'en').format('YYYY-MM-DD HH:mm')}
         </span>
       ),
     },
@@ -361,7 +362,7 @@ export const UsersPage: React.FC = () => {
         </RowActions>
       ),
     },
-  ];
+  ], [locale, canEdit, canResetPassword, canDelete, changingStatusIds, isSelfUser, handleToggleStatus, handleOpenEditModal, handleDelete, passwordForm]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">

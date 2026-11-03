@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
-import { AssistantRuntimeLayout } from '@/components/assistant/AssistantRuntime';
+import { AssistantRuntimeLayout } from '@/components/assistant/AssistantRuntimeLayout';
 import { Spin } from '@/ui/spinner';
 import { Page403, Page404 } from '@/pages/error';
 import { RouteErrorPage } from '@/pages/error/RouteErrorPage';

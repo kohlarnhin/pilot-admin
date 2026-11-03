@@ -328,6 +328,12 @@ pnpm preview --port 3300
 
 localStorage 按 origin 共享，而不是按部署路径隔离。项目键均带 `pilot-admin:` 前缀，不清空其他应用的存储；同一域名下的多个 Pilot Admin 副本仍共享这些键，需要隔离时应在 fork 中统一更换命名空间或使用不同域名。
 
+### Brotli 与 gzip
+
+自管主机可为 HTML、JS 和 CSS 开启 Brotli（`br`），并保留 gzip 回退。也可在构建后生成 `.br` / `.gz` 旁文件，由服务器或 CDN 根据 `Accept-Encoding` 协商；保留原文件供不接受这两种编码的客户端使用。响应仍使用原资源 URL 和 MIME 类型，只有正文实际采用对应编码时才发送 `Content-Encoding: br` 或 `gzip`；所有变体（含未压缩响应）都发送 `Vary: Accept-Encoding`。CDN 缓存需区分编码变体，避免对已压缩响应重复压缩。WOFF2 字体本身已压缩。
+
+当前构建不生成预压缩文件。仅把旁文件上传到 GitHub Pages 不会开启上述协商，也不会获得 Brotli 收益：Pages 自行管理响应头与压缩，此方案需要可配置的主机或 CDN。
+
 ### GitHub Pages
 
 仓库已包含 `.github/workflows/deploy-pages.yml`：推送 `main` 或手动运行时，执行冻结安装、lint、i18n、类型检查和构建，再上传并部署 `dist/`。仓库需在 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**；本仓库已完成该设置。工作流按仓库名称使用 `/<repository-name>/`，适用于项目站点；用户/组织根站点或自定义根域名部署时，把工作流的 `VITE_BASE_PATH` 改为 `/`。
