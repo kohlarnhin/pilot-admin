@@ -17,6 +17,7 @@ import { cn } from '@/utils';
 import { NavVertical, NavMini, type NavProps, type NavItemDataProps } from '@/components/nav';
 import { BookOpen, ChevronsLeft, ChevronsRight, Sparkles } from 'lucide-react';
 import { AccountMenu } from './AccountMenu';
+import { SidebarLocaleEntry } from '@/components/common/LocaleSwitcher';
 import { canAccessPage, getFirstAccessiblePage } from '@/routes/access';
 import { usePermission } from '@/hooks/usePermission';
 import type { Menu } from '../../types';
@@ -203,7 +204,10 @@ export const Sidebar: React.FC = () => {
           </Tooltip>
         </div>
         )}
-        <AccountMenu collapsed={sidebarCollapsed} />
+        <div className={cn('flex items-center gap-1', sidebarCollapsed && 'flex-col-reverse gap-2')}>
+          <div className="w-full min-w-0 flex-1"><AccountMenu collapsed={sidebarCollapsed} /></div>
+          <SidebarLocaleEntry />
+        </div>
       </div>
     </nav>
   );

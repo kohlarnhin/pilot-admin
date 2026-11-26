@@ -2,8 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect, zh, en, logout } from './fixtures';
 
 async function switchLanguage(page: Page, language: 'English' | '简体中文') {
-  await page.locator('[data-slot="account-menu-trigger"]').click();
-  await page.getByRole('menuitem', { name: new RegExp(`${zh.layout.language}|${en.layout.language}`) }).hover();
+  await page.locator('[data-slot="sidebar-locale-entry"]').click();
   await page.getByRole('menuitemradio', { name: language, exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', language === 'English' ? 'en-US' : 'zh-CN');
 }

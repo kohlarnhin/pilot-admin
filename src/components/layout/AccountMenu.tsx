@@ -1,4 +1,3 @@
-import { LocaleSubmenu } from '@/components/common/LocaleSwitcher';
 import { t, useT } from '@/i18n';
 import { usePermission } from '@/hooks/usePermission';
 import React, { useRef, useState } from 'react';
@@ -101,7 +100,6 @@ export const AccountMenu: React.FC<{ collapsed: boolean }> = ({ collapsed }) => 
             <DropdownItem className={menuItemClass} onSelect={() => { setOpen(false); navigate('/profile'); }}>
               <User /><span className="min-w-0 flex-1 truncate">{t('profile.title')}</span>
             </DropdownItem>
-            <LocaleSubmenu />
             {menu}
           </>
         )}
