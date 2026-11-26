@@ -79,3 +79,25 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1440, height: 900
     }
   });
 }
+
+test('narrow viewport keeps the mini sidebar and expands it as an overlay', async ({ page, loginAs }) => {
+  await page.setViewportSize({ width: 900, height: 720 });
+  await loginAs('admin');
+  const sidebar = page.locator('[data-slot="pilot-admin-layout-nav"]');
+  const main = page.locator('[data-slot="pilot-admin-layout-main"]');
+  const backdrop = page.locator('[data-slot="sidebar-backdrop"]');
+  const stored = () => page.evaluate(() => localStorage.getItem('pilot-admin:sidebar-collapsed:v1'));
+  const before = await stored();
+  await expect.poll(() => sidebar.evaluate((element) => element.getBoundingClientRect().width)).toBe(88);
+  await page.getByRole('button', { name: zh.layout.expandMenu, exact: true }).click();
+  await expect(backdrop).toHaveCount(1);
+  // 浮层展开不推挤内容，也不改写宽屏下保存的折叠偏好。
+  await expect.poll(() => main.evaluate((element) => element.getBoundingClientRect().left)).toBe(88);
+  expect(await stored()).toBe(before);
+  await page.keyboard.press('Escape');
+  await expect(backdrop).toHaveCount(0);
+  await page.getByRole('button', { name: zh.layout.expandMenu, exact: true }).click();
+  await page.getByRole('navigation', { name: zh.layout.pageNavigation, exact: true }).getByRole('link', { name: zh.menu.users, exact: true }).click();
+  await expect(backdrop).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

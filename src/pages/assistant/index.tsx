@@ -1,3 +1,4 @@
+import { useCompactLayout } from '@/hooks/useMediaQuery';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { t, useT } from '@/i18n';
@@ -29,6 +30,7 @@ function AssistantSettingsWorkspace() {
   const canUpdate = can('agent-config:update');
   const sections = visibleAssistantSections(assistantSections, can);
   const [params, setParams] = useSearchParams();
+  const compact = useCompactLayout();
   const section = sections.find((item) => item.key === params.get('tab')) || sections[0];
   const [profile, setProfile] = useState<ProfileDrafts | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,15 +102,15 @@ function AssistantSettingsWorkspace() {
 
   return <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
     <PageHeader title={t('menu.assistant')} description={t('assistantSettings.description')} />
-    <div className="flex min-h-0 min-w-0 flex-1 gap-5">
-      <Card className="w-64 shrink-0 xl:w-72">
-        <div role="tablist" aria-label={t('assistantSettings.workspace.sectionLabel')} aria-orientation="vertical" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+      <Card className="w-full shrink-0 lg:w-64 xl:w-72">
+        <div role="tablist" aria-label={t('assistantSettings.workspace.sectionLabel')} aria-orientation={compact ? 'horizontal' : 'vertical'} className="flex min-h-0 flex-1 gap-2 overflow-x-auto p-3 lg:block lg:space-y-2 lg:overflow-y-auto lg:overflow-x-visible">
           {sections.map((item) => <button key={item.key} type="button" role="tab" id={`assistant-tab-${item.key}`} aria-selected={section.key === item.key}
-            {...getRovingTabProps(section.key === item.key, () => select(item.key), 'vertical')}
+            {...getRovingTabProps(section.key === item.key, () => select(item.key), compact ? 'horizontal' : 'vertical')}
             aria-controls={`assistant-panel-${item.key}`} onClick={() => select(item.key)}
-            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', section.key === item.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+            className={cn('flex w-auto shrink-0 items-center gap-3.5 rounded-xl border px-4 py-3 text-left lg:w-full lg:shrink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', section.key === item.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={item.icon} size={18} /></span>
-            <span className="min-w-0 flex-1"><span className="block text-13 font-medium">{t(item.titleKey)}</span><span className={cn('mt-0.5 block text-[11px] leading-5 text-slate-500', section.key === item.key && 'text-slate-600')}>{t(item.descriptionKey)}</span></span>
+            <span className="min-w-0 flex-1"><span className="block text-13 font-medium">{t(item.titleKey)}</span><span className={cn('mt-0.5 hidden text-[11px] lg:block leading-5 text-slate-500', section.key === item.key && 'text-slate-600')}>{t(item.descriptionKey)}</span></span>
             {item.kind === 'form' && profile && isSectionDirty(profile, item) ? <span className="shrink-0"><span aria-hidden="true" className="block size-1.5 rounded-full bg-slate-500" /><span className="sr-only">{t('assistantSettings.workspace.unsaved')}</span></span> : null}
           </button>)}
         </div>

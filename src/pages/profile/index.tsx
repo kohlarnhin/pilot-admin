@@ -1,3 +1,4 @@
+import { useCompactLayout } from '@/hooks/useMediaQuery';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { t, useT } from '@/i18n';
@@ -38,18 +39,19 @@ function ProfileSecurity() {
 export function ProfilePage() {
   useT();
   const [params, setParams] = useSearchParams();
+  const compact = useCompactLayout();
   const section = SECTIONS.find((item) => item.key === params.get('tab')) || SECTIONS[0];
   return <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
     <PageHeader title={t('profile.title')} description={t('profile.description')} />
-    <div className="flex min-h-0 min-w-0 flex-1 gap-5">
-      <Card className="w-64 shrink-0 xl:w-72">
-        <div role="tablist" aria-label={t('profile.sectionLabel')} aria-orientation="vertical" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+      <Card className="w-full shrink-0 lg:w-64 xl:w-72">
+        <div role="tablist" aria-label={t('profile.sectionLabel')} aria-orientation={compact ? 'horizontal' : 'vertical'} className="flex min-h-0 flex-1 gap-2 overflow-x-auto p-3 lg:block lg:space-y-2 lg:overflow-y-auto lg:overflow-x-visible">
           {SECTIONS.map((item) => <button key={item.key} type="button" role="tab" id={`profile-tab-${item.key}`} aria-selected={item.key === section.key} aria-controls={`profile-panel-${item.key}`}
-            {...getRovingTabProps(item.key === section.key, () => setParams({ tab: item.key }, { replace: true }), 'vertical')}
+            {...getRovingTabProps(item.key === section.key, () => setParams({ tab: item.key }, { replace: true }), compact ? 'horizontal' : 'vertical')}
             onClick={() => setParams({ tab: item.key }, { replace: true })}
-            className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', item.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+            className={cn('flex w-auto shrink-0 items-center gap-3.5 rounded-xl border px-4 py-3 text-left lg:w-full lg:shrink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', item.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={item.icon} size={18} /></span>
-            <span className="min-w-0"><span className="block text-13 font-medium">{t(item.title)}</span><span className="mt-0.5 block text-[11px] text-slate-600">{t(item.description)}</span></span>
+            <span className="min-w-0"><span className="block text-13 font-medium">{t(item.title)}</span><span className="mt-0.5 hidden text-[11px] lg:block text-slate-600">{t(item.description)}</span></span>
           </button>)}
         </div>
       </Card>

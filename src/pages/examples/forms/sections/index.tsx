@@ -149,10 +149,10 @@ function ProfileForm() {
 
   return <>
     <LeaveGuard dirty={dirty} busy={saving} />
-    <div className="flex min-h-0 min-w-0 flex-1 gap-5">
-      <Card className="w-56 shrink-0 xl:w-64">
-        <nav aria-label={t('exampleForms.sections.navLabel')} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
-          <ol className="space-y-1">{sectionIds.map((id, index) => <li key={id}>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+      <Card className="w-full shrink-0 lg:w-56 xl:w-64">
+        <nav aria-label={t('exampleForms.sections.navLabel')} className="min-h-0 flex-1 overflow-x-auto overscroll-contain p-3 lg:overflow-y-auto lg:overflow-x-visible">
+          <ol className="flex gap-1 lg:block lg:space-y-1">{sectionIds.map((id, index) => <li key={id} className="shrink-0">
             <a href={`#profile-section-${id}`} aria-current={active === id ? 'location' : undefined} onClick={(event) => { event.preventDefault(); anchor(id); }}
               className={cn('flex items-center gap-3 rounded-xl border p-3 text-13 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus', active === id ? 'border-line bg-slate-100 font-medium text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900')}>
               <Icon icon={sectionIcons[index]} size={18} /><span>{t(`exampleForms.sections.${id}`)}</span>

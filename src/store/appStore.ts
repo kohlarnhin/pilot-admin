@@ -12,18 +12,22 @@ const persistCollapsed = (collapsed: boolean) => {
 
 interface AppState {
   sidebarCollapsed: boolean;
+  /** 窄屏下侧栏浮层是否展开；不持久化。 */
+  sidebarOverlayOpen: boolean;
   siteName: string;
   siteDescription: string;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setSidebarOverlayOpen: (open: boolean) => void;
   loadBrand: () => Promise<void>;
 }
 
 let brandRequest: Promise<void> | null = null;
 export const useAppStore = create<AppState>((set, get) => ({
-  sidebarCollapsed: readCollapsed(), siteName: appConfig.name, siteDescription: appConfig.description,
+  sidebarCollapsed: readCollapsed(), sidebarOverlayOpen: false, siteName: appConfig.name, siteDescription: appConfig.description,
   toggleSidebar: () => get().setSidebarCollapsed(!get().sidebarCollapsed),
   setSidebarCollapsed: (sidebarCollapsed) => { persistCollapsed(sidebarCollapsed); set({ sidebarCollapsed }); },
+  setSidebarOverlayOpen: (sidebarOverlayOpen) => set({ sidebarOverlayOpen }),
   loadBrand: () => {
     if (brandRequest) return brandRequest;
     const request = settingsService.getBrand().then((brand) => {

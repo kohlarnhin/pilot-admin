@@ -1,8 +1,9 @@
 import { NotificationEntry } from '@/components/notifications/NotificationEntry';
 import { t, useT } from '@/i18n';
 import { GlobalSearchTrigger } from '@/components/search/GlobalSearch';
-import React, { useMemo } from 'react';
-import { Link } from 'react-router';
+import React, { useEffect, useMemo } from 'react';
+import { Link, useLocation } from 'react-router';
+import { useCompactLayout } from '@/hooks/useMediaQuery';
 import { useAssistantStore } from '@/store/assistantStore';
 import { getAssistantShortcut } from '@/components/assistant/assistantUtils';
 import { Kbd } from '@/components/common/Kbd';
@@ -81,8 +82,23 @@ export const Sidebar: React.FC = () => {
   const menus = useAuthStore((state) => state.menus);
   const permissions = useAuthStore((state) => state.permissions);
   const siteName = useAppStore((state) => state.siteName);
-  const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
-  const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+  const storedCollapsed = useAppStore((state) => state.sidebarCollapsed);
+  const toggleStored = useAppStore((state) => state.toggleSidebar);
+  const overlayOpen = useAppStore((state) => state.sidebarOverlayOpen);
+  const setOverlayOpen = useAppStore((state) => state.setSidebarOverlayOpen);
+  const compact = useCompactLayout();
+  const { pathname } = useLocation();
+  // 窄屏固定为窄栏，展开时浮在内容之上，不改动用户在宽屏下保存的偏好。
+  const sidebarCollapsed = compact ? !overlayOpen : storedCollapsed;
+  const floating = compact && overlayOpen;
+  const toggleSidebar = () => (compact ? setOverlayOpen(!overlayOpen) : toggleStored());
+  useEffect(() => { setOverlayOpen(false); }, [pathname, compact, setOverlayOpen]);
+  useEffect(() => {
+    if (!floating) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOverlayOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [floating, setOverlayOpen]);
   const navData = useMemo(() => {
     const accessibleMenus = (items: Menu[]): Menu[] => items.flatMap((menu) => {
       if (menu.visible === 0 || menu.status === 0) return [];
@@ -102,7 +118,8 @@ export const Sidebar: React.FC = () => {
       data-slot="pilot-admin-layout-nav"
       className={cn(
         'scrollbar-hover-zone fixed inset-y-0 left-0 z-30 flex h-full select-none flex-col border-r border-line bg-white transition-[width] duration-300 ease-in-out',
-        sidebarCollapsed ? 'w-[var(--layout-nav-width-mini)]' : 'w-[var(--layout-nav-width)]'
+        sidebarCollapsed ? 'w-[var(--layout-nav-width-mini)]' : 'w-[var(--layout-nav-width)]',
+        floating && 'shadow-pop'
       )}
     >
       {/* 品牌区 */}

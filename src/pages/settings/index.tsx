@@ -1,3 +1,4 @@
+import { useCompactLayout } from '@/hooks/useMediaQuery';
 import { t, useT } from '@/i18n';
 import { useCan } from '@/hooks/usePermission';
 import { useDataChanged } from '@/hooks/useDataChanged';
@@ -33,6 +34,7 @@ export const SettingsPage: React.FC = () => {
   const canReset = can('settings:reset');
   const loadBrand = useAppStore((state) => state.loadBrand);
   const [params, setParams] = useSearchParams();
+  const compact = useCompactLayout();
   const tab = SECTIONS.find((section) => section.key === params.get('tab')) || SECTIONS[0];
   const [draft, setDraft] = useState<SystemSettings | null>(null);
   const [saving, setSaving] = useState(false);
@@ -93,15 +95,15 @@ export const SettingsPage: React.FC = () => {
     <div className="flex h-full min-h-0 min-w-0 w-full flex-col">
       <PageHeader title={t('menu.settings')} description={t('settings.description')} />
       {error && <Alert type="error" title={error} action={<Button size="xs" onClick={() => setAttempt((value) => value + 1)}>{t('common.actions.retry')}</Button>} className="mb-4" />}
-      <div className="flex min-h-0 min-w-0 flex-1 gap-5">
-        <Card className="w-64 shrink-0 xl:w-72">
-          <div role="tablist" aria-label={t('settings.sectionLabel')} aria-orientation="vertical" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-5">
+        <Card className="w-full shrink-0 lg:w-64 xl:w-72">
+          <div role="tablist" aria-label={t('settings.sectionLabel')} aria-orientation={compact ? 'horizontal' : 'vertical'} className="flex min-h-0 flex-1 gap-2 overflow-x-auto p-3 lg:block lg:space-y-2 lg:overflow-y-auto lg:overflow-x-visible">
             {SECTIONS.map((section) => <button key={section.key} type="button" role="tab" id={`settings-tab-${section.key}`} aria-selected={tab.key === section.key}
-              {...getRovingTabProps(tab.key === section.key, () => setParams({ tab: section.key }, { replace: true }), 'vertical')}
+              {...getRovingTabProps(tab.key === section.key, () => setParams({ tab: section.key }, { replace: true }), compact ? 'horizontal' : 'vertical')}
               aria-controls={`settings-panel-${section.key}`} onClick={() => setParams({ tab: section.key }, { replace: true })}
-              className={cn('flex w-full items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', tab.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
+              className={cn('flex w-auto shrink-0 items-center gap-3.5 rounded-xl border px-4 py-3 text-left lg:w-full lg:shrink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus', tab.key === section.key ? 'border-line bg-slate-100 text-slate-900' : 'border-transparent text-slate-600 hover:bg-slate-50')}>
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-slate-500"><Icon icon={section.icon} size={18} /></span>
-              <span className="min-w-0"><span className="block text-13 font-medium">{t(section.label)}</span><span className="mt-0.5 block text-[11px] text-slate-600">{t(section.description)}</span></span>
+              <span className="min-w-0"><span className="block text-13 font-medium">{t(section.label)}</span><span className="mt-0.5 hidden text-[11px] lg:block text-slate-600">{t(section.description)}</span></span>
             </button>)}
           </div>
         </Card>

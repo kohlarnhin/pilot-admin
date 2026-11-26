@@ -15,6 +15,7 @@ import { canAccessPage } from '@/routes/access';
 import { usePermission } from '@/hooks/usePermission';
 import { isKnownPageRoute, preloadRoute } from '@/routes/routeModules';
 import { createLazyResource } from '@/utils/lazyResource';
+import { useCompactLayout } from '@/hooks/useMediaQuery';
 
 const tableVirtualizer = createLazyResource(() => import('@tanstack/react-virtual'));
 
@@ -25,6 +26,9 @@ export const AppLayout: React.FC = () => {
   const initAuth = useAuthStore((state) => state.initAuth);
   const menus = useAuthStore((state) => state.menus);
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed);
+  const overlayOpen = useAppStore((state) => state.sidebarOverlayOpen);
+  const setOverlayOpen = useAppStore((state) => state.setSidebarOverlayOpen);
+  const compact = useCompactLayout();
   const location = useLocation();
   const { pathname } = location;
   const agentReturnTo = agentReturnPath(location.state?.agentReturnTo);
@@ -69,10 +73,11 @@ export const AppLayout: React.FC = () => {
     <div data-slot="pilot-admin-layout-root" className="h-screen w-full overflow-hidden bg-white">
       <SkipLink targetId="admin-main" />
       <Sidebar />
+      {compact && overlayOpen ? <div aria-hidden="true" data-slot="sidebar-backdrop" className="fixed inset-0 z-20 animate-overlay-in bg-slate-900/20" onClick={() => setOverlayOpen(false)} /> : null}
       <GlobalSearch />
       {canUseAgent ? <AIAssistant /> : null}
       <div className="relative flex h-full min-h-0 min-w-0 w-full flex-col transition-[padding] duration-300 ease-in-out"
-        style={{ paddingLeft: sidebarCollapsed ? 'var(--layout-nav-width-mini)' : 'var(--layout-nav-width)' }}>
+        style={{ paddingLeft: compact || sidebarCollapsed ? 'var(--layout-nav-width-mini)' : 'var(--layout-nav-width)' }}>
         {agentReturnTo && canUseAgent ? <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line bg-slate-50 px-6 py-2 text-xs text-slate-500"><span>{t('layout.agentBanner')}</span><Link to={agentReturnTo} className="font-medium text-slate-700 hover:text-slate-900">{t('layout.returnConversation')}</Link></div> : null}
         <main id="admin-main" tabIndex={-1} data-slot="pilot-admin-layout-main" className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden p-4 outline-none lg:p-6">
           <div data-slot="page-container" className="mx-auto flex min-h-0 min-w-0 w-full flex-1 flex-col">
