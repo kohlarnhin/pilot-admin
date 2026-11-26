@@ -63,7 +63,7 @@ export function EditableTablePage() {
   const saveLock = useRef(false);
   const focusAfterAdd = useRef<string | null>(null);
 
-  useEffect(() => () => { alive.current = false; }, []);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => {
     let active = true;
     setLoadError('');
