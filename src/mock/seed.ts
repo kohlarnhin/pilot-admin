@@ -114,7 +114,7 @@ export function createSeed(): MockDb {
       text.roles.operator.name,
       'ROLE_OPERATOR',
       text.roles.operator.description,
-      ['dashboard', 'system', 'users', 'examples', 'components', 'crud-example', 'directory-example', 'form-wizard', 'form-sections', 'result-pages', 'ai-permissions'],
+      ['dashboard', 'system', 'users', 'examples', 'components', 'crud-example', 'editable-table', 'directory-example', 'form-wizard', 'form-sections', 'result-pages', 'ai-permissions'],
       ['user-update', 'agent-use', 'example-create', 'example-update'],
     ),
     role(
@@ -122,7 +122,7 @@ export function createSeed(): MockDb {
       text.roles.viewer.name,
       'ROLE_VIEWER',
       text.roles.viewer.description,
-      ['dashboard', 'examples', 'components', 'crud-example', 'directory-example', 'form-wizard', 'form-sections', 'result-pages'],
+      ['dashboard', 'examples', 'components', 'crud-example', 'editable-table', 'directory-example', 'form-wizard', 'form-sections', 'result-pages'],
       [],
     ),
   ];

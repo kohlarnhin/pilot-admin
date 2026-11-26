@@ -7,6 +7,7 @@ export default {
   "resultPages": "Results and exceptions",
   "directoryExample": "Tree directory",
   "crudExample": "Standard List",
+  "editableTable": "Editable table",
   "auditLogs": "Audit Logs",
   "assistant": "Assistant settings",
   "dashboard": "Overview",

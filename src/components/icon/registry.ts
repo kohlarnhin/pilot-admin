@@ -6,7 +6,7 @@ import {
   LayoutGrid, Lightbulb, ListChecks, ListTodo, ListTree, LoaderCircle, LockKeyhole, LogIn, MapPin, Monitor,
   Maximize2, MousePointerClick, Package, Pencil, Plus, RefreshCw, RotateCcw, Send, Settings2, Shield, ShieldCheck,
   SquarePen, SquareTerminal, SquareX, TriangleAlert, Trash2, Type, Upload, User, UserCheck, UserPlus, UserX, Users, UsersRound,
-  WandSparkles, Wrench, Component, Database, Save, Bell, Lock, Check, Clock,
+  WandSparkles, Wrench, Sheet, Component, Database, Save, Bell, Lock, Check, Clock,
 } from 'lucide-react';
 
 /**
@@ -15,6 +15,7 @@ import {
  */
 export const ICONS = {
   component: Component,
+  sheet: Sheet,
   database: Database,
   save: Save,
   bell: Bell,

@@ -62,6 +62,7 @@ export const adminPages = [
   definePage({ path: '/examples/components', load: () => import('../pages/examples/components').then((module) => ({ default: module.ComponentsPage })) }),
   definePage({ path: '/examples/crud', load: () => import('../pages/examples/crud').then((module) => ({ default: module.CrudExamplePage })) }),
   definePage({ path: '/examples/crud/:id', accessPath: '/examples/crud', load: () => import('../pages/examples/crud/ProjectDetailPage').then((module) => ({ default: module.ProjectDetailPage })) }),
+  definePage({ path: '/examples/editable-table', load: () => import('../pages/examples/editable-table').then((module) => ({ default: module.EditableTablePage })) }),
   definePage({ path: '/examples/directory', load: () => import('../pages/examples/directory').then((module) => ({ default: module.DirectoryExamplePage })) }),
   definePage({ path: '/examples/forms/wizard', load: () => import('../pages/examples/forms/wizard').then((module) => ({ default: module.FormWizardPage })) }),
   definePage({ path: '/examples/forms/sections', load: () => import('../pages/examples/forms/sections').then((module) => ({ default: module.FormSectionsPage })) }),
