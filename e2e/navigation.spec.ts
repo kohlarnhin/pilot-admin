@@ -59,3 +59,23 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1440, height: 900
     }
   });
 }
+
+for (const viewport of [{ width: 1280, height: 720 }, { width: 1440, height: 900 }]) {
+  test(`sidebar bottom shows the last menu item once at ${viewport.width}x${viewport.height}`, async ({ page, loginAs }) => {
+    await page.setViewportSize(viewport);
+    await loginAs('admin');
+    const nav = page.getByRole('navigation', { name: zh.layout.pageNavigation, exact: true });
+    const scroller = page.locator('.scrollbar-hover').filter({ has: nav });
+    for (const mode of ['expanded', 'collapsed']) {
+      if (mode === 'collapsed') await page.getByRole('button', { name: zh.layout.collapseMenu, exact: true }).click();
+      await scroller.hover();
+      await scroller.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+      // 滚动区只给滑块着色：背景裁成文字会在底部留下同名幽灵文字。
+      await expect(scroller).not.toHaveCSS('background-clip', 'text');
+      await expect(scroller).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      const last = nav.getByRole('link', { name: zh.menu.resultPages, exact: true });
+      await expect(last).toHaveCount(1);
+      await expect(last).toBeInViewport({ ratio: 1 });
+    }
+  });
+}
