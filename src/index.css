@@ -59,20 +59,25 @@ body {
 }
 
 @supports selector(::-webkit-scrollbar) {
+  @property --scrollbar-thumb-color {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: transparent;
+  }
+
+  /* 只给滑块着色，避免文字参与滚动区的背景绘制。 */
   .scrollbar-hover {
-    background-color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    transition: background-color .2s;
+    --scrollbar-thumb-color: transparent;
+    transition: --scrollbar-thumb-color .2s;
   }
 
   .scrollbar-hover:hover,
   .scrollbar-hover-zone:hover .scrollbar-hover {
-    background-color: #C4CDD5;
+    --scrollbar-thumb-color: #C4CDD5;
   }
 
   .scrollbar-hover::-webkit-scrollbar-thumb {
-    background-color: inherit;
+    background-color: var(--scrollbar-thumb-color);
   }
 
   .scrollbar-hover::-webkit-scrollbar-thumb:hover {
