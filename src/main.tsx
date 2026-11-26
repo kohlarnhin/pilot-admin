@@ -1,12 +1,12 @@
 import { t } from '@/i18n';
-// Open Sans Variable（西文/数字）+ Noto Sans SC（中文，轻量现代）
-import '@fontsource-variable/open-sans';
+// Open Sans Variable（西文/数字）+ Noto Sans SC（中文，轻量现代）；西文与等宽字体只打包 latin 子集
+import './fonts.css';
 import '@fontsource/noto-sans-sc/400.css';
 import '@fontsource/noto-sans-sc/500.css';
 import '@fontsource/noto-sans-sc/600.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/jetbrains-mono/600.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-500.css';
+import '@fontsource/jetbrains-mono/latin-600.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';

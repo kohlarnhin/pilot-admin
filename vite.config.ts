@@ -21,6 +21,18 @@ function loginFontPreloads(base: string): Plugin {
   };
 }
 
+/** 支持的浏览器都能用 woff2，去掉 Fontsource 的 woff 回退，避免重复打包并缩小首屏 CSS。 */
+function dropWoffFallback(): Plugin {
+  return {
+    name: 'drop-woff-fallback',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/[\\/]@fontsource(-variable)?[\\/].+\.css$/.test(id)) return;
+      return code.replace(/,\s*url\([^)]+\.woff\)\s*format\(['"]woff['"]\)/g, '');
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const basePath = env.VITE_BASE_PATH?.trim() || '/';
@@ -35,7 +47,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
-    plugins: [react(), loginFontPreloads(base)],
+    plugins: [dropWoffFallback(), react(), loginFontPreloads(base)],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
