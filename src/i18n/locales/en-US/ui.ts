@@ -24,5 +24,10 @@ export default {
   "dialog": "Dialog",
   "noOptions": "No matching options",
   "loadingOptions": "Loading…",
-  "remove": "Remove"
+  "remove": "Remove",
+  "datePlaceholder": "Select date",
+  "chooseDate": "Choose date",
+  "prevMonth": "Previous month",
+  "nextMonth": "Next month",
+  "today": "Today"
 } satisfies LocalizedDictionary<typeof source>;

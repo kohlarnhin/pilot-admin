@@ -1,5 +1,5 @@
-import { t, useT } from '@/i18n';
-import React, { useState } from 'react';
+import { formatNumber, t, useT } from '@/i18n';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, type ButtonProps } from '@/ui/button';
 import { Input, SearchInput } from '@/ui/input';
 import { Select } from '@/ui/select';
@@ -22,6 +22,13 @@ import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, Tabl
 import { Separator } from '@/ui/separator';
 import { WorkbenchCrumbs } from '@/ui/breadcrumb';
 import { RowAction, RowActions } from '@/ui/row-action';
+import { RadioGroup, Segmented } from '@/ui/radio';
+import { DatePicker } from '@/ui/date-picker';
+import { Descriptions } from '@/ui/descriptions';
+import { Timeline } from '@/ui/timeline';
+import { Steps, type StepItem } from '@/components/common/Steps';
+import dayjs from 'dayjs';
+import { CalendarDays, LayoutGrid, List } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PageSkeleton } from '@/components/common/PageSkeleton';
@@ -29,6 +36,7 @@ import { CopyButton } from '@/components/common/CopyButton';
 import { FixedTable } from '@/components/common/FixedTable';
 import { Kbd } from '@/components/common/Kbd';
 import { Icon } from '@/components/icon';
+import { cn } from '@/utils';
 
 function Example({ id, title, description, children, wide = false }: { id: string; title: string; description: string; children: React.ReactNode; wide?: boolean }) {
   return <Card id={id} className={wide ? 'col-span-2' : ''}>
@@ -42,6 +50,105 @@ const DEMO_ROWS = [
   { id: 'DEMO-002', name: 'gallery.demoRows.reviewName', owner: 'gallery.demoRows.reviewOwner', status: 'active', statusLabel: 'gallery.demoRows.inProgress' },
   { id: 'DEMO-003', name: 'gallery.demoRows.releaseName', owner: 'gallery.demoRows.releaseOwner', status: 'pending', statusLabel: 'gallery.demoRows.notStarted' },
 ] as const;
+
+const SECTIONS = [
+  ['gallery-buttons', 'gallery.buttons.title'], ['gallery-inputs', 'gallery.inputs.title'], ['gallery-selects', 'gallery.selection.title'],
+  ['gallery-radio', 'gallery.radio.title'], ['gallery-date', 'gallery.date.title'], ['gallery-badges', 'gallery.badges.title'], ['gallery-alerts', 'gallery.feedback.title'], ['gallery-tabs', 'gallery.overlays.title'],
+  ['gallery-overlays', 'gallery.dialogs.title'], ['gallery-form', 'gallery.form.title'], ['gallery-files', 'gallery.files.title'],
+  ['gallery-loading', 'gallery.loading.title'], ['gallery-cards', 'gallery.cards.title'],
+  ['gallery-steps', 'gallery.steps.title'], ['gallery-descriptions', 'gallery.descriptions.title'], ['gallery-table', 'gallery.tables.title'],
+  ['gallery-page-skeleton', 'gallery.skeletons.title'],
+] as const;
+type SectionId = typeof SECTIONS[number][0];
+const SPY_OFFSET = 24;
+
+/** 悬浮目录：随滚动高亮当前分区，点击在滚动容器内定位；窄屏收为右下角按钮。 */
+function GalleryToc({ scrollRef }: { scrollRef: React.RefObject<HTMLDivElement | null> }) {
+  const [active, setActive] = useState<SectionId>(SECTIONS[0][0]);
+  const [open, setOpen] = useState(false);
+  const pinned = useRef<SectionId | null>(null);
+  // 点击跳转期间暂停滚动跟随，滚动停稳后再计算，避免高亮扫过途经分区。
+  const jumping = useRef(false);
+  const settleTimer = useRef<number | undefined>(undefined);
+  const compactRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => { if (!compactRef.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open]);
+  const update = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) { setActive(SECTIONS[SECTIONS.length - 1][0]); return; }
+    // 双列网格里同一行的卡片顶部相同：默认取该行第一张，点击过同行的另一张时保留点击项。
+    let current: SectionId = SECTIONS[0][0];
+    let currentTop = -Infinity;
+    for (const [id] of SECTIONS) {
+      const element = document.getElementById(id);
+      if (element && element.offsetTop - container.scrollTop <= SPY_OFFSET && element.offsetTop > currentTop) {
+        current = id;
+        currentTop = element.offsetTop;
+      }
+    }
+    const pinnedElement = pinned.current ? document.getElementById(pinned.current) : null;
+    if (pinned.current && pinnedElement?.offsetTop === currentTop) current = pinned.current;
+    else pinned.current = null;
+    setActive(current);
+  }, [scrollRef]);
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    let frame = 0;
+    const onScroll = () => {
+      if (jumping.current) {
+        window.clearTimeout(settleTimer.current);
+        settleTimer.current = window.setTimeout(() => { jumping.current = false; update(); }, 120);
+        return;
+      }
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    container.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { cancelAnimationFrame(frame); window.clearTimeout(settleTimer.current); container.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, [scrollRef, update]);
+  const jump = (id: SectionId) => {
+    const container = scrollRef.current;
+    const element = document.getElementById(id);
+    if (!container || !element) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    container.scrollTo({ top: Math.max(0, element.offsetTop - 4), behavior: reduce ? 'auto' : 'smooth' });
+    pinned.current = id;
+    jumping.current = true;
+    window.clearTimeout(settleTimer.current);
+    settleTimer.current = window.setTimeout(() => { jumping.current = false; update(); }, 150);
+    setActive(id);
+    setOpen(false);
+  };
+  const list = (compact: boolean) => <ol className="space-y-0.5">
+    {SECTIONS.map(([id, title]) => <li key={id}>
+      <button type="button" aria-current={active === id ? 'location' : undefined} onClick={() => jump(id)}
+        className={cn('relative block w-full truncate rounded-md py-1.5 pl-3 pr-2 text-left text-13 transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+          active === id ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800',
+          !compact && active === id && 'before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-500')}>{t(title)}</button>
+    </li>)}
+  </ol>;
+  return <>
+    <nav aria-label={t('gallery.toc.title')} data-slot="gallery-toc" className="hidden w-48 shrink-0 xl:block">
+      <div className="rounded-xl border border-line bg-white p-2 shadow-sm">
+        <p className="px-3 pb-1.5 pt-1 text-xs font-medium text-slate-400">{t('gallery.toc.title')}</p>
+        {list(false)}
+      </div>
+    </nav>
+    <div ref={compactRef} className="fixed bottom-6 right-6 z-30 xl:hidden" data-slot="gallery-toc-compact">
+      {open ? <nav aria-label={t('gallery.toc.title')} className="absolute bottom-12 right-0 max-h-[min(70vh,480px)] w-56 overflow-y-auto rounded-xl border border-line bg-white p-2 shadow-lg">{list(true)}</nav> : null}
+      <Button size="icon" aria-label={t('gallery.toc.open')} aria-expanded={open} onClick={() => setOpen((value) => !value)}
+        onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false); }} className="rounded-full bg-white shadow-md"><Icon icon={open ? 'x' : 'list-tree'} size={18} /></Button>
+    </div>
+  </>;
+}
 
 export const ComponentsPage: React.FC = () => {
   useT();
@@ -61,12 +168,20 @@ export const ComponentsPage: React.FC = () => {
   const [keys, setKeys] = useState<Key[]>([]);
   const [tableState, setTableState] = useState<'data' | 'loading' | 'empty'>('data');
   const [form] = Form.useForm();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [plan, setPlan] = useState<'basic' | 'pro' | 'enterprise'>('pro');
+  const [notice, setNotice] = useState<'inbox' | 'email' | 'none'>('inbox');
+  const [view, setView] = useState<'list' | 'board' | 'calendar'>('list');
+  const [date, setDate] = useState<string | null>(null);
+  const [due, setDue] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   const options = [{ value: 'one', label: t('gallery.options.first') }, { value: 'two', label: t('gallery.options.second') }, { value: 'three', label: t('gallery.options.disabled'), disabled: true }];
   const variants: NonNullable<ButtonProps['variant']>[] = ['outline', 'primary', 'secondary', 'ghost', 'subtle', 'link', 'danger', 'destructive'];
 
   return <div className="flex h-full min-h-0 min-w-0 flex-col">
     <PageHeader title={t('menu.components')} description={t('gallery.description')} actions={<span className="text-xs text-slate-500">{t('gallery.searchShortcut')}<Kbd className="border-slate-200 bg-slate-50 text-slate-500">⌘ / Ctrl K</Kbd></span>} />
-    <div data-slot="gallery-scroll" className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+    <div className="flex min-h-0 min-w-0 flex-1 gap-5">
+    <div ref={scrollRef} data-slot="gallery-scroll" className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain pr-1">
       <div className="grid grid-cols-2 items-start gap-5 pb-1">
         <Example id="gallery-buttons" title={t('gallery.buttons.title')} description={t('gallery.buttons.description')} wide>
           <div className="flex flex-wrap items-center gap-3">{variants.map((variant) => <Button key={variant} variant={variant}>{variant}</Button>)}</div>
@@ -89,6 +204,28 @@ export const ComponentsPage: React.FC = () => {
           <div className="flex flex-wrap gap-4"><Checkbox checked={checked} onChange={(event) => setChecked(event.target.checked)}>{t('gallery.selection.checkedLabel')}</Checkbox><Checkbox indeterminate checked={false}>{t('gallery.selection.partialLabel')}</Checkbox><Checkbox disabled checked>{t('gallery.selection.disabledCheckbox')}</Checkbox></div>
           <Checkbox.Group value={multi} onChange={(values) => setMulti(values.map(String))} className="flex gap-4"><Checkbox value="one">{t('gallery.selection.firstGroup')}</Checkbox><Checkbox value="two">{t('gallery.selection.secondGroup')}</Checkbox></Checkbox.Group>
           <div className="flex flex-wrap items-center gap-5"><Switch aria-label={t('gallery.selection.switchLabel')} checked={switchOn} onChange={setSwitchOn} /><Switch aria-label={t('gallery.selection.offLabel')} /><Switch aria-label={t('gallery.selection.disabledSwitch')} checked disabled /><Switch aria-label={t('gallery.selection.loadingSwitch')} checked loading /><InputNumber aria-label={t('gallery.selection.numberLabel')} id="gallery-number" min={0} max={10} value={number} onChange={setNumber} className="w-28" /></div>
+        </Example>
+        <Example id="gallery-radio" title={t('gallery.radio.title')} description={t('gallery.radio.description')}>
+          <RadioGroup aria-label={t('gallery.radio.planLabel')} value={plan} onChange={setPlan} options={[{ value: 'basic', label: t('gallery.radio.planBasic') }, { value: 'pro', label: t('gallery.radio.planPro') }, { value: 'enterprise', label: t('gallery.radio.planEnterprise'), disabled: true }]} />
+          <RadioGroup aria-label={t('gallery.radio.noticeLabel')} direction="vertical" value={notice} onChange={setNotice} options={[{ value: 'inbox', label: t('gallery.radio.noticeInbox'), description: t('gallery.radio.noticeInboxHint') }, { value: 'email', label: t('gallery.radio.noticeEmail'), description: t('gallery.radio.noticeEmailHint') }, { value: 'none', label: t('gallery.radio.noticeNone'), description: t('gallery.radio.noticeNoneHint') }]} />
+          <div className="flex flex-wrap items-center gap-3">
+            <Segmented aria-label={t('gallery.radio.viewLabel')} value={view} onChange={setView} options={[{ value: 'list', label: t('gallery.radio.viewList'), icon: <List size={14} aria-hidden="true" /> }, { value: 'board', label: t('gallery.radio.viewBoard'), icon: <LayoutGrid size={14} aria-hidden="true" /> }, { value: 'calendar', label: t('gallery.radio.viewCalendar'), icon: <CalendarDays size={14} aria-hidden="true" /> }]} />
+            <span className="text-xs text-slate-500">{t('gallery.radio.currentView', { view: t(view === 'list' ? 'gallery.radio.viewList' : view === 'board' ? 'gallery.radio.viewBoard' : 'gallery.radio.viewCalendar') })}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Segmented aria-label={t('gallery.radio.rangeLabel')} size="small" block defaultValue="week" options={[{ value: 'day', label: t('gallery.radio.rangeDay') }, { value: 'week', label: t('gallery.radio.rangeWeek') }, { value: 'month', label: t('gallery.radio.rangeMonth') }]} />
+            <Segmented aria-label={t('gallery.radio.disabledLabel')} size="small" block disabled defaultValue="day" options={[{ value: 'day', label: t('gallery.radio.rangeDay') }, { value: 'week', label: t('gallery.radio.rangeWeek') }]} />
+          </div>
+        </Example>
+        <Example id="gallery-date" title={t('gallery.date.title')} description={t('gallery.date.description')}>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            <div className="min-w-0 space-y-1.5"><p className="text-xs text-slate-500">{t('gallery.date.basicLabel')}</p><DatePicker aria-label={t('gallery.date.basicLabel')} value={date} onChange={setDate} /></div>
+            <div className="min-w-0 space-y-1.5"><p className="text-xs text-slate-500">{t('gallery.date.rangedLabel')}</p><DatePicker aria-label={t('gallery.date.rangedLabel')} aria-describedby="gallery-date-ranged-hint" value={due} onChange={setDue} min={dayjs().format('YYYY-MM-DD')} max={dayjs().add(30, 'day').format('YYYY-MM-DD')} /></div>
+            <div className="min-w-0 space-y-1.5"><p className="text-xs text-slate-500">{t('gallery.date.disabledLabel')}</p><DatePicker aria-label={t('gallery.date.disabledLabel')} disabled defaultValue="2026-11-20" /></div>
+            <div className="min-w-0 space-y-1.5"><p className="text-xs text-slate-500">{t('gallery.date.errorLabel')}</p><DatePicker aria-label={t('gallery.date.errorLabel')} status="error" aria-describedby="gallery-date-error-hint" /><p id="gallery-date-error-hint" className="text-xs text-red-600">{t('gallery.date.errorHint')}</p></div>
+          </div>
+          <p id="gallery-date-ranged-hint" className="text-xs text-slate-500">{t('gallery.date.rangedHint')}</p>
+          <p role="status" className="text-xs text-slate-600">{date ? t('gallery.date.selected', { date }) : t('gallery.date.none')}</p>
         </Example>
         <Example id="gallery-badges" title={t('gallery.badges.title')} description={t('gallery.badges.description')}>
           <div className="flex flex-wrap gap-2">{(['default', 'secondary', 'outline', 'info', 'warning', 'success', 'error', 'destructive'] as NonNullable<BadgeProps['variant']>[]).map((variant) => <Badge key={variant} variant={variant}>{variant}</Badge>)}<Badge shape="circle">{t('gallery.badges.round')}</Badge></div>
@@ -137,6 +274,38 @@ export const ComponentsPage: React.FC = () => {
           <Separator />
           <Card><CardToolbar title={t('gallery.cards.exampleTitle')} count={3} description={t('gallery.cards.exampleDescription')} actions={<Button size="sm">{t('common.columns.actions')}</Button>} /><CardBar actions={<Button size="xs">{t('gallery.cards.more')}</Button>}>{t('gallery.cards.compactTitle')}</CardBar><ListToolbar extra={t('gallery.cards.recordCount')}><span className="text-xs text-slate-500">{t('gallery.cards.filterTitle')}</span></ListToolbar><CardContent className="py-4 text-xs text-slate-600">{t('gallery.cards.content')}</CardContent><CardFooter className="text-xs text-slate-500">{t('gallery.cards.footer')}</CardFooter></Card>
         </Example>
+        <Example id="gallery-steps" title={t('gallery.steps.title')} description={t('gallery.steps.description')}>
+          <Steps label={t('gallery.steps.label')} onChange={(index) => { if (index < step) setStep(index); }}
+            items={(['fill', 'review', 'submit'] as const).map((key, index): StepItem => ({ id: key, title: t(`gallery.steps.${key}`), status: index < step ? 'done' : index === step ? 'current' : 'upcoming', statusLabel: t(index < step ? 'gallery.steps.done' : index === step ? 'gallery.steps.current' : 'gallery.steps.upcoming'), disabled: index > step }))} />
+          <div className="flex gap-2">
+            <Button size="sm" disabled={step === 0} onClick={() => setStep((value) => Math.max(0, value - 1))}>{t('gallery.steps.prev')}</Button>
+            {step < 3 ? <Button size="sm" variant="primary" onClick={() => setStep((value) => value + 1)}>{t('gallery.steps.next')}</Button> : <Button size="sm" onClick={() => setStep(0)}>{t('gallery.steps.restart')}</Button>}
+          </div>
+          <Separator />
+          <Timeline aria-label={t('gallery.steps.timelineLabel')} items={[
+            { key: 'e4', title: t('gallery.steps.eventProcessing'), time: '11-26 14:20', dateTime: '2026-11-26T14:20', description: t('gallery.steps.eventProcessingHint'), tone: 'processing' },
+            { key: 'e3', title: t('gallery.steps.eventWarning'), time: '11-25 18:05', dateTime: '2026-11-25T18:05', description: t('gallery.steps.eventWarningHint'), tone: 'warning' },
+            { key: 'e2', title: t('gallery.steps.eventSuccess'), time: '11-25 09:40', dateTime: '2026-11-25T09:40', tone: 'success' },
+            { key: 'e1', title: t('gallery.steps.eventCreated'), time: '11-24 16:12', dateTime: '2026-11-24T16:12' },
+          ]} />
+        </Example>
+        <Example id="gallery-descriptions" title={t('gallery.descriptions.title')} description={t('gallery.descriptions.description')}>
+          <Descriptions aria-label={t('gallery.descriptions.basicLabel')} items={[
+            { key: 'code', label: t('gallery.descriptions.code'), children: <CodeTag>APV-202611-018</CodeTag> },
+            { key: 'status', label: t('common.columns.status'), children: <Tag dot color="processing">{t('gallery.descriptions.statusValue')}</Tag> },
+            { key: 'applicant', label: t('gallery.descriptions.applicant'), children: t('gallery.descriptions.applicantValue') },
+            { key: 'department', label: t('gallery.descriptions.department'), children: t('gallery.descriptions.departmentValue') },
+            { key: 'amount', label: t('gallery.descriptions.amount'), children: <span className="tabular-nums">{formatNumber(12600, { style: 'currency', currency: 'CNY' })}</span> },
+            { key: 'created', label: t('gallery.descriptions.createdAt'), children: <span className="tabular-nums">2026-11-20 10:30</span> },
+          ]} />
+          <Descriptions bordered aria-label={t('gallery.descriptions.borderedLabel')} items={[
+            { key: 'applicant', label: t('gallery.descriptions.applicant'), children: t('gallery.descriptions.applicantValue') },
+            { key: 'department', label: t('gallery.descriptions.department'), children: t('gallery.descriptions.departmentValue') },
+            { key: 'amount', label: t('gallery.descriptions.amount'), children: <span className="tabular-nums">{formatNumber(12600, { style: 'currency', currency: 'CNY' })}</span> },
+            { key: 'created', label: t('gallery.descriptions.createdAt'), children: <span className="tabular-nums">2026-11-20</span> },
+            { key: 'remark', label: t('gallery.descriptions.remark'), children: t('gallery.descriptions.remarkValue'), full: true },
+          ]} />
+        </Example>
         <Example id="gallery-table" title={t('gallery.tables.title')} description={t('gallery.tables.description')} wide>
           <div className="flex gap-2"><Button size="sm" pressed={tableState === 'data'} onClick={() => setTableState('data')}>{t('gallery.tables.dataTab')}</Button><Button size="sm" pressed={tableState === 'loading'} onClick={() => setTableState('loading')}>{t('common.status.loading')}</Button><Button size="sm" pressed={tableState === 'empty'} onClick={() => setTableState('empty')}>{t('gallery.tables.emptyTab')}</Button></div>
           <div className="h-[260px] overflow-hidden rounded-xl border border-line">
@@ -151,6 +320,8 @@ export const ComponentsPage: React.FC = () => {
           <div className="h-[160px] overflow-hidden rounded-xl border border-line"><TableSkeleton rows={2} /></div>
         </Example>
       </div>
+    </div>
+    <GalleryToc scrollRef={scrollRef} />
     </div>
     <Modal open={modal} onCancel={() => setModal(false)} onOk={() => { setModal(false); message.success(t('common.toast.saved')); }} title={t('gallery.dialogs.standardTitle')} icon="layout-grid" description={t('gallery.dialogs.standardDescription')} okText={t('common.actions.save')}>
       <p className="text-13 leading-6 text-slate-600">{t('gallery.dialogs.standardContent')}</p>

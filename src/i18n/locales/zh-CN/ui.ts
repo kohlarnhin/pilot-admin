@@ -21,5 +21,10 @@ export default {
   "dialog": "对话框",
   "noOptions": "暂无匹配选项",
   "loadingOptions": "加载中…",
-  "remove": "移除"
+  "remove": "移除",
+  "datePlaceholder": "请选择日期",
+  "chooseDate": "选择日期",
+  "prevMonth": "上个月",
+  "nextMonth": "下个月",
+  "today": "今天"
 } as const;
