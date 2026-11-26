@@ -4,6 +4,7 @@ export default {
   "resultPages": "结果与异常页",
   "directoryExample": "树形目录页",
   "crudExample": "标准列表页",
+  "approvalFlow": "审批流程",
   "editableTable": "可编辑表格",
   "auditLogs": "操作日志",
   "assistant": "助手设置",

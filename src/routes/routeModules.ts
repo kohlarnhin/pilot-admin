@@ -66,6 +66,7 @@ export const adminPages = [
   definePage({ path: '/examples/directory', load: () => import('../pages/examples/directory').then((module) => ({ default: module.DirectoryExamplePage })) }),
   definePage({ path: '/examples/forms/wizard', load: () => import('../pages/examples/forms/wizard').then((module) => ({ default: module.FormWizardPage })) }),
   definePage({ path: '/examples/forms/sections', load: () => import('../pages/examples/forms/sections').then((module) => ({ default: module.FormSectionsPage })) }),
+  definePage({ path: '/examples/approval', load: () => import('../pages/examples/approval').then((module) => ({ default: module.ApprovalExamplePage })) }),
   definePage({ path: '/examples/results', load: () => import('../pages/examples/results').then((module) => ({ default: module.ResultPagesPage })) }),
 ];
 

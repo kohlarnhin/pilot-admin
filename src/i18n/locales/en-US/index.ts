@@ -1,6 +1,7 @@
 import exampleResults from './exampleResults';
 import exampleForms from './exampleForms';
 import exampleTable from './exampleTable';
+import exampleApproval from './exampleApproval';
 import notifications from './notifications';
 import profile from './profile';
 import exampleProjects from './exampleProjects';
@@ -33,4 +34,4 @@ import assistant from './assistant';
 import agentMode from './agentMode';
 import agentTools from './agentTools';
 import agentCommands from './agentCommands';
-export default { notifications, exampleResults, exampleForms, exampleTable, profile, exampleProjects, directory, common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } satisfies LocalizedDictionary<typeof source>;
+export default { notifications, exampleResults, exampleForms, exampleTable, exampleApproval, profile, exampleProjects, directory, common, auth, layout, search, dashboard, errors, ui, agentEntry, client, history, menu, button, users, roles, menus, settings, agentConfig, assistantSettings, gallery, serverErrors, audit, assistant, agentMode, agentTools, agentCommands } satisfies LocalizedDictionary<typeof source>;
